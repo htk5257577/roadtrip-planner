@@ -1,0 +1,9 @@
+.DS_Store
+.env
+.env.*
+*.log
+*.zip
+node_modules/
+roadtrip-planner-output/
+**/output/
+**/generated-roadtrip-plan.html

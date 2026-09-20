@@ -1,0 +1,20 @@
+{
+  "name": "roadtrip-planner-marketplace",
+  "interface": {
+    "displayName": "Roadtrip Planner Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "roadtrip-planner",
+      "source": {
+        "source": "local",
+        "path": "./plugins/roadtrip-planner"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Travel"
+    }
+  ]
+}

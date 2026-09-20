@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "sourceNotes", "candidates"],
+  "properties": {
+    "summary": { "type": "string" },
+    "sourceNotes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id", "name", "segment", "after", "order", "detour", "drive",
+          "stay", "tags", "pet", "ev", "reason", "lon", "lat", "highlight"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "segment": { "type": "string" },
+          "after": { "type": "string" },
+          "order": { "type": "integer", "minimum": 1 },
+          "detour": { "type": "number" },
+          "drive": { "type": "number" },
+          "stay": { "type": "number", "minimum": 0.25 },
+          "tags": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "pet": { "type": "string" },
+          "ev": { "type": "string" },
+          "reason": { "type": "string" },
+          "lon": { "type": "number" },
+          "lat": { "type": "number" },
+          "highlight": { "type": "string" }
+        }
+      }
+    }
+  }
+}

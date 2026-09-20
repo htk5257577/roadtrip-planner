@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>自驾路书 · 通用结构参考</title>
+  <style>
+    :root{--pine:#173e38;--ink:#243933;--muted:#71817b;--sand:#f7f2e8;--paper:#fffdf8;--line:#e9e1d5;--coral:#d66548;--blue:#4d8790}
+    *{box-sizing:border-box}body{margin:0;background:var(--sand);color:var(--ink);font:16px/1.7 system-ui,"PingFang SC",sans-serif}
+    main{width:min(1100px,calc(100% - 32px));margin:auto;padding:24px 0 64px}
+    h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2rem,5vw,4rem);line-height:1.18}h2{font-size:clamp(1.35rem,2.5vw,2rem)}
+    .hero{padding:clamp(28px,5vw,60px);border-radius:28px;background:var(--pine);color:white}.eyebrow{color:#f3c56f;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    .route{font-size:1.1rem;font-weight:700}.muted{color:var(--muted)}.hero .muted{color:#cbdad3}
+    .metrics,.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin:16px 0 28px}
+    .metric,.card{padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--paper)}.metric strong{display:block;font-size:1.6rem;color:var(--coral)}
+    section{margin:28px 0}.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .stop,.day,.stay{margin:10px 0;padding:18px 20px;border-left:4px solid var(--coral);border-radius:14px;background:var(--paper)}
+    .meta{color:var(--muted);font-size:.9rem}.bar{height:8px;overflow:hidden;border-radius:99px;background:#e8e5df}.bar i{display:block;height:100%;background:var(--coral)}.bar.play i{background:var(--blue)}
+    .map{min-height:320px;display:grid;place-items:center;border:1px dashed #aabbb4;border-radius:20px;background:#e9eee8;text-align:center;padding:24px}
+    .timeline-time{font-weight:800;color:var(--coral)}a{color:#1e6c75}ul{padding-left:20px}
+    @media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.section-head{display:block}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <span class="eyebrow">Route verdict</span>
+    <h1>旅行标题</h1>
+    <p class="route">出发地 → 已确认的目的地 → 终点</p>
+    <p class="muted">一句话说明这条路线为什么成立、哪里最值得停留、哪里有时间压力。</p>
+  </header>
+  <div class="metrics" aria-label="全程概览">
+    <div class="metric"><strong>—</strong>旅行天数</div><div class="metric"><strong>—</strong>预计里程</div>
+    <div class="metric"><strong>—</strong>驾驶与补能</div><div class="metric"><strong>—</strong>有效游玩</div>
+  </div>
+  <section id="before"><div class="section-head"><h2>1 · 出发前要办</h2></div><div class="card">列出需要预订、核验和准备的事项；注明截止时间与规则来源。</div></section>
+  <section id="stops"><div class="section-head"><h2>2 · 每站值在哪里</h2></div><article class="stop"><h3>目的地名称 · 建议停留时长</h3><p>一句话概括独有体验；写明具体景点、活动、餐饮和宠物可行性。</p><p class="meta">抵达时段、离开时段、住宿区域、可删减项。</p></article></section>
+  <section id="heat"><div class="section-head"><h2>3 · 每天开多久、玩多久</h2></div><div class="card"><p>日期 · 驾驶 0h / 游玩 0h</p><div class="bar"><i style="width:45%"></i></div><div class="bar play" style="margin-top:8px"><i style="width:65%"></i></div></div></section>
+  <section id="map"><div class="section-head"><h2>4 · 一条线看全程</h2></div><div class="map">根据实际路线绘制地图或离线示意；不要把示意直线称为道路导航轨迹。</div></section>
+  <section id="daily"><div class="section-head"><h2>5 · 逐日时间轴</h2></div><article class="day"><h3>日期 · 当天主题</h3><p><span class="timeline-time">09:00–11:00</span> 去哪里、做什么、预计能玩多久。</p><p><span class="timeline-time">11:00–14:00</span> 驾驶与补能；说明预计距离和不确定性。</p></article></section>
+  <section id="stays"><div class="section-head"><h2>6 · 每晚住哪里</h2></div><div class="stay">逐晚列住宿区域；临时休息点只写地理区间，不伪装成游玩目的地。</div></section>
+  <section id="rules" class="two"><div class="card"><h2>宠物与纯电</h2><p>景区、交通、寄养、酒店和充电逐项核验，不默认将宠物留在车内。</p></div><div class="card"><h2>天气、拥堵与备选</h2><p>写清触发条件、替代安排和取消边界。</p></div></section>
+  <section id="sources"><h2>来源与更新时间</h2><ul><li>把已核验事实与估算分开标注，附可打开的来源链接。</li></ul></section>
+</main>
+</body>
+</html>

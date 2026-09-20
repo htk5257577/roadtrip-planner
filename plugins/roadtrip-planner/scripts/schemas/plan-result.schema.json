@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "title", "summary", "route", "reportPath"],
+  "properties": {
+    "status": { "type": "string", "enum": ["completed"] },
+    "title": { "type": "string" },
+    "summary": { "type": "string" },
+    "route": { "type": "string" },
+    "reportPath": { "type": "string" }
+  }
+}

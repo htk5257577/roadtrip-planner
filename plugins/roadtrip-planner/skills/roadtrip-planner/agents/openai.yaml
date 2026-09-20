@@ -1,0 +1,7 @@
+interface:
+  display_name: "Roadtrip Planner"
+  short_description: "网页评审路线，再由 Codex 生成完整自驾路书"
+  brand_color: "#E75A3C"
+  default_prompt: "Use $roadtrip-planner to start the Codex-native interactive planner and build my self-drive roadbook without an OpenAI API key."
+policy:
+  allow_implicit_invocation: true

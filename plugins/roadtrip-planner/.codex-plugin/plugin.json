@@ -1,0 +1,18 @@
+{
+  "name": "roadtrip-planner",
+  "version": "0.1.0",
+  "description": "A Codex-native guided road-trip planner that turns page decisions into real AI candidate reviews and a full HTML roadbook without an OpenAI API key.",
+  "author": {
+    "name": "Roadtrip Planner"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Roadtrip Planner",
+    "shortDescription": "在网页里做选择，再由 Codex 生成完整自驾路书",
+    "longDescription": "从必去点、日期、宠物和纯电条件出发，用引导式页面评审沿途候选，并调用本机已登录的 Codex 生成南线模板风格的完整 HTML 路书。无需 OpenAI API Key。",
+    "developerName": "Roadtrip Planner",
+    "category": "Travel",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": "启动 Roadtrip Planner，让我在页面里规划一次自驾旅行。"
+  }
+}
