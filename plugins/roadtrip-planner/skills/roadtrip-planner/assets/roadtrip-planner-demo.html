@@ -79,9 +79,7 @@
     .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
     .metric{padding:11px;border-radius:13px;background:rgba(255,253,246,.82);border:1px solid var(--line)}
     .metric b{display:block;font:900 19px/1 Georgia,serif;color:var(--red)}.metric b.is-pending{color:var(--muted);font:900 13px/1.15 var(--sans)}.metric span{display:block;margin-top:5px;color:var(--muted);font-size:8px;line-height:1.35}
-    .map-card{position:relative;overflow:hidden;min-height:460px;background:linear-gradient(155deg,#d8e8dd 0%,#f3e7cb 56%,#c9d9d9 100%)}
-    .map-card:before{content:"";position:absolute;inset:0;opacity:.3;background-image:radial-gradient(circle at 30% 40%,transparent 0 17%,rgba(24,59,54,.18) 17.3% 17.6%,transparent 18%),radial-gradient(circle at 68% 56%,transparent 0 24%,rgba(24,59,54,.16) 24.3% 24.7%,transparent 25%)}
-    .map-card svg{position:relative;display:block;width:100%;height:460px}
+    .map-card{overflow:hidden;background:#e8eee8}.map-canvas{position:relative;display:grid;place-items:center;min-height:350px;background:#e8eee8}.map-canvas.has-map{display:block;min-height:0}.map-canvas img{display:block;width:100%;height:auto}.map-canvas svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}.map-placeholder{max-width:270px;padding:28px;color:var(--muted);text-align:center;font-size:11px;line-height:1.7}.map-placeholder b{display:block;margin-bottom:5px;color:var(--ink);font:700 20px var(--serif)}.map-points{display:grid;gap:6px;padding:12px;background:#fffdf6;border-top:1px solid var(--line)}.map-point{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--ink)}.map-point i{flex:0 0 auto;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font:900 9px var(--sans)}.map-point.is-missing{color:var(--muted)}.map-point.is-missing i{background:#a4aaa3}.map-caption{padding:0 12px 12px;color:var(--muted);background:#fffdf6;font-size:9px;line-height:1.5}
     .map-overlay{position:absolute;left:16px;right:16px;bottom:16px;display:flex;align-items:end;justify-content:space-between;gap:10px;pointer-events:none}
     .map-legend{max-width:68%;padding:10px 12px;border:1px solid rgba(255,255,255,.55);border-radius:14px;background:rgba(255,253,246,.84);backdrop-filter:blur(10px);font-size:9px;line-height:1.6;box-shadow:0 9px 24px rgba(24,59,54,.1)}
     .legend-row{display:flex;gap:9px;flex-wrap:wrap}.legend-row span{display:flex;align-items:center;gap:4px}.dot{width:8px;height:8px;border-radius:50%}.dot.locked{background:var(--red)}.dot.selected{background:var(--pine)}.dot.optional{border:2px solid var(--blue);background:white}
@@ -112,7 +110,7 @@
     .guide-hero:after{content:"";position:absolute;width:360px;height:360px;right:-120px;top:-190px;border:70px solid rgba(243,189,77,.13);border-radius:50%}.guide-hero h1{position:relative;margin:7px 0 14px;font:700 clamp(34px,6vw,66px)/.98 var(--serif);letter-spacing:-.04em}.guide-hero p{position:relative;max-width:620px;margin:0;color:#cfe1da;font-size:13px;line-height:1.8}.guide-summary{position:relative;display:grid;align-content:end;gap:8px}.guide-summary .metric{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.13)}.guide-summary .metric span{color:#b9d2ca}
     .guide-hero>div{position:relative;z-index:1;max-width:820px}.guide-hero p{max-width:760px}
     .route-band{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:14px;margin-top:14px;padding:13px 17px}.route-band-title{padding-right:14px;border-right:1px solid var(--line)}.route-band-title b{display:block;font:700 17px var(--serif)}.route-band-title small{display:block;margin-top:4px;color:var(--muted);font-size:8px}.route-band .route-string{padding:0;min-width:0}
-    .guide-body{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;margin-top:18px}.guide-main{padding:24px}.guide-side{position:sticky;top:118px;align-self:start;display:grid;align-content:start;gap:12px}.guide-side>.panel:not(.map-card){padding:15px}.guide-side .map-card{min-height:350px}.guide-side .map-card svg{height:350px}.guide-side .map-overlay{left:10px;right:10px;bottom:10px}.guide-side .map-legend{max-width:100%;font-size:8px}.guide-side .map-mode{display:none}.guide-map-label{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 3px 0}.guide-map-label b{font:700 15px var(--serif)}.guide-map-label small{max-width:150px;text-align:right;color:var(--muted);font-size:8px}.guide h2{font:700 32px/1.1 var(--serif)}
+    .guide-body{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;margin-top:18px}.guide-main{padding:24px}.guide-side{position:sticky;top:118px;align-self:start;display:grid;align-content:start;gap:12px}.guide-side>.panel:not(.map-card){padding:15px}.guide-map-label{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:2px 3px 0}.guide-map-label b{font:700 15px var(--serif)}.guide-map-label small{max-width:150px;text-align:right;color:var(--muted);font-size:8px}.guide h2{font:700 32px/1.1 var(--serif)}
     .global-state{overflow:hidden;padding:0!important;background:var(--pine-2)!important;color:#edf4f0;border-color:rgba(255,255,255,.08)}.global-state-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:15px 15px 12px;border-bottom:1px solid rgba(255,255,255,.1)}.global-state-head h3{margin:3px 0 0;color:var(--sun);font:700 18px var(--serif)}.global-state-head p{margin:4px 0 0;color:#91aea6;font-size:8px}.phase-chip{padding:6px 8px;border-radius:99px;color:#d7e7e1;background:rgba(255,255,255,.08);font:900 8px Georgia,serif}.global-state-grid{display:grid;grid-template-columns:1fr 1fr}.global-cell{min-width:0;padding:12px 14px;border-right:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}.global-cell:nth-child(2n){border-right:0}.global-cell b{display:block;color:#fff;font:900 17px/1 Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.global-cell b.pending{color:#87a59d;font:900 12px/1 var(--sans)}.global-cell span{display:block;margin-top:5px;color:#8fa9a2;font-size:8px}.global-state-foot{display:flex;flex-wrap:wrap;gap:6px;padding:11px 14px}.global-state-foot span{padding:5px 7px;border-radius:99px;color:#bad0c9;background:rgba(255,255,255,.07);font-size:8px}
     .guide-route-builder{display:grid;grid-template-columns:1fr 1fr;gap:18px}.guide-route-builder .route-editor{padding-right:18px;border-right:1px solid var(--line)}
     .guide-candidate-focus{display:grid;grid-template-columns:45px minmax(0,1fr) 45px;gap:12px;align-items:center}.focus-arrow{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:50%;color:var(--ink);background:white}.focus-card{padding:22px;border-radius:24px;background:linear-gradient(150deg,#fffdf8,#ece1cd);border:1px solid var(--line)}.focus-card .candidate-title h3{font-size:28px}.focus-card .candidate-reason{font-size:12px}.focus-count{text-align:center;margin-top:12px;color:var(--muted);font-size:10px}
@@ -229,6 +227,12 @@
     const excludedCandidates = () => candidates.filter(c => statusOf(c.id) === 'excluded');
     const locations = Array.isArray(window.ROADTRIP_LOCATIONS) ? window.ROADTRIP_LOCATIONS : [];
     const locationByLabel = new Map(locations.map(place=>[place[4],place]));
+    const mapPreviews = new Map();
+    const pendingMapPreviews = new Set();
+    const mapPlaces = () => routeNodes().map(node => {
+      const place=locationByLabel.get(node.name);
+      return { name:node.name, ...(place?{code:place[0]}:{}), query:place?[place[3],place[2],place[1]].filter(Boolean).filter((part,index,parts)=>parts.indexOf(part)===index).join(' '):node.name };
+    });
     const coordFor = name => {
       if(cityCatalog[name]) return cityCatalog[name];
       const place=locationByLabel.get(name);
@@ -439,22 +443,37 @@
     }
 
     function mapView(){
-      const nodes = routeNodes().filter(n => Number.isFinite(n.lon));
-      const optionalNodes = state.stage >= 3 ? candidates.filter(c => statusOf(c.id) !== 'selected').map(c => ({...coordFor(c.name),name:c.name,kind:'optional',status:statusOf(c.id)})).filter(n => n.lon) : [];
-      const all = [...nodes, ...optionalNodes];
-      const lons = all.map(n=>n.lon), lats=all.map(n=>n.lat);
-      const minLon=lons.length?Math.min(...lons)-.6:73,maxLon=lons.length?Math.max(...lons)+.6:135,minLat=lats.length?Math.min(...lats)-.5:18,maxLat=lats.length?Math.max(...lats)+.5:54;
-      const project = n => ({ x:55+(n.lon-minLon)/(maxLon-minLon)*750, y:45+(maxLat-n.lat)/(maxLat-minLat)*360 });
-      const points = nodes.map(n => {const p=project(n);return `${p.x.toFixed(1)},${p.y.toFixed(1)}`}).join(' ');
-      const routeLabels = nodes.map((n,index) => { const p=project(n); const fill=n.kind==='hard'?'#e65c3d':'#123f37'; return `<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})"><circle r="14" fill="${fill}" stroke="#fffdf6" stroke-width="3"></circle><text x="0" y="4" text-anchor="middle" fill="white" font-size="10" font-weight="900">${index+1}</text><text x="0" y="31" text-anchor="middle" fill="#183b36" font-size="10" font-weight="900" paint-order="stroke" stroke="#fffdf6" stroke-width="4">${esc(n.name)}</text></g>`; }).join('');
-      const optional = all.filter(n=>n.kind==='optional').map(n => { const p=project(n); const excluded=n.status==='excluded'; return `<g opacity="${excluded ? .35 : .72}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})"><circle r="8" fill="#fffdf6" stroke="${excluded?'#756c68':'#236d78'}" stroke-width="3" stroke-dasharray="${n.status==='backup'?'0':'3 2'}"></circle><text x="0" y="22" text-anchor="middle" fill="#236d78" font-size="8" font-weight="800" paint-order="stroke" stroke="#fffdf6" stroke-width="3">${esc(n.name)}</text></g>`; }).join('');
-      const missing=routeNodes().length-nodes.length;
-      const legend = state.stage < 3 ? `<div class="legend-row"><span><i class="dot locked"></i>已定位地点</span></div><div>${missing?'有 '+missing+' 个地点暂无坐标，地图与里程待 Codex 核验。':'目前只画地点顺序示意，不代表实际道路。'}</div>` : `<div class="legend-row"><span><i class="dot locked"></i>必去点</span><span><i class="dot selected"></i>已加入候选</span><span><i class="dot optional"></i>待决定</span></div><div>${missing?'部分地点尚未定位，不显示未经核验的总里程。':'候选只有在“加入路线”后，才会进入里程和行程计算。'}</div>`;
-      return `<div class="panel map-card"><svg viewBox="0 0 860 450" role="img" aria-label="路线总览示意地图">
-        <defs><filter id="routeShadow"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#183b36" flood-opacity=".24"/></filter><pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="#183b36" stroke-opacity=".07"/></pattern></defs>
-        <rect width="860" height="450" fill="url(#grid)"></rect><path d="M40 118 C170 25 270 83 365 48 S585 90 820 27 M14 330 C180 250 252 351 408 286 S667 304 846 210" fill="none" stroke="#6f9d91" stroke-opacity=".25" stroke-width="2"></path>
-        ${nodes.length>1&&!missing?`<polyline points="${points}" fill="none" stroke="#fffdf6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#routeShadow)"></polyline><polyline points="${points}" fill="none" stroke="#e65c3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8"></polyline>`:''}${optional}${routeLabels}${!nodes.length?'<text x="430" y="210" text-anchor="middle" fill="#315c55" font-size="22" font-weight="800">路线从这里开始</text><text x="430" y="242" text-anchor="middle" fill="#6e7c75" font-size="13">选择地点后显示路线预览</text>':''}
-      </svg><div class="map-overlay"><div class="map-legend">${legend}</div><div class="map-mode">${state.stage<3?'仅显示骨架':'路线随选择更新'}</div></div></div>`;
+      const places=mapPlaces();
+      const preview=mapPreviews.get(JSON.stringify(places));
+      const pointRows=(preview?.points||places).map((point,index)=>`<div class="map-point ${point.error?'is-missing':''}"><i>${point.error?'?':index+1}</i><span>${esc(point.name)}${point.error?` · ${esc(point.error)}`:''}</span></div>`).join('');
+      const points=(preview?.points||[]).filter(point=>Number.isFinite(point.x)&&Number.isFinite(point.y));
+      const path=points.map(point=>`${point.x},${point.y}`).join(' ');
+      const markers=points.map(point=>`<g transform="translate(${point.x} ${point.y})"><circle r="16" fill="#e65c3d" stroke="#fffdf6" stroke-width="4"/><text text-anchor="middle" y="4" fill="#fff" font-size="12" font-weight="900">${(preview.points.indexOf(point)+1)}</text></g>`).join('');
+      const overlay=`<svg viewBox="0 0 760 600" aria-hidden="true">${points.length>1?`<polyline points="${path}" fill="none" stroke="#fffdf6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${path}" fill="none" stroke="#e65c3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`:''}${markers}</svg>`;
+      const canvas=preview?.imageUrl?`<img src="${esc(preview.imageUrl)}" alt="高德地图：${esc(places.map(place=>place.name).join(' → '))}" loading="eager">${overlay}`:`<div class="map-placeholder"><b>${places.length?'地图正在定位':'路线从这里开始'}</b>${preview?.error?esc(preview.error):places.length?'正在从高德加载已选地点和真实底图…':'选定出发地、终点或必去点后，这里会显示地图。'}</div>`;
+      return `<div class="panel map-card"><div class="map-canvas ${preview?.imageUrl?'has-map':''}">${canvas}</div>${places.length?`<div class="map-points">${pointRows}</div><div class="map-caption">高德底图 · 数字对应已定位站点；红线只表示途经顺序，不是实际驾车道路。</div>`:''}</div>`;
+    }
+
+    async function refreshMapPreview(){
+      if(location.protocol==='file:') return;
+      const places=mapPlaces();
+      if(!places.length) return;
+      const key=JSON.stringify(places);
+      if(mapPreviews.has(key)||pendingMapPreviews.has(key)) return;
+      pendingMapPreviews.add(key);
+      try{
+        const response=await fetch('/api/map/preview',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({places})});
+        const data=await response.json();
+        if(!response.ok||!data.ok) throw new Error(data.error||'地图加载失败');
+        mapPreviews.set(key,data);
+      }catch(error){mapPreviews.set(key,{error:error.message,points:places.map(place=>({name:place.name,error:'待定位'}))});}
+      finally{
+        pendingMapPreviews.delete(key);
+        if(JSON.stringify(mapPlaces())===key){
+          const card=app.querySelector('.map-card');
+          if(card) card.outerHTML=mapView();
+        }
+      }
     }
 
     function candidateCard(c, focus=false){
@@ -525,6 +544,7 @@
 
     function render(){
       app.innerHTML = header() + guideVariant();
+      refreshMapPreview();
     }
 
     function toast(message){ clearTimeout(toastTimer); toastEl.textContent=message; toastEl.classList.add('is-show'); toastTimer=setTimeout(()=>toastEl.classList.remove('is-show'),2600); }

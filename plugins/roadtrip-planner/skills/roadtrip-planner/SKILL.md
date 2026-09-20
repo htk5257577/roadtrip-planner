@@ -55,7 +55,7 @@ The page asks for model work only at deliberate checkpoints:
 6. Separate genuine destinations from flexible rest corridors. Do not turn an uncertain overnight break into a destination card.
 7. For EV trips, include charging buffers in drive-time estimates and identify risky charging segments. For pet trips, verify access, transport, heat, boarding, and accommodation constraints rather than assuming “outdoor” means pet-friendly.
 8. If current facts matter, verify them with the best available route, web, map, booking, or travel tools. State uncertainty and date-sensitive caveats. The skill must still work without any specific plugin.
-9. Never embed personal API keys in a shareable skill or exported report. Live maps are optional enhancement; the bundled schematic map is the portable fallback.
+9. Never embed personal API keys in a shareable skill or exported report. The page's real AMap preview uses the local server's `AMAP_MAPS_API_KEY` (Web Service key), if configured. Without it, show the explicit configuration error; do not substitute a decorative schematic or claim the map loaded. This key is separate from an OpenAI API key, which this planner does not need.
 
 ## Candidate decisions
 

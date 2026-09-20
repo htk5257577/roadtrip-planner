@@ -7,6 +7,8 @@ A Codex-native guided road-trip planner. The first page starts blank and collect
 
 No OpenAI API key is used. The local server only exchanges page state and results with the **current Codex conversation**. It never launches a second Codex process.
 
+The real AMap preview geocodes selected places and shows every located stop on a map. Set `AMAP_MAPS_API_KEY` (an AMap Web Service key) in the server environment to enable it. This is optional for planning, and the key is never bundled with the plugin or sent to the browser.
+
 ## Quick start
 
 From the workspace where the roadbook should be written:

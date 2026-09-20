@@ -15,6 +15,10 @@ const outputDir = join(workspaceRoot, "roadtrip-planner-output");
 const reportPath = join(outputDir, "generated-roadtrip-plan.html");
 const port = Number(process.env.ROADTRIP_PORT ?? 4317);
 const host = "127.0.0.1";
+const amapKey = process.env.AMAP_MAPS_API_KEY || "";
+const amapBaseUrl = process.env.ROADTRIP_AMAP_BASE_URL || "https://restapi.amap.com";
+const mapCache = new Map();
+const mapImages = new Map();
 const jobs = new Map();
 const pending = [];
 const waiters = new Set();
@@ -70,6 +74,73 @@ async function readJsonBody(req) {
     chunks.push(chunk);
   }
   return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+}
+
+async function amapGet(path, parameters) {
+  const url = new URL(path, amapBaseUrl);
+  for (const [key, value] of Object.entries(parameters)) url.searchParams.set(key, String(value));
+  url.searchParams.set("key", amapKey);
+  const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+  if (!response.ok) throw new Error(`高德地图暂时不可用（${response.status}）`);
+  return response;
+}
+
+async function locatePlace(place) {
+  const cacheKey = `${place.code || ""}|${place.query}`;
+  if (mapCache.has(cacheKey)) return mapCache.get(cacheKey);
+  const response = await amapGet("/v3/geocode/geo", { address: place.query, output: "JSON" });
+  const data = await response.json();
+  if (data.status !== "1") throw new Error(`高德定位失败：${data.info || "未知错误"}`);
+  const geocode = data.geocodes?.find(item => !place.code || item.adcode === place.code);
+  const [lon, lat] = String(geocode?.location || "").split(",").map(Number);
+  const result = Number.isFinite(lon) && Number.isFinite(lat) && lon > 70 && lat > 0
+    ? { name: place.name, lon, lat, verified: Boolean(place.code) }
+    : { name: place.name, error: place.code ? "行政区划未匹配" : "地点未定位" };
+  mapCache.set(cacheKey, result);
+  return result;
+}
+
+async function mapPreview(places) {
+  if (!amapKey) throw new Error("未配置高德 Web 服务 Key，请先配置 AMAP_MAPS_API_KEY");
+  if (!Array.isArray(places) || places.length > 25 || places.some(place =>
+    typeof place?.name !== "string" || typeof place?.query !== "string" ||
+    place.name.length > 80 || place.query.length > 160 ||
+    (place.code !== undefined && !/^\d{6}$/.test(place.code)))) {
+    throw new Error("地点列表格式不正确，最多支持 25 个地点");
+  }
+  const located = await Promise.all(places.map(async place => {
+    try { return await locatePlace(place); }
+    catch { return { name: place.name, error: "定位服务暂时不可用" }; }
+  }));
+  const points = located.filter(item => Number.isFinite(item.lon));
+  if (!points.length) return { points: located, imageUrl: "" };
+  const mercator = point => {
+    const sine = Math.sin(point.lat * Math.PI / 180);
+    return { x: (point.lon + 180) / 360, y: .5 - Math.log((1 + sine) / (1 - sine)) / (4 * Math.PI) };
+  };
+  const projected = points.map(mercator);
+  const xs = projected.map(point => point.x), ys = projected.map(point => point.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
+  const span = Math.max((maxX - minX) * 256 / 660, (maxY - minY) * 256 / 500);
+  const zoom = points.length === 1 ? 8 : Math.max(3, Math.min(14, Math.floor(Math.log2(1 / Math.max(span, 1e-9)))));
+  const centerLon = centerX * 360 - 180;
+  const centerLat = Math.atan(Math.sinh(Math.PI * (1 - 2 * centerY))) * 180 / Math.PI;
+  const scale = 256 * 2 ** zoom;
+  let pointIndex = 0;
+  const plotted = located.map(point => {
+    if (!Number.isFinite(point.lon)) return point;
+    const position = projected[pointIndex++];
+    return { ...point, x: Math.round(380 + (position.x - centerX) * scale), y: Math.round(300 + (position.y - centerY) * scale) };
+  });
+  const parameters = { size: "760*600", scale: "1", location: `${centerLon.toFixed(6)},${centerLat.toFixed(6)}`, zoom };
+  const response = await amapGet("/v3/staticmap", parameters);
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.startsWith("image/")) throw new Error("高德没有返回地图图片");
+  const imageId = randomUUID();
+  mapImages.set(imageId, Buffer.from(await response.arrayBuffer()));
+  if (mapImages.size > 80) mapImages.delete(mapImages.keys().next().value);
+  return { points: plotted, imageUrl: `/api/map/image/${imageId}` };
 }
 
 function runnerConnected() {
@@ -168,6 +239,19 @@ const server = createServer(async (req, res) => {
     }
     if (req.method === "GET" && url.pathname === "/locations.js") {
       serveFile(res, locationsPath);
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/api/map/preview") {
+      const body = await readJsonBody(req);
+      const preview = await mapPreview(body.places);
+      sendJson(res, 200, { ok: true, ...preview });
+      return;
+    }
+    if (req.method === "GET" && url.pathname.startsWith("/api/map/image/")) {
+      const image = mapImages.get(url.pathname.slice("/api/map/image/".length));
+      if (!image) { sendJson(res, 404, { ok: false, error: "地图已过期，请刷新页面" }); return; }
+      res.writeHead(200, { "content-type": "image/png", "content-length": image.length, "cache-control": "private, max-age=600" });
+      res.end(image);
       return;
     }
     if (req.method === "GET" && url.pathname === "/api/status") {
