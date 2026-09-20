@@ -26,7 +26,7 @@ Every UI or report view must derive from this state. Do not let a map, timeline,
 ## Hard versus soft constraints
 
 - Hard: must-go points, fixed dates/events, start/end, explicit exclusions, vehicle limitations, border/document constraints, pet cannot-enter rules the user will not work around.
-- Soft: themes, pace, preferred scenery, crowd tolerance, lodging style, optional boarding, budget, optional detours.
+- Soft: themes, pace, preferred scenery, crowd tolerance, lodging style, budget, optional detours.
 - A candidate cannot displace a hard anchor. If hard constraints make the trip infeasible, show the conflict and the smallest changes that would resolve it.
 
 ## Minimum questions
@@ -36,7 +36,7 @@ Ask only unresolved items that change the route:
 1. start/end and available dates;
 2. ordered or unordered must-go points;
 3. self-drive/vehicle type and daily driving tolerance;
-4. travelers, pet, and acceptable pet separation/boarding;
+4. travelers and whether a pet joins the trip;
 5. two or three priority experiences plus explicit exclusions;
 6. fixed bookings or border/document limitations.
 

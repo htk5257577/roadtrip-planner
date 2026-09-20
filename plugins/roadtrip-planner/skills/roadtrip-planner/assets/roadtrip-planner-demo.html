@@ -212,11 +212,11 @@
         end:'赤壁市 · 咸宁市 · 湖北省',
         must:['东山县 · 漳州市 · 福建省','柳州市 · 广西壮族自治区','恩施市 · 恩施土家族苗族自治州 · 湖北省']
       },
-      answers: { departDate:'2026-09-24',returnDate:'2026-10-05',departTime:'19:00',maxDrive:'6',pace:'balanced',pet:true,ev:true,boarding:true },
+      answers: { departDate:'2026-09-24',returnDate:'2026-10-05',departTime:'19:00',maxDrive:'6',pace:'balanced',pet:true,ev:true },
       prefs: { '美食':'prefer','海岛':'prefer','海景':'prefer','人文':'prefer','山景':'prefer' }
     };
     const emptyRoute = () => ({ start:'', end:'', must:[] });
-    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:null, ev:null, boarding:null });
+    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:null, ev:null });
     const emptyPrefs = () => Object.fromEntries(preferenceKeys.map(key=>[key,'off']));
 
     const state = {
@@ -261,7 +261,7 @@
       return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
     };
     const frameworkReady = () => Boolean(state.route.start && state.route.end && state.route.must.length && state.answers.departTime && datesReady());
-    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.pet || state.answers.boarding!==null);
+    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && state.answers.pet!==null && state.answers.ev!==null;
 
     function roadLeg(from,to){
       const exact=roadLegs[`${from.name}>${to.name}`];
@@ -438,7 +438,7 @@
       return `<div class="question-grid">
         <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select></label>
         <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select></label>
-        <div class="question">${toggle('pet','带宠物')}${toggle('ev','纯电车')}${state.answers.pet?toggle('boarding','可短时寄养'):''}<p class="helper">点击选择：未选 → 是 → 否。</p></div>
+        <div class="question">${toggle('pet','带宠物')}${toggle('ev','纯电车')}<p class="helper">点击选择：未选 → 是 → 否。</p></div>
       </div>`;
     }
 
@@ -649,7 +649,7 @@
         state.stage=1;render();toast('先完成第一步的地点与时间。');return;
       }
       if(!planningReady()){
-        state.stage=2;render();toast('请选驾驶上限、是否带宠物与是否开电车；带宠物时再选能否寄养。');return;
+        state.stage=2;render();toast('请选驾驶上限、是否带宠物与是否开电车。');return;
       }
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       setAiState('loading','请求已提交；当前 Codex 会话将领取任务，过程会显示在 Codex 对话中。');
@@ -744,7 +744,7 @@
       if(nextStage >= 3 && !planningReady()){
         state.stage=2;
         render();
-        toast('请选驾驶上限、是否带宠物与是否开电车；带宠物时再选能否寄养。');
+        toast('请选驾驶上限、是否带宠物与是否开电车。');
         return false;
       }
       state.stage=nextStage;
@@ -833,7 +833,7 @@
     document.addEventListener('click',event=>{
       const stageButton=event.target.closest('[data-stage]'); if(stageButton){const nextStage=Number(stageButton.dataset.stage);if(nextStage===4){requestCodexPlan();return;}goToStage(nextStage);return;}
       const prefButton=event.target.closest('[data-pref]'); if(prefButton){const key=prefButton.dataset.pref;const index=preferenceCycles.indexOf(state.prefs[key]||'off');state.prefs[key]=preferenceCycles[(index+1)%preferenceCycles.length];render();return;}
-      const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;if(key==='pet'&&state.answers.pet!==true)state.answers.boarding=null;render();return;}
+      const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;render();return;}
       const candidateButton=event.target.closest('[data-candidate]'); if(candidateButton){updateCandidate(candidateButton.dataset.candidate,candidateButton.dataset.statusChoice);return;}
       const action=event.target.closest('[data-action]')?.dataset.action;
       if(action==='toggle-debug'){toggleDebugExample();return;}
