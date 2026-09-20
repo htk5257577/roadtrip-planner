@@ -81,9 +81,22 @@ export function renderRoadbook(trip) {
     ["🧥", "同行装备", pre.packing], ["💳", "支付", pre.payment],
     ["📱", "必备 App", array(pre.apps).join(" · ")], ["🎟", "预订顺序", pre.ticketTip]
   ].map(([icon, title, body]) => `<article class="info-card card"><div class="icon">${icon}</div><h3>${title}</h3><p>${text(body)}</p></article>`).join("");
-  const heatCell = (value, color) => `<div class="heat-cell" style="background:rgba(${color},${Math.min(.8, .09 + finite(value) / 11 * .68).toFixed(2)})">${finite(value).toFixed(1)}<small>h</small></div>`;
-  const heatRows = trip.dayBalance.map(day => `<div class="heat-date">${esc(day.date)}</div><div class="heat-label">${esc(day.label)}</div>${heatCell(day.play, "55,126,116")}${heatCell(day.drive, "202,62,45")}${heatCell(day.buffer, "240,185,65")}<div class="heat-total">${(finite(day.play) + finite(day.drive) + finite(day.buffer)).toFixed(1)}h</div>`).join("");
-  const heatmap = `<div class="heat-legend"><span><i class="heat-dot" style="background:#377e74"></i>有效游玩</span><span><i class="heat-dot" style="background:#ca3e2d"></i>驾驶/跨城</span><span><i class="heat-dot" style="background:#f0b941"></i>充电、用餐与缓冲</span></div><div class="heat-grid"><div class="heat-head">日期</div><div class="heat-head">当天主题</div><div class="heat-head">游玩</div><div class="heat-head">开车</div><div class="heat-head">缓冲</div><div class="heat-head">活动总量</div>${heatRows}</div><div class="heat-summary"><span>全程有效游玩 <b>${trip.dayBalance.reduce((sum, day) => sum + finite(day.play), 0).toFixed(1)}h</b></span><span>驾驶约 <b>${trip.dayBalance.reduce((sum, day) => sum + finite(day.drive), 0).toFixed(1)}h</b></span></div>`;
+  const paceDays = trip.dayBalance;
+  const chartWidth = Math.max(780, paceDays.length * 58);
+  const maxHours = Math.max(6, Math.ceil(Math.max(...paceDays.flatMap(day => [finite(day.play), finite(day.drive)]))));
+  const chartX = index => paceDays.length === 1 ? chartWidth / 2 : 27 + index * (chartWidth - 54) / (paceDays.length - 1);
+  const chartY = value => 76 - finite(value) / maxHours * 56;
+  const paceSeries = (key, label, color) => {
+    const total = paceDays.reduce((sum, day) => sum + finite(day[key]), 0).toFixed(1);
+    const line = paceDays.map((day, index) => `${chartX(index).toFixed(1)},${chartY(day[key]).toFixed(1)}`).join(" ");
+    const points = paceDays.map((day, index) => {
+      const x = chartX(index).toFixed(1), y = chartY(day[key]).toFixed(1), value = finite(day[key]).toFixed(1);
+      return `<g class="pace-point"><title>${esc(day.date)} · ${esc(day.label)} · ${label} ${value} 小时</title><circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="#fffaf0" stroke-width="2"/><text x="${x}" y="${(Number(y) - 10).toFixed(1)}" text-anchor="middle">${value}</text></g>`;
+    }).join("");
+    return `<div class="pace-chart-row"><div class="pace-chart-label"><i style="background:${color}"></i><strong>${label}</strong><span>合计 ${total}h</span></div><svg viewBox="0 0 ${chartWidth} 88" role="img" aria-label="${label}逐日时长曲线，合计 ${total} 小时"><line class="pace-baseline" x1="27" y1="76" x2="${chartWidth - 27}" y2="76"/><line class="pace-guide" x1="27" y1="48" x2="${chartWidth - 27}" y2="48"/><polyline points="${line}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${points}</svg></div>`;
+  };
+  const dateLabels = paceDays.map((day, index) => `<text x="${chartX(index).toFixed(1)}" y="18" text-anchor="middle">${esc(day.date)}</text>`).join("");
+  const heatmap = `<div class="pace-chart-intro"><span>每天同一位置，上下对照</span><b>统一刻度 0–${maxHours}h</b></div><span class="pace-swipe-hint">向右滑动，查看后续日期 →</span><div class="pace-chart-scroll"><div class="pace-chart-inner" style="min-width:${chartWidth + 86}px">${paceSeries("play", "游玩", "#377e74")}${paceSeries("drive", "驾驶", "#ca3e2d")}<div class="pace-chart-dates"><span>日期</span><svg viewBox="0 0 ${chartWidth} 28" aria-hidden="true">${dateLabels}</svg></div></div></div><p class="pace-chart-note">线上的数字是当天小时数；充电、用餐和休息已留在逐日安排中，不计入这两条线。</p>`;
   const ledger = trip.routeLegs.map(leg => `<div class="leg"><div class="leg-date">${esc(leg.date)}</div><div class="leg-route"><b>${esc(leg.route)}</b><span>${[leg.distance, leg.duration, leg.buffer, leg.toll].filter(Boolean).map(esc).join(" · ")}</span></div></div>`).join("");
   const transport = array(trip.transport).map(item => `<article class="transport-card card"><span class="status-chip">${esc(item.status || "需核验")}</span><h3>${esc(item.title)}</h3><p>${text(item.detail)}</p></article>`).join("") || `<article class="transport-card card"><span class="status-chip">转场</span><h3>按路线账本执行</h3><p>${text(meta.transportNote || "道路、补能和特殊交通以临行核验为准。")}</p></article>`;
   const hotels = trip.hotelAreas.map(area => `<article class="hotel-area card"><h3>${esc(area.area)}</h3><p>${text(area.reason)}</p><div class="hotel-options">${array(area.options).map(option => `<div class="hotel-option"><div class="hotel-option-head"><strong>${esc(option.tier)}</strong><span>${esc(option.priceRange)}</span></div><h4>${esc(option.name)}</h4><p>${text(option.note)}</p>${link(option.actionLink)}</div>`).join("")}</div></article>`).join("");

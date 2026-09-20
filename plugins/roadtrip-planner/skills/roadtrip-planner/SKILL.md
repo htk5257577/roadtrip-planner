@@ -80,7 +80,7 @@ The bundled renderer keeps the established roadbook visual language, with overvi
 
 1. hero with route verdict, one-line route, days, mileage and usable play;
 2. departure countdown and essential bookings, then concise pretrip notes;
-3. daily drive/play/buffer heat for the whole trip;
+3. two long, vertically aligned daily curves for play and driving hours on one shared scale; keep charging, meals and rest detail in the daily schedule rather than adding a table row;
 4. full-route map with a readable offline fallback; below it, show only ordered city names, each linking to its first relevant day where possible;
 5. one chronological daily spine, collapsed by default, whose day summaries show route, play, drive and overnight area; the expanded day alone owns exact time blocks, transport/charging, pet notes and meals;
 6. a secondary, collapsed practical-reference area for lodging alternatives, segment-level data, trip rules and evidence links.

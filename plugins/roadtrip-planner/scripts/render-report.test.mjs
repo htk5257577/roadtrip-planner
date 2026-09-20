@@ -14,9 +14,13 @@ test("generated report leads with four overviews and one collapsible daily spine
   const sections = [...html.matchAll(/<section\b[^>]*id="([^"]+)"/g)].map(match => match[1]);
   assert.deepEqual(sections, ["todo", "brief", "pace", "map-section", "days", "practical"]);
   assert.ok(html.includes(`<style>${css}</style>`));
-  for (const className of ["hero-stats", "heat-grid", "hotel-area card", "day-flow", "slot-card", "map-route-legend", "day card is-collapsed", "reference-panel card"]) {
+  for (const className of ["hero-stats", "pace-chart-inner", "hotel-area card", "day-flow", "slot-card", "map-route-legend", "day card is-collapsed", "reference-panel card"]) {
     assert.ok(html.includes(className), `${className} missing`);
   }
+  assert.equal((html.match(/class="pace-chart-row"/g) || []).length, 2);
+  assert.match(html, /游玩逐日时长曲线/);
+  assert.match(html, /驾驶逐日时长曲线/);
+  assert.doesNotMatch(html, /class="heat-grid"/);
   assert.match(html, /id="expand-all-days"/);
   assert.match(html, /data-open-day="day-1"/);
   assert.match(html, /aria-expanded="false"/);
