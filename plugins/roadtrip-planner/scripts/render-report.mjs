@@ -20,13 +20,12 @@ function checkData(trip) {
   for (const field of ["title", "startDate", "meta", "preTrip", "routeDecision"]) {
     if (!trip[field]) throw new Error(`路书数据缺少 ${field}`);
   }
-  for (const field of ["reminders", "stopSummaries", "dayBalance", "routeLegs", "hotelAreas", "mapStops", "days", "tips", "sourceLinks"]) {
+  for (const field of ["reminders", "dayBalance", "routeLegs", "hotelAreas", "mapStops", "days", "tips", "sourceLinks"]) {
     if (!Array.isArray(trip[field]) || !trip[field].length) throw new Error(`路书数据缺少 ${field}`);
   }
   if (trip.dayBalance.length !== trip.days.length) throw new Error("热力图天数必须与逐日时间轴一致");
   if (!trip.days.every(day => Array.isArray(day.slots) && day.slots.length && day.drive && day.dog)) throw new Error("每天必须有时间块、路线和同行信息");
   if (!trip.mapStops.every(point => typeof point.name === "string" && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)))) throw new Error("地图落点缺少坐标");
-  if (trip.stopSummaries.some(stop => !stop.city || !stop.stay || !Array.isArray(stop.focus))) throw new Error("每站摘要必须包含地点、停留时间和看点");
 }
 
 function mapMarkup(points) {
@@ -53,7 +52,6 @@ function mapScript(points) {
       var coords=points.map(function(p){return[p.lat,p.lng]});
       if(coords.length>1)L.polyline(coords,{color:'#ca3e2d',dashArray:'7 9',weight:4}).addTo(map);
       map.fitBounds(coords,{padding:[34,34]});
-      document.getElementById('map-caption').textContent='道路底图为 Esri；红线仅表示落点顺序，不是逐弯导航轨迹。';
     } catch(error) { host.innerHTML=${JSON.stringify(mapMarkup(points)).replace(/</g, "\\u003c")}; }
   });
   var setDay=function(day,expanded){day.classList.toggle('is-collapsed',!expanded);var button=day.querySelector('.toggle-day');button.textContent=expanded?'收起当天安排':'查看当天安排';button.setAttribute('aria-expanded',String(expanded));};
@@ -90,16 +88,9 @@ export function renderRoadbook(trip) {
   const transport = array(trip.transport).map(item => `<article class="transport-card card"><span class="status-chip">${esc(item.status || "需核验")}</span><h3>${esc(item.title)}</h3><p>${text(item.detail)}</p></article>`).join("") || `<article class="transport-card card"><span class="status-chip">转场</span><h3>按路线账本执行</h3><p>${text(meta.transportNote || "道路、补能和特殊交通以临行核验为准。")}</p></article>`;
   const hotels = trip.hotelAreas.map(area => `<article class="hotel-area card"><h3>${esc(area.area)}</h3><p>${text(area.reason)}</p><div class="hotel-options">${array(area.options).map(option => `<div class="hotel-option"><div class="hotel-option-head"><strong>${esc(option.tier)}</strong><span>${esc(option.priceRange)}</span></div><h4>${esc(option.name)}</h4><p>${text(option.note)}</p>${link(option.actionLink)}</div>`).join("")}</div></article>`).join("");
   const mapLegend = trip.mapStops.map((point, index) => {
-    const stop = trip.stopSummaries.find(item => item.city === point.name);
-    const lodgingBase = !stop && trip.hotelAreas.some(area => area.area.includes(point.name));
-    const scheduledDate = stop?.schedule?.[0]?.date;
-    const dayIndex = scheduledDate ? trip.days.findIndex(day => String(day.date).slice(-5).replace("-", "/") === scheduledDate) : index === trip.mapStops.length - 1 ? trip.days.length - 1 : trip.days.findIndex(day => day.drive.route.includes(point.name) || day.theme.includes(point.name));
-    const dayId = `day-${Math.max(0, dayIndex) + 1}`;
-    const url = `https://uri.amap.com/marker?position=${finite(point.lng)},${finite(point.lat)}&name=${encodeURIComponent(point.name)}&coordinate=wgs84&callnative=1&src=roadtrip-planner`;
-    const extra = stop?.note || array(stop?.guides).length ? `<details class="route-stop-more"><summary>同行提醒与攻略</summary>${stop.note ? `<p>${text(stop.note)}</p>` : ""}${array(stop.guides).filter(guide => safeUrl(guide.url)).map(guide => `<a href="${esc(guide.url)}" target="_blank" rel="noopener">${esc(guide.label)} ↗</a>`).join("")}</details>` : "";
-    const detail = stop ? `<span class="route-stop-time">${esc(stop.stay)} · 游玩约 ${esc(stop.playHours)}h</span><span class="route-stop-focus">${array(stop.focus).slice(0, 3).map(esc).join(" / ")}</span>${extra}` : `<span class="route-stop-time">${index === 0 ? "出发" : index === trip.mapStops.length - 1 ? "返程终点" : lodgingBase ? "住宿基地 / 路线转场" : "路线转场"}</span>`;
-    const dayLink = dayIndex >= 0 ? `<a href="#${dayId}" data-open-day="${dayId}" aria-label="查看${esc(point.name)}的逐日行程">看当天 ↗</a>` : "";
-    return `<li class="route-stop${stop ? " route-stop--destination" : ""}"><span class="route-stop-number">${index + 1}</span><div class="route-stop-copy"><strong>${esc(point.name)}</strong>${detail}</div><div class="route-stop-actions">${dayLink}<a href="${esc(url)}" target="_blank" rel="noopener" aria-label="在高德地图查看${esc(point.name)}">地图 ↗</a></div></li>`;
+    const dayIndex = index === trip.mapStops.length - 1 ? trip.days.length - 1 : trip.days.findIndex(day => day.theme.includes(point.name) || day.drive.route.includes(point.name) || day.slots.some(slot => slot.name.includes(point.name)));
+    const city = esc(point.name);
+    return `<li>${dayIndex >= 0 ? `<a href="#day-${dayIndex + 1}" data-open-day="day-${dayIndex + 1}" aria-label="查看${city}的逐日行程">${city}</a>` : `<span>${city}</span>`}</li>`;
   }).join("");
   const timeline = trip.days.map((day, index) => {
     const flow = `<div class="day-flow"><span class="day-flow-label">当天顺序</span>${day.slots.map((slot, i) => `${i ? '<span class="day-flow-arrow">→</span>' : ''}<span class="day-flow-step"><b>${esc(slot.time)}</b>${esc(slot.name)}</span>`).join("")}</div>`;

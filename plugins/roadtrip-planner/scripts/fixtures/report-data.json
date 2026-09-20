@@ -5,7 +5,6 @@
   "hero": { "eyebrow": "ROAD BOOK · 示例", "badge": "自驾 · 1日", "title": "从甲城到乙城。", "lede": "以一次短途自驾示范南线版式。", "route": "甲城 → 乙城", "stats": [{ "value": "1", "label": "天" }, { "value": "120", "label": "公里" }, { "value": "4h", "label": "有效游玩" }] },
   "reminders": [{ "item": "核对天气与停车", "leadDays": 1 }],
   "preTrip": { "note": "示例数据，不作为旅行建议。", "weather": { "summary": "临行核对", "typhoon": "恶劣天气调整" }, "packing": "饮水与常用物品", "payment": "准备移动支付", "apps": ["地图"], "ticketTip": "按实际政策预订" },
-  "stopSummaries": [{ "city": "乙城", "stay": "半天", "playHours": 4, "focus": ["街区"], "note": "示例地点。", "guides": [] }],
   "routeDecision": { "title": "示例路线成立", "text": "只有一段转场。" },
   "dayBalance": [{ "date": "10/01", "label": "甲城→乙城", "play": 4, "drive": 2, "buffer": 2 }],
   "routeLegs": [{ "date": "10/01", "route": "甲城 → 乙城", "distance": "约120公里", "duration": "约2小时", "buffer": "含休息", "toll": "以导航为准" }],

@@ -37,11 +37,9 @@
       <div id="heatmap" class="heat-wrap card">{{HEATMAP}}</div>
     </section>
     <section id="map-section">
-      <div class="section-head"><div><div class="section-kicker">03 · MAP</div><h2>一条线看全程</h2></div><p class="section-note">每站看点和停留时间都在下方；点目的地直达那一天。</p></div>
+      <div class="section-head"><div><div class="section-kicker">03 · MAP</div><h2>一条线看全程</h2></div></div>
       <div id="map">{{MAP}}</div>
-      <p id="map-caption" class="map-caption">离线时可看示意；下方可跳到当天行程，也可单独打开地图位置。</p>
       <ol id="map-route-legend" class="map-route-legend" aria-label="全程路线落点">{{MAP_LEGEND}}</ol>
-      <div id="route-decision" class="route-decision">{{ROUTE_DECISION}}</div>
     </section>
     <section id="days">
       <div class="section-head"><div><div class="section-kicker">04 · DAY BY DAY</div><h2>逐日行程</h2></div><p class="section-note">先看每天的路线和时间分配，点开再看具体时段。</p></div>
@@ -52,7 +50,7 @@
       <div class="section-head"><div><div class="section-kicker">05 · FIELD NOTES</div><h2>实用资料</h2></div><p class="section-note">具体执行时再查，不打断上面的行程阅读。</p></div>
       <div class="reference-stack">
         <details class="reference-panel card"><summary>住宿片区与备选 <span>{{HOTEL_COUNT}} 处</span></summary><div id="hotel-grid" class="grid hotel-grid">{{HOTELS}}</div></details>
-        <details class="reference-panel card"><summary>跨城路线与转场 <span>{{LEG_COUNT}} 段</span></summary><div id="route-ledger" class="route-ledger">{{ROUTE_LEDGER}}</div><div id="transport-grid" class="grid transport-grid">{{TRANSPORT}}</div></details>
+        <details class="reference-panel card"><summary>跨城路线与转场 <span>{{LEG_COUNT}} 段</span></summary><div id="route-decision" class="route-decision">{{ROUTE_DECISION}}</div><div id="route-ledger" class="route-ledger">{{ROUTE_LEDGER}}</div><div id="transport-grid" class="grid transport-grid">{{TRANSPORT}}</div></details>
         <details class="reference-panel card"><summary>同行提醒与核验资料 <span>出发前再看</span></summary><div id="tips-grid" class="grid tips-grid">{{TIPS}}</div><div id="sources" class="sources">{{SOURCES}}</div><div id="source-strip" class="source-strip">{{SOURCE_STRIP}}</div><p class="disclaimer">{{DISCLAIMER}}</p></details>
       </div>
     </section>

@@ -21,6 +21,10 @@ test("generated report leads with four overviews and one collapsible daily spine
   assert.match(html, /data-open-day="day-1"/);
   assert.match(html, /aria-expanded="false"/);
   assert.doesNotMatch(html, /class="stop-plan"|每站到底怎么玩/);
+  const cityList = html.match(/<ol id="map-route-legend"[^>]*>(.*?)<\/ol>/s)?.[1];
+  assert.ok(cityList);
+  assert.equal((cityList.match(/<li>/g) || []).length, example.mapStops.length);
+  assert.doesNotMatch(cityList, /游玩|停留|同行提醒|地图 ↗|<strong>|<div>/);
   assert.match(html, /data-roadbook-template="south-line-v1"/);
   assert.doesNotMatch(html, /{{[A-Z_]+}}|securityJsCode|0106n12000rrctq3jAA64/);
 });
@@ -28,8 +32,7 @@ test("generated report leads with four overviews and one collapsible daily spine
 test("report data must provide complete daily content", () => {
   assert.throws(() => renderRoadbook({ ...example, dayBalance: [] }), /dayBalance/);
   assert.throws(() => renderRoadbook({ ...example, days: [{ ...example.days[0], slots: [] }] }), /每天必须有时间块/);
-  const summaryOnly = { ...example, stopSummaries: example.stopSummaries.map(({ schedule, ...stop }) => stop) };
-  assert.match(renderRoadbook(summaryOnly), /data-open-day="day-1"/);
+  assert.match(renderRoadbook({ ...example, stopSummaries: undefined }), /data-open-day="day-1"/);
 });
 
 test("final report title and hero route show places without planning-status labels", () => {
