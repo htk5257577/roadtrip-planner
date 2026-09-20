@@ -26,13 +26,16 @@
           "segment": { "type": "string" },
           "after": { "type": "string" },
           "order": { "type": "integer", "minimum": 1 },
-          "detour": { "type": "number" },
-          "drive": { "type": "number" },
+          "detour": { "type": "number", "description": "Incremental road km versus the current route without this candidate." },
+          "drive": { "type": "number", "description": "Incremental hours of driving plus EV charging versus the current route without this candidate; exclude stay/visit time." },
           "stay": { "type": "number", "minimum": 0.25 },
           "tags": {
             "type": "array",
-            "minItems": 1,
-            "items": { "type": "string" }
+            "minItems": 2,
+            "maxItems": 5,
+            "uniqueItems": true,
+            "description": "Multiple factual experience tags for this destination, from the canonical vocabulary only; do not include pet, charging, crowd, or effort constraints.",
+            "items": { "type": "string", "enum": ["地方美食", "历史街巷", "民族文化", "沙滩", "海岛", "海岸线", "山岳", "峡谷", "湖泊", "河流", "草原", "沙漠", "风景公路"] }
           },
           "pet": { "type": "string" },
           "ev": { "type": "string" },

@@ -13,8 +13,9 @@ trip
   must_go[]                 locked, ordered hard anchors
   exclusions[]              places or experience types
   travelers / vehicle / pet
-  max_daily_drive / pace
-  interests{}               prefer | must | avoid
+  max_daily_drive / max_detour_hours / pace
+  ev_highway_range_km        only for pure EVs; observed range
+  interests{}               prefer | must | avoid; canonical destination tags
   candidates[]              proposed | selected | backup | excluded
   route[]                   hard anchors plus selected candidates
   days[]                    drive, charge, play, rest, lodging
@@ -26,7 +27,7 @@ Every UI or report view must derive from this state. Do not let a map, timeline,
 ## Hard versus soft constraints
 
 - Hard: must-go points, fixed dates/events, start/end, explicit exclusions, vehicle limitations, border/document constraints, pet cannot-enter rules the user will not work around.
-- Soft: themes, pace, preferred scenery, crowd tolerance, lodging style, budget, optional detours.
+- Soft: themes, pace, preferred scenery, crowd tolerance, lodging style, budget. The user's detour tolerance is a candidate-screening constraint, not a reason to remove a locked must-go place.
 - A candidate cannot displace a hard anchor. If hard constraints make the trip infeasible, show the conflict and the smallest changes that would resolve it.
 
 ## Minimum questions
@@ -35,7 +36,7 @@ Ask only unresolved items that change the route:
 
 1. start/end and available dates;
 2. ordered or unordered must-go points;
-3. self-drive/vehicle type and daily driving tolerance;
+3. self-drive/vehicle type, daily driving tolerance, detour tolerance, and observed highway range for pure EVs;
 4. travelers and whether a pet joins the trip;
 5. two or three priority experiences plus explicit exclusions;
 6. fixed bookings or border/document limitations.
@@ -43,6 +44,8 @@ Ask only unresolved items that change the route:
 Do not ask about preferences already established in the conversation.
 
 ## Candidate score
+
+Destination tags describe experiences available in a city/stop; each candidate has multiple relevant tags from the schema's canonical vocabulary. Pet access, charging feasibility, crowds, and physical effort are separate decision factors, not city tags. `must` interest means the whole proposed trip needs a credible experience of that kind; do not require every city to carry it. `avoid` never removes a locked must-go point.
 
 Use a transparent directional score rather than false precision:
 

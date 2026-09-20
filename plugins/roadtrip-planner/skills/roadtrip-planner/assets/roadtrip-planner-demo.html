@@ -63,7 +63,7 @@
     .add-row{display:grid;grid-template-columns:1fr auto;gap:7px}
     .place-field{position:relative;min-width:0}.place-field input{width:100%}.place-results{position:absolute;z-index:30;top:calc(100% + 4px);left:0;right:0;max-height:260px;overflow:auto;padding:5px;border:1px solid var(--line);border-radius:12px;background:#fffdf8;box-shadow:var(--shadow)}.place-results[hidden]{display:none}.place-option{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 10px;border:0;border-radius:8px;color:var(--ink);background:transparent;text-align:left;font-size:11px}.place-option:hover,.place-option.is-active{background:#eaf3f2}.place-option small{color:var(--muted);font-size:9px}.place-empty{padding:10px;color:var(--muted);font-size:10px}.framework-block{margin-top:18px;padding-top:17px;border-top:1px solid var(--line)}.framework-block .question-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.framework-block h3{margin:0 0 10px;font:700 19px var(--serif)}.validation-hint{margin-top:12px;color:var(--red-dark);font-size:10px}
     .helper{margin:8px 0 0;color:var(--muted);font-size:9px;line-height:1.55}
-    .pref-grid{display:flex;flex-wrap:wrap;gap:7px}
+    .pref-grid{display:flex;flex-wrap:wrap;gap:7px}.pref-groups{display:grid;gap:14px;margin-top:12px}.pref-group{padding:12px;border:1px solid var(--line);border-radius:14px;background:#fffdf8}.pref-group h3{margin:0 0 9px;color:var(--ink);font-size:11px}
     .pref{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:7px 9px;color:var(--muted);background:#fffdf8;font-size:10px;font-weight:800}
     .pref:after{content:attr(data-state-label);padding:2px 5px;border-radius:99px;background:var(--paper-2);font-size:8px}
     .pref[data-state="prefer"]{color:var(--blue);border-color:rgba(35,109,120,.3);background:#eaf3f2}.pref[data-state="prefer"]:after{background:#cfe5e4}
@@ -95,7 +95,7 @@
     .score{display:grid;place-items:center;min-width:45px;height:45px;border-radius:50%;color:white;background:var(--pine);font:900 14px Georgia,serif}.score small{font:700 7px var(--sans)}
     .candidate-reason{margin:10px 0;color:var(--ink);font-size:10px;line-height:1.6}
     .candidate-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.fact{padding:7px;border-radius:9px;background:var(--paper);font-size:8px;color:var(--muted)}.fact b{display:block;margin-bottom:2px;color:var(--ink);font-size:10px}
-    .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.tag{padding:4px 6px;border-radius:99px;color:var(--blue);background:#e9f2f1;font-size:8px;font-weight:800}
+    .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.tag{padding:4px 6px;border-radius:99px;color:var(--blue);background:#e9f2f1;font-size:8px;font-weight:800}.candidate-warning{margin:9px 0 0;color:var(--red-dark);font-size:10px;font-weight:800}
     .candidate-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}.status-btn{padding:8px 6px;color:var(--muted);background:var(--paper);font-size:9px}.status-btn.is-active[data-status-choice="selected"]{color:white;background:var(--pine)}.status-btn.is-active[data-status-choice="backup"]{color:var(--ink);background:var(--sun)}.status-btn.is-active[data-status-choice="excluded"]{color:white;background:#7a706c}
     .ai-note{padding:12px;border-radius:14px;background:#fff0d2;border:1px solid rgba(243,189,77,.4);font-size:9px;line-height:1.65}.ai-note b{color:var(--red-dark)}
     .ai-run-state{display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;padding:7px 18px;color:#cfe1da;background:#17483f;border-bottom:1px solid rgba(255,255,255,.08);font-size:10px;font-weight:800;text-align:center}
@@ -201,7 +201,25 @@
       '宜昌>杭州': { km:1002.684, hours:11.218 }
     };
 
-    const preferenceKeys = ['美食','海岛','海景','人文','山景','峡谷','少数民族','自驾公路','宠物友好','低强度','低人流'];
+    // A tag describes a destination's experience, never a travel constraint.
+    const tagGroups = {
+      '风味与文化':['地方美食','历史街巷','民族文化'],
+      '海岸与岛屿':['沙滩','海岛','海岸线'],
+      '山水与旷野':['山岳','峡谷','湖泊','河流','草原','沙漠'],
+      '路上体验':['风景公路']
+    };
+    const preferenceKeys = Object.values(tagGroups).flat();
+    const knownCityTags = {
+      '杭州':['地方美食','历史街巷','湖泊'],'泉州':['地方美食','历史街巷','海岸线'],'东山岛':['海岛','沙滩','海岸线','风景公路'],
+      '潮汕':['地方美食','历史街巷'],'澳门':['地方美食','历史街巷','海岸线'],'珠海':['海岸线','沙滩','地方美食'],
+      '广州':['地方美食','历史街巷'],'深圳':['海岸线','沙滩','地方美食'],'香港':['地方美食','海岸线','山岳'],
+      '柳州':['地方美食','河流','历史街巷'],'凯里':['地方美食','民族文化','河流'],'镇远':['历史街巷','河流','民族文化'],
+      '梵净山':['山岳','风景公路'],'肇兴侗寨':['民族文化','历史街巷','山岳'],'张家界':['山岳','峡谷','风景公路'],
+      '恩施':['峡谷','河流','民族文化'],'宜昌':['河流','峡谷','地方美食'],'西安':['历史街巷','地方美食'],
+      '兰州':['地方美食','河流'],'西宁':['地方美食','民族文化'],'青海湖':['湖泊','草原','风景公路'],
+      '甘南':['草原','民族文化','风景公路'],'成都':['地方美食','历史街巷']
+    };
+    Object.entries(knownCityTags).forEach(([name,tags])=>{cityCatalog[name].tags=tags;});
     const preferenceCycles = ['off','prefer','must','avoid'];
     const preferenceLabels = { off:'未选', prefer:'偏好', must:'必有', avoid:'避开' };
     // Temporary product-review fixture. Switch to false when blank-first onboarding resumes.
@@ -212,11 +230,11 @@
         end:'赤壁市 · 咸宁市 · 湖北省',
         must:['东山县 · 漳州市 · 福建省','柳州市 · 广西壮族自治区','恩施市 · 恩施土家族苗族自治州 · 湖北省']
       },
-      answers: { departDate:'2026-09-24',returnDate:'2026-10-05',departTime:'19:00',maxDrive:'6',pace:'balanced',pet:true,ev:true },
-      prefs: { '美食':'prefer','海岛':'prefer','海景':'prefer','人文':'prefer','山景':'prefer' }
+      answers: { departDate:'2026-09-24',returnDate:'2026-10-05',departTime:'19:00',maxDrive:'6',maxDetour:'2',pace:'balanced',pet:true,ev:true,evHighwayRange:'350',lowEffort:false,lowCrowd:false },
+      prefs: { '地方美食':'prefer','海岛':'prefer','沙滩':'prefer','历史街巷':'prefer','山岳':'prefer' }
     };
     const emptyRoute = () => ({ start:'', end:'', must:[] });
-    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:null, ev:null });
+    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', maxDrive:'', maxDetour:'', pace:'', pet:null, ev:null, evHighwayRange:'', lowEffort:false, lowCrowd:false });
     const emptyPrefs = () => Object.fromEntries(preferenceKeys.map(key=>[key,'off']));
 
     const state = {
@@ -261,7 +279,8 @@
       return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
     };
     const frameworkReady = () => Boolean(state.route.start && state.route.end && state.route.must.length && state.answers.departTime && datesReady());
-    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && state.answers.pet!==null && state.answers.ev!==null;
+    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && Number(state.answers.maxDetour) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.ev || Number(state.answers.evHighwayRange)>=100 && Number(state.answers.evHighwayRange)<=1000);
+    const chargeHoursFor = km => state.answers.ev && Number(state.answers.evHighwayRange)>0 ? km/Number(state.answers.evHighwayRange)*.45 : 0;
 
     function roadLeg(from,to){
       const exact=roadLegs[`${from.name}>${to.name}`];
@@ -280,7 +299,7 @@
         else {km+=leg.km; driveHours+=leg.hours; if(leg.source==='amap')exactLegs++;}
         legs.push({ from:nodes[i-1].name, to:nodes[i].name, ...leg });
       }
-      return { km:unlocated?null:km, driveHours:unlocated?null:driveHours, chargeHours:unlocated?null:state.answers.ev?km/330*.45:0, source:unlocated?'unlocated':exactLegs===legs.length?'amap':exactLegs?'mixed':'estimate', legs };
+      return { km:unlocated?null:km, driveHours:unlocated?null:driveHours, chargeHours:unlocated?null:chargeHoursFor(km), source:unlocated?'unlocated':exactLegs===legs.length?'amap':exactLegs?'mixed':'estimate', legs };
     }
 
     function candidateScore(c){
@@ -292,12 +311,10 @@
         if (mode === 'avoid') score -= 15;
       });
       if (state.answers.pet && /友好|户外|基地/.test(c.pet)) score += 4;
-      if (state.answers.pet && /不适合|寄养/.test(c.pet)) score -= 7;
+      if (state.answers.pet && /不适合|禁入/.test(c.pet)) score -= 7;
       if (state.answers.ev && /预留|县道|山脚/.test(c.ev)) score -= 3;
-      if (state.prefs['低强度'] === 'must' || state.prefs['低强度'] === 'prefer'){
-        const impact=candidateImpact(c);
-        score-=Math.round(Math.max(0,impact.drive)*2+Math.max(0,impact.km)/80);
-      }
+      const impact=candidateDetour(c);
+      if(Number.isFinite(impact.drive) && Number(state.answers.maxDetour)>0 && impact.drive>Number(state.answers.maxDetour)) score-=18;
       return Math.max(38, Math.min(97, score));
     }
 
@@ -328,6 +345,7 @@
         source:base.source==='amap'&&next.source==='amap'?'amap':'mixed'
       };
     }
+    const candidateDetour = candidate => state.ai.source==='codex' ? {km:candidate.detour,drive:candidate.drive,source:'codex'} : candidateImpact(candidate);
 
     function haversine(a,b){
       if (!a || !b || !Number.isFinite(a.lat) || !Number.isFinite(b.lat)) return null;
@@ -365,7 +383,7 @@
         const from = nodes[i-1], to = nodes[i];
         const leg = roadLeg(from,to);
         const km = leg.km;
-        const charge = state.answers.ev ? km/330*.45 : 0;
+        const charge = chargeHoursFor(km);
         const drive = Math.max(.5, leg.hours + charge);
         const profile = to.candidate || coordFor(to.name) || { stay:1, highlight:'按兴趣生成当地核心体验' };
         const stay = to.name === state.route.end && i === nodes.length-1 ? 0 : (profile.stay ?? 1);
@@ -430,15 +448,19 @@
     }
 
     function preferenceEditor(){
-      return `<div><span class="kicker">EXPERIENCE KEYWORDS</span><div class="pref-grid">${preferenceKeys.map(key => { const mode=state.prefs[key]||'off'; return `<button type="button" class="pref" data-pref="${esc(key)}" data-state="${mode}" data-state-label="${preferenceLabels[mode]}">${esc(key)}</button>`; }).join('')}</div><p class="helper">点击循环：未选 → 偏好 → 必有 → 避开。它会立即影响候选排序。</p></div>`;
+      const groups=Object.entries(tagGroups).map(([group,keys])=>`<section class="pref-group"><h3>${esc(group)}</h3><div class="pref-grid">${keys.map(key=>{const mode=state.prefs[key]||'off';return `<button type="button" class="pref" data-pref="${esc(key)}" data-state="${mode}" data-state-label="${preferenceLabels[mode]}">${esc(key)}</button>`;}).join('')}</div></section>`).join('');
+      return `<div><span class="kicker">目的地标签</span><div class="pref-groups">${groups}</div><p class="helper">一个城市可有多个标签。点击循环：未选 → 偏好 → 必有 → 避开；这里仅描述想体验什么，宠物、驾驶和补能条件单独判断。</p></div>`;
     }
 
     function questions(){
       const toggle=(key,label)=>`<button type="button" class="toggle ${state.answers[key]===true?'is-on':state.answers[key]===false?'is-off':''}" data-toggle="${key}"><span>${label}<small>${state.answers[key]===null?'未选':state.answers[key]?'是':'否'}</small></span><i></i></button>`;
       return `<div class="question-grid">
         <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select></label>
+        <label class="question"><span>可接受的额外绕路</span><select data-answer="maxDetour"><option value="" ${state.answers.maxDetour===''?'selected':''}>请选择</option><option value="1" ${state.answers.maxDetour==='1'?'selected':''}>最多 1 小时</option><option value="2" ${state.answers.maxDetour==='2'?'selected':''}>最多 2 小时</option><option value="4" ${state.answers.maxDetour==='4'?'selected':''}>最多 4 小时</option><option value="999" ${state.answers.maxDetour==='999'?'selected':''}>不设上限</option></select><small>对比不去该候选点的路线，计算增加的驾驶与补能时间。</small></label>
         <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select></label>
         <div class="question">${toggle('pet','带宠物')}${toggle('ev','纯电车')}<p class="helper">点击选择：未选 → 是 → 否。</p></div>
+        <div class="question"><span>可选的游玩限制</span><div class="pref-grid"><button type="button" class="pref" data-filter="lowEffort" data-state="${state.answers.lowEffort?'prefer':'off'}" data-state-label="${state.answers.lowEffort?'已选':'未选'}">少爬山少步行</button><button type="button" class="pref" data-filter="lowCrowd" data-state="${state.answers.lowCrowd?'prefer':'off'}" data-state-label="${state.answers.lowCrowd?'已选':'未选'}">尽量避开拥挤</button></div><small>这是行程限制，不是城市标签。</small></div>
+        ${state.answers.ev?`<label class="question"><span>实际高速续航</span><input type="number" min="100" max="1000" step="10" inputmode="numeric" placeholder="例如 350" value="${esc(state.answers.evHighwayRange)}" data-answer="evHighwayRange"><small>填你日常高速能稳定跑到的公里数，不是车辆标称续航；只用于补能粗估。</small></label>`:''}
       </div>`;
     }
 
@@ -454,7 +476,7 @@
 
     function routeString(){
       const nodes=routeNodes();
-      return `<div class="route-string">${nodes.length?nodes.map((node,index) => `${index?'<span class="route-arrow">→</span>':''}<span class="route-node ${node.kind}">${node.kind==='hard'?'◆':'＋'} ${esc(node.name)}</span>`).join(''):'<span class="helper">选择出发地、必去点与终点后，这里会显示顺序。</span>'}</div>`;
+      return `<div class="route-string">${nodes.length?nodes.map((node,index) => `${index?'<span class="route-arrow">→</span>':''}<span class="route-node ${node.kind}" ${node.tags?.length?`title="体验标签：${esc(node.tags.join('、'))}"`:''}>${node.kind==='hard'?'◆':'＋'} ${esc(node.name)}</span>`).join(''):'<span class="helper">选择出发地、必去点与终点后，这里会显示顺序。</span>'}</div>`;
     }
 
     function mapView(){
@@ -493,14 +515,15 @@
 
     function candidateCard(c, focus=false){
       const status=statusOf(c.id), score=candidateScore(c);
-      const impact=state.ai.source==='codex'?{km:c.detour,drive:c.drive,source:'codex'}:candidateImpact(c);
+      const impact=candidateDetour(c);
       const sign=value=>value>0?'+':'';
       const sourceLabel=impact.source==='codex'?'Codex 核验增量':impact.source==='amap'?'高德道路增量':impact.source==='unlocated'?'地点待定位':'粗略估算';
       return `<article class="candidate ${focus?'focus-card':''}" data-status="${status}">
         <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='backup'?'备选，不计入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${score}<small>/100</small></div></div>
         <p class="candidate-reason"><b>为什么出现：</b>${esc(c.reason)}</p>
         <div class="candidate-facts"><div class="fact"><b>${impact.km===null?'待核验':`${sign(impact.km)}${impact.km} km`}</b>${sourceLabel}</div><div class="fact"><b>${impact.drive===null?'待核验':`${sign(impact.drive)}${impact.drive} h`}</b>额外驾驶${state.answers.ev?'＋补能':''}</div><div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
-        <div class="tags">${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}<span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>
+        ${impact.drive!==null && Number(state.answers.maxDetour)<999 && impact.drive>Number(state.answers.maxDetour)?`<p class="candidate-warning">比你设定的绕路上限多 ${+(impact.drive-Number(state.answers.maxDetour)).toFixed(1)} 小时</p>`:''}
+        <div class="tags"><span class="tag">城市标签</span>${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div><div class="tags"><span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>
         <div class="candidate-actions"><button type="button" class="status-btn ${status==='selected'?'is-active':''}" data-candidate="${c.id}" data-status-choice="selected">加入路线</button><button type="button" class="status-btn ${status==='backup'?'is-active':''}" data-candidate="${c.id}" data-status-choice="backup">放入备选</button><button type="button" class="status-btn ${status==='excluded'?'is-active':''}" data-candidate="${c.id}" data-status-choice="excluded">排除</button></div>
       </article>`;
     }
@@ -529,8 +552,9 @@
       const foot=[
         datesReady()?`${state.answers.departDate}—${state.answers.returnDate}`:'日期待填写',
         state.answers.maxDrive?`舒适驾驶 ≤ ${state.answers.maxDrive}h/天`:'驾驶上限待选择',
+        state.answers.maxDetour?`额外绕路 ${state.answers.maxDetour==='999'?'不限':`≤ ${state.answers.maxDetour}h`}`:'绕路上限待选择',
         state.stage>=3?`候选已处理 ${reviewed}/${candidates.length}`:'候选尚未开始',
-        state.answers.ev?'纯电车':null,
+        state.answers.ev?`纯电高速续航 ${state.answers.evHighwayRange||'待填'} km`:null,
         state.answers.pet?'带宠物':null,
         state.stage>=2&&state.answers.ev===null?'车辆类型待选':null,
         state.stage>=2&&state.answers.pet===null?'宠物同行待选':null,
@@ -627,14 +651,14 @@
         detour:Number(candidate.detour)||0,
         drive:Number(candidate.drive)||0,
         stay:Number(candidate.stay)||1,
-        tags:Array.isArray(candidate.tags)?candidate.tags:[]
+        tags:Array.isArray(candidate.tags)?[...new Set(candidate.tags.filter(tag=>preferenceKeys.includes(tag)))]:[]
       }));
       state.candidateStatus={};
       candidates.forEach(candidate=>{
         state.candidateStatus[candidate.id]='none';
         cityCatalog[candidate.name]={
           lon:Number(candidate.lon),lat:Number(candidate.lat),stay:candidate.stay,
-          highlight:candidate.highlight||candidate.reason
+          highlight:candidate.highlight||candidate.reason,tags:candidate.tags
         };
       });
       state.focusCandidate=0;
@@ -649,7 +673,7 @@
         state.stage=1;render();toast('先完成第一步的地点与时间。');return;
       }
       if(!planningReady()){
-        state.stage=2;render();toast('请选驾驶上限、是否带宠物与是否开电车。');return;
+        state.stage=2;render();toast('请补齐驾驶、绕路、宠物与车辆条件；纯电车还需填写高速实际续航。');return;
       }
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       setAiState('loading','请求已提交；当前 Codex 会话将领取任务，过程会显示在 Codex 对话中。');
@@ -744,7 +768,7 @@
       if(nextStage >= 3 && !planningReady()){
         state.stage=2;
         render();
-        toast('请选驾驶上限、是否带宠物与是否开电车。');
+        toast('请补齐驾驶、绕路、宠物与车辆条件；纯电车还需填写高速实际续航。');
         return false;
       }
       state.stage=nextStage;
@@ -833,7 +857,8 @@
     document.addEventListener('click',event=>{
       const stageButton=event.target.closest('[data-stage]'); if(stageButton){const nextStage=Number(stageButton.dataset.stage);if(nextStage===4){requestCodexPlan();return;}goToStage(nextStage);return;}
       const prefButton=event.target.closest('[data-pref]'); if(prefButton){const key=prefButton.dataset.pref;const index=preferenceCycles.indexOf(state.prefs[key]||'off');state.prefs[key]=preferenceCycles[(index+1)%preferenceCycles.length];render();return;}
-      const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;render();return;}
+      const filterButton=event.target.closest('[data-filter]'); if(filterButton){const key=filterButton.dataset.filter;state.answers[key]=!state.answers[key];render();return;}
+      const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;if(key==='ev'&&state.answers.ev!==true)state.answers.evHighwayRange='';render();return;}
       const candidateButton=event.target.closest('[data-candidate]'); if(candidateButton){updateCandidate(candidateButton.dataset.candidate,candidateButton.dataset.statusChoice);return;}
       const action=event.target.closest('[data-action]')?.dataset.action;
       if(action==='toggle-debug'){toggleDebugExample();return;}

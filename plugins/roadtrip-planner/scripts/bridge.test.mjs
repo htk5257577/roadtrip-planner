@@ -138,7 +138,7 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.equal((await json(base, `/api/jobs/${candidateJob.id}`)).data.job.message, "正在比较绕路成本");
     const candidate = {
       id: "sample", name: "样例", segment: "杭州 → 恩施", after: "杭州", order: 1,
-      detour: 12, drive: 0.3, stay: 1, tags: ["美食"], pet: "需核验", ev: "有补能",
+      detour: 12, drive: 0.3, stay: 1, tags: ["地方美食", "历史街巷"], pet: "需核验", ev: "有补能",
       reason: "供测试", lon: 110, lat: 30, highlight: "样例体验"
     };
     const candidates = { summary: "测试候选", sourceNotes: [], candidates: [1, 2, 3].map((number) => ({ ...candidate, id: `sample-${number}` })) };
