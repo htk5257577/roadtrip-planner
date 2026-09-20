@@ -73,6 +73,7 @@
     .question{padding:10px;border-radius:13px;background:var(--paper);border:1px solid rgba(24,59,54,.08)}
     .question label{display:block;margin-bottom:7px;font-size:10px;font-weight:900}.question select,.question input{width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff}
     .toggle{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;padding:8px 0;color:var(--ink);background:transparent;font-size:11px;font-weight:800;text-align:left}
+    .toggle small{margin-left:7px;padding:3px 6px;border-radius:99px;color:var(--muted);background:#fff;font-size:8px}.toggle.is-on small{color:white;background:var(--pine)}.toggle.is-off small{color:var(--muted);background:#dedbd2}
     .toggle i{position:relative;width:34px;height:20px;border-radius:99px;background:#c7c7c0;font-style:normal;transition:.2s}.toggle i:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:white;transition:.2s}
     .toggle.is-on i{background:var(--pine)}.toggle.is-on i:after{transform:translateX(14px)}
     .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
@@ -210,7 +211,7 @@
       stage: 1,
       route: { start:'', end:'', must:[] },
       prefs: { '美食':'off','海岛':'off','海景':'off','人文':'off','山景':'off','峡谷':'off','少数民族':'off','自驾公路':'off','宠物友好':'off','低强度':'off','低人流':'off' },
-      answers: { departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:false, ev:false, boarding:false },
+      answers: { departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:null, ev:null, boarding:null },
       candidateStatus: {},
       focusCandidate: 0,
       ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', reportUrl:'', backendReady:false, ended:false },
@@ -241,7 +242,7 @@
       return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
     };
     const frameworkReady = () => Boolean(state.route.start && state.route.end && state.route.must.length && state.answers.departTime && datesReady());
-    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0;
+    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.pet || state.answers.boarding!==null);
 
     function roadLeg(from,to){
       const exact=roadLegs[`${from.name}>${to.name}`];
@@ -414,16 +415,17 @@
     }
 
     function questions(){
+      const toggle=(key,label)=>`<button type="button" class="toggle ${state.answers[key]===true?'is-on':state.answers[key]===false?'is-off':''}" data-toggle="${key}"><span>${label}<small>${state.answers[key]===null?'未选':state.answers[key]?'是':'否'}</small></span><i></i></button>`;
       return `<div class="question-grid">
         <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select></label>
         <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select></label>
-        <div class="question"><button type="button" class="toggle ${state.answers.pet?'is-on':''}" data-toggle="pet"><span>带宠物</span><i></i></button><button type="button" class="toggle ${state.answers.ev?'is-on':''}" data-toggle="ev"><span>纯电车</span><i></i></button><button type="button" class="toggle ${state.answers.boarding?'is-on':''}" data-toggle="boarding"><span>可短时寄养</span><i></i></button></div>
+        <div class="question">${toggle('pet','带宠物')}${toggle('ev','纯电车')}${state.answers.pet?toggle('boarding','可短时寄养'):''}<p class="helper">点击选择：未选 → 是 → 否。</p></div>
       </div>`;
     }
 
     function metrics(){
       if (state.stage === 1) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b class="is-pending">尚未选择</b><span>沿途候选点</span></div><div class="metric"><b class="is-pending">暂不估算</b><span>最终路线与里程</span></div><div class="metric"><b class="is-pending">${datesReady()?`${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1} 天`:'待填写'}</b><span>可用旅行时间</span></div></div>`;
-      if (!planningReady()) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b class="is-pending">待填写</b><span>出发与返程日期</span></div><div class="metric"><b class="is-pending">待选择</b><span>单日舒适驾驶</span></div><div class="metric"><b class="is-pending">尚未计算</b><span>驾驶压力</span></div></div>`;
+      if (!planningReady()) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b>${datesReady()?Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1:'—'}</b><span>可用旅行天数</span></div><div class="metric"><b class="is-pending">待确认</b><span>驾驶与同行约束</span></div><div class="metric"><b class="is-pending">尚未计算</b><span>驾驶压力</span></div></div>`;
       const stats = routeStats();
       if(stats.km===null) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b>${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天</b><span>可用旅行时间</span></div><div class="metric"><b class="is-pending">待核验</b><span>路线里程</span></div><div class="metric"><b class="is-pending">待核验</b><span>驾驶压力</span></div></div>`;
       const scope = selectedCandidates().length ? '当前路线' : '仅必去点基线';
@@ -496,6 +498,8 @@
         state.stage>=3?`候选已处理 ${reviewed}/${candidates.length}`:'候选尚未开始',
         state.answers.ev?'纯电车':null,
         state.answers.pet?'带宠物':null,
+        state.stage>=2&&state.answers.ev===null?'车辆类型待选':null,
+        state.stage>=2&&state.answers.pet===null?'宠物同行待选':null,
         located?(stats.source==='amap'?`${roadSnapshot.provider} · ${roadSnapshot.capturedAt}`:'路段为粗略估算，需 Codex 核验'):null
       ].filter(Boolean).map(item=>`<span>${esc(item)}</span>`).join('');
       return `<section class="panel global-state"><div class="global-state-head"><div><span class="kicker" style="color:#f3bd4d">全局状态</span><h3>${stageName}</h3><p>只展示当前已经能够确定或计算的结果</p></div><span class="phase-chip">STEP ${state.stage} / 4</span></div><div class="global-state-grid">${cells}</div><div class="global-state-foot">${foot}</div></section>`;
@@ -610,7 +614,7 @@
         state.stage=1;render();toast('先完成第一步的地点与时间。');return;
       }
       if(!planningReady()){
-        state.stage=2;render();toast('先选择单日舒适驾驶时间。');return;
+        state.stage=2;render();toast('请选驾驶上限、是否带宠物与是否开电车；带宠物时再选能否寄养。');return;
       }
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       setAiState('loading','请求已提交；当前 Codex 会话将领取任务，过程会显示在 Codex 对话中。');
@@ -705,7 +709,7 @@
       if(nextStage >= 3 && !planningReady()){
         state.stage=2;
         render();
-        toast('先选择单日舒适驾驶时间。');
+        toast('请选驾驶上限、是否带宠物与是否开电车；带宠物时再选能否寄养。');
         return false;
       }
       state.stage=nextStage;
@@ -784,7 +788,7 @@
     document.addEventListener('click',event=>{
       const stageButton=event.target.closest('[data-stage]'); if(stageButton){const nextStage=Number(stageButton.dataset.stage);if(nextStage===4){requestCodexPlan();return;}goToStage(nextStage);return;}
       const prefButton=event.target.closest('[data-pref]'); if(prefButton){const key=prefButton.dataset.pref;const index=preferenceCycles.indexOf(state.prefs[key]||'off');state.prefs[key]=preferenceCycles[(index+1)%preferenceCycles.length];render();return;}
-      const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=!state.answers[key];render();return;}
+      const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;if(key==='pet'&&state.answers.pet!==true)state.answers.boarding=null;render();return;}
       const candidateButton=event.target.closest('[data-candidate]'); if(candidateButton){updateCandidate(candidateButton.dataset.candidate,candidateButton.dataset.statusChoice);return;}
       const action=event.target.closest('[data-action]')?.dataset.action;
       if(action==='add-stop'){addStop();return;}
