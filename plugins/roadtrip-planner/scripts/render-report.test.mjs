@@ -25,3 +25,11 @@ test("report data must provide complete daily content", () => {
   assert.throws(() => renderRoadbook({ ...example, dayBalance: [] }), /dayBalance/);
   assert.throws(() => renderRoadbook({ ...example, days: [{ ...example.days[0], slots: [] }] }), /每天必须有时间块/);
 });
+
+test("final report title and hero route show places without planning-status labels", () => {
+  const marked = { ...example, title: "杭州〔已选〕自驾", hero: { ...example.hero, title: "去东山岛〔必去〕", route: "杭州 → 东山岛〔必去〕 → 恩施【已选】 → 杭州" } };
+  const html = renderRoadbook(marked);
+  assert.match(html, /<title>杭州自驾<\/title>/);
+  assert.match(html, /<h1>去东山岛<\/h1>/);
+  assert.match(html, /<p class="route-string">杭州 → 东山岛 → 恩施 → 杭州<\/p>/);
+});

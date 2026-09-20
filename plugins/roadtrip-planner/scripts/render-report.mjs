@@ -9,6 +9,7 @@ const template = readFileSync(join(pluginRoot, "assets/roadbook-template.html"),
 const css = readFileSync(join(pluginRoot, "assets/south-line.css"), "utf8");
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const text = value => esc(value).replace(/\n/g, "<br>");
+const cleanHeroLabel = value => String(value ?? "").replace(/\s*[〔【（(]\s*(?:必去|已选|已选定|已加入)\s*[〕】）)]/g, "").trim();
 const array = value => Array.isArray(value) ? value : [];
 const finite = value => Number.isFinite(Number(value)) ? Number(value) : 0;
 const safeUrl = value => /^(https?:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(String(value ?? "")) ? String(value) : "";
@@ -91,8 +92,8 @@ export function renderRoadbook(trip) {
     return `<article id="day-${index + 1}" class="day card"><div class="day-head"><div class="day-no">${String(index + 1).padStart(2, "0")}</div><div class="day-title"><small>${esc(day.date)} · ${esc(day.weekday)}</small><h3>${esc(day.theme)}</h3></div><button class="toggle-day" aria-label="折叠当日" aria-expanded="true">−</button></div><div class="day-meta"><div class="meta-chip"><b>路线</b><br>${esc(day.drive.route)}</div><div class="meta-chip"><b>里程</b><br>${esc(day.drive.distance)}</div><div class="meta-chip"><b>时间</b><br>${esc(day.drive.duration)}</div><div class="meta-chip dog-chip"><b>🐾 ${esc(day.dog.status)}</b><br>${esc(day.dog.note)}</div></div>${flow}${array(day.tips).map(tip => `<p class="day-tips">${text(tip)}</p>`).join("")}<div class="day-body"><div class="slots">${slots}</div>${array(day.alternatives).map(item => `<div class="alternative"><b>${esc(item.label)}</b> · ${text(item.summary)}</div>`).join("")}${dining ? `<div class="day-extras-head"><b>当天吃什么</b><span>就近穿插，不额外占一段行程</span></div><div class="dining">${dining}</div>` : ""}</div></article>`;
   }).join("");
   const slots = {
-    DOCUMENT_TITLE: esc(trip.title), SOUTH_LINE_CSS: css, HERO_STYLE: safeUrl(hero.imageUrl) ? `style="background-image:linear-gradient(180deg,rgba(5,31,30,.18),rgba(6,29,27,.95)),url('${esc(hero.imageUrl)}')"` : "",
-    EYEBROW: esc(hero.eyebrow || "ROAD BOOK"), BADGE: esc(hero.badge || meta.party || "自驾路书"), HERO_TITLE: text(hero.title || trip.title), HERO_LEDE: text(hero.lede || meta.pace), ROUTE: text(hero.route || trip.mapStops.map(point => point.name).join(" → ")),
+    DOCUMENT_TITLE: esc(cleanHeroLabel(trip.title)), SOUTH_LINE_CSS: css, HERO_STYLE: safeUrl(hero.imageUrl) ? `style="background-image:linear-gradient(180deg,rgba(5,31,30,.18),rgba(6,29,27,.95)),url('${esc(hero.imageUrl)}')"` : "",
+    EYEBROW: esc(hero.eyebrow || "ROAD BOOK"), BADGE: esc(hero.badge || meta.party || "自驾路书"), HERO_TITLE: text(cleanHeroLabel(hero.title || trip.title)), HERO_LEDE: text(hero.lede || meta.pace), ROUTE: text(cleanHeroLabel(hero.route || trip.mapStops.map(point => point.name).join(" → "))),
     HERO_STATS: stats.map(stat => `<div class="stat"><b>${esc(stat.value)}</b><span>${esc(stat.label)}</span></div>`).join(""), DAY_MARK: esc(trip.days.length),
     CHECKLIST: `<ul class="pretrip-todo">${reminders}</ul>`, BRIEF_NOTE: esc(pre.note || "跨地区旅行，临行再核天气和开放信息。"), PRETRIP: preCards,
     STOPS: stops, ROUTE_DECISION: `<b>${esc(trip.routeDecision.title)}</b><p>${text(trip.routeDecision.text)}</p>`, HEATMAP: heatmap, ROUTE_LEDGER: ledger, TRANSPORT: transport, HOTELS: hotels,

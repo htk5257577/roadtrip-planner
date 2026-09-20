@@ -88,7 +88,7 @@ The bundled renderer uses the south-line report's actual layout, not just a simi
 8. pet, EV, weather, crowd, cancellation and other trip rules;
 9. source links and freshness notes, clearly separating verified facts from estimates.
 
-Keep the final plan concise, scannable, and free of planning-history chatter. Make exact versus estimated numbers visually distinct.
+Keep the final plan concise, scannable, and free of planning-history chatter. In the final report's title and hero route, display place names without `必去` or `已选` status labels; keep those hard constraints in the planning data. Make exact versus estimated numbers visually distinct.
 
 ## Bundled interface
 
