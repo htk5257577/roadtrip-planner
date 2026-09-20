@@ -122,11 +122,13 @@ async function mapPreview(places) {
   const xs = projected.map(point => point.x), ys = projected.map(point => point.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
   const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
-  const span = Math.max((maxX - minX) * 256 / 660, (maxY - minY) * 256 / 500);
+  // AMap static maps advance in 512px world tiles per zoom level. Using the
+  // usual 256px slippy-map scale puts every overlay point too near the center.
+  const span = Math.max((maxX - minX) * 512 / 660, (maxY - minY) * 512 / 500);
   const zoom = points.length === 1 ? 8 : Math.max(3, Math.min(14, Math.floor(Math.log2(1 / Math.max(span, 1e-9)))));
   const centerLon = centerX * 360 - 180;
   const centerLat = Math.atan(Math.sinh(Math.PI * (1 - 2 * centerY))) * 180 / Math.PI;
-  const scale = 256 * 2 ** zoom;
+  const scale = 512 * 2 ** zoom;
   let pointIndex = 0;
   const plotted = located.map(point => {
     if (!Number.isFinite(point.lon)) return point;

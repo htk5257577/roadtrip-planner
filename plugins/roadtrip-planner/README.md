@@ -1,6 +1,6 @@
 # Roadtrip Planner for Codex
 
-A Codex-native guided road-trip planner. The first page starts blank and collects departure, destination, ordered must-go places, dates, and departure time. Its bundled searchable location snapshot covers province, prefecture, and county-level divisions; custom scenic spots can also be entered. The webpage then collects preferences, pet and EV constraints; Codex performs the two steps that genuinely require reasoning:
+A Codex-native guided road-trip planner. The first page temporarily opens with a labeled sample route and dates for product review; click “清空示例” to start blank. It collects departure, destination, ordered must-go places, dates, and departure time. Its bundled searchable location snapshot covers province, prefecture, and county-level divisions; custom scenic spots can also be entered. The webpage then collects preferences, pet and EV constraints; Codex performs the two steps that genuinely require reasoning:
 
 1. research and rank optional stops;
 2. generate the final single-file HTML roadbook.

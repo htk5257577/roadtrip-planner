@@ -114,7 +114,7 @@
     .global-state{overflow:hidden;padding:0!important;background:var(--pine-2)!important;color:#edf4f0;border-color:rgba(255,255,255,.08)}.global-state-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:15px 15px 12px;border-bottom:1px solid rgba(255,255,255,.1)}.global-state-head h3{margin:3px 0 0;color:var(--sun);font:700 18px var(--serif)}.global-state-head p{margin:4px 0 0;color:#91aea6;font-size:8px}.phase-chip{padding:6px 8px;border-radius:99px;color:#d7e7e1;background:rgba(255,255,255,.08);font:900 8px Georgia,serif}.global-state-grid{display:grid;grid-template-columns:1fr 1fr}.global-cell{min-width:0;padding:12px 14px;border-right:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}.global-cell:nth-child(2n){border-right:0}.global-cell b{display:block;color:#fff;font:900 17px/1 Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.global-cell b.pending{color:#87a59d;font:900 12px/1 var(--sans)}.global-cell span{display:block;margin-top:5px;color:#8fa9a2;font-size:8px}.global-state-foot{display:flex;flex-wrap:wrap;gap:6px;padding:11px 14px}.global-state-foot span{padding:5px 7px;border-radius:99px;color:#bad0c9;background:rgba(255,255,255,.07);font-size:8px}
     .guide-route-builder{display:grid;grid-template-columns:1fr 1fr;gap:18px}.guide-route-builder .route-editor{padding-right:18px;border-right:1px solid var(--line)}
     .guide-candidate-focus{display:grid;grid-template-columns:45px minmax(0,1fr) 45px;gap:12px;align-items:center}.focus-arrow{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:50%;color:var(--ink);background:white}.focus-card{padding:22px;border-radius:24px;background:linear-gradient(150deg,#fffdf8,#ece1cd);border:1px solid var(--line)}.focus-card .candidate-title h3{font-size:28px}.focus-card .candidate-reason{font-size:12px}.focus-count{text-align:center;margin-top:12px;color:var(--muted);font-size:10px}
-    .guide .pref{padding:10px 12px}.guide .question{padding:14px}.guide-next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}.guide-next p{margin:0;color:var(--muted);font-size:10px}
+    .guide .pref{padding:10px 12px}.guide .question{padding:14px}.debug-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0;padding:10px 12px;border:1px solid #e4c791;border-radius:12px;background:#fff6e5;color:#755633;font-size:10px;line-height:1.5}.debug-notice button{flex:0 0 auto;border:0;padding:6px 9px;border-radius:8px;background:#eed6a9;color:#564326;font:800 9px var(--sans);cursor:pointer}.guide-next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}.guide-next p{margin:0;color:var(--muted);font-size:10px}
 
     /* Fixed report preview */
     .generated{padding:0!important;overflow:hidden}.report-hero{position:relative;overflow:hidden;padding:30px;color:white;background:linear-gradient(145deg,#0e302b,#246456)}.report-hero:after{content:"ROUTE";position:absolute;right:-12px;bottom:-25px;color:rgba(255,255,255,.05);font:900 96px Georgia,serif}.report-hero h2{position:relative;max-width:650px;margin:6px 0 10px;font:700 38px/1.05 var(--serif)}.report-hero p{position:relative;max-width:750px;margin:0;color:#cbe0d8;font-size:11px;line-height:1.7}.report-actions{position:relative;display:flex;gap:8px;margin-top:17px}.report-body{padding:20px}.report-body .metrics{margin-bottom:16px}.report-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.5fr);gap:16px}.day-list{display:grid;gap:8px}.day-row{display:grid;grid-template-columns:55px minmax(140px,.8fr) minmax(220px,1.3fr) 170px;align-items:center;gap:9px;padding:11px;border:1px solid var(--line);border-radius:14px;background:#fffdf8}.day-date{font:900 11px Georgia,serif;color:var(--red)}.day-title b{font-size:11px}.day-title small{display:block;margin-top:3px;color:var(--muted);font-size:8px}.day-plan{font-size:9px;line-height:1.55;color:var(--muted)}.day-bars{display:grid;gap:5px}.bar{display:grid;grid-template-columns:34px 1fr 30px;gap:5px;align-items:center;color:var(--muted);font-size:7px}.bar-track{height:6px;border-radius:99px;background:var(--paper-2);overflow:hidden}.bar-fill{height:100%;border-radius:99px}.bar-fill.drive{background:var(--red)}.bar-fill.play{background:var(--sky)}
@@ -204,12 +204,27 @@
     const preferenceKeys = ['美食','海岛','海景','人文','山景','峡谷','少数民族','自驾公路','宠物友好','低强度','低人流'];
     const preferenceCycles = ['off','prefer','must','avoid'];
     const preferenceLabels = { off:'未选', prefer:'偏好', must:'必有', avoid:'避开' };
+    // Temporary product-review fixture. Switch to false when blank-first onboarding resumes.
+    const DEBUG_PREFILL = true;
+    const debugExample = {
+      route: {
+        start:'杭州市 · 浙江省',
+        end:'赤壁市 · 咸宁市 · 湖北省',
+        must:['东山县 · 漳州市 · 福建省','柳州市 · 广西壮族自治区','恩施市 · 恩施土家族苗族自治州 · 湖北省']
+      },
+      answers: { departDate:'2026-09-24',returnDate:'2026-10-05',departTime:'19:00',maxDrive:'6',pace:'balanced',pet:true,ev:true,boarding:true },
+      prefs: { '美食':'prefer','海岛':'prefer','海景':'prefer','人文':'prefer','山景':'prefer' }
+    };
+    const emptyRoute = () => ({ start:'', end:'', must:[] });
+    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:null, ev:null, boarding:null });
+    const emptyPrefs = () => Object.fromEntries(preferenceKeys.map(key=>[key,'off']));
 
     const state = {
       stage: 1,
-      route: { start:'', end:'', must:[] },
-      prefs: { '美食':'off','海岛':'off','海景':'off','人文':'off','山景':'off','峡谷':'off','少数民族':'off','自驾公路':'off','宠物友好':'off','低强度':'off','低人流':'off' },
-      answers: { departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:null, ev:null, boarding:null },
+      route: DEBUG_PREFILL ? structuredClone(debugExample.route) : emptyRoute(),
+      prefs: { ...emptyPrefs(), ...(DEBUG_PREFILL?debugExample.prefs:{}) },
+      answers: DEBUG_PREFILL ? { ...debugExample.answers } : emptyAnswers(),
+      debugSample: DEBUG_PREFILL,
       candidateStatus: {},
       focusCandidate: 0,
       ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', reportUrl:'', backendReady:false, ended:false },
@@ -445,13 +460,13 @@
     function mapView(){
       const places=mapPlaces();
       const preview=mapPreviews.get(JSON.stringify(places));
-      const pointRows=(preview?.points||places).map((point,index)=>`<div class="map-point ${point.error?'is-missing':''}"><i>${point.error?'?':index+1}</i><span>${esc(point.name)}${point.error?` · ${esc(point.error)}`:''}</span></div>`).join('');
+      const pointRows=(preview?.points||places).map((point,index)=>`<div class="map-point ${point.error?'is-missing':''}"><i>${point.error?'?':index+1}</i><span>${esc(point.name)}${point.error?` · ${esc(point.error)}`:point.verified===false?' · 地名匹配，待核验':''}</span></div>`).join('');
       const points=(preview?.points||[]).filter(point=>Number.isFinite(point.x)&&Number.isFinite(point.y));
       const path=points.map(point=>`${point.x},${point.y}`).join(' ');
       const markers=points.map(point=>`<g transform="translate(${point.x} ${point.y})"><circle r="16" fill="#e65c3d" stroke="#fffdf6" stroke-width="4"/><text text-anchor="middle" y="4" fill="#fff" font-size="12" font-weight="900">${(preview.points.indexOf(point)+1)}</text></g>`).join('');
       const overlay=`<svg viewBox="0 0 760 600" aria-hidden="true">${points.length>1?`<polyline points="${path}" fill="none" stroke="#fffdf6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${path}" fill="none" stroke="#e65c3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`:''}${markers}</svg>`;
       const canvas=preview?.imageUrl?`<img src="${esc(preview.imageUrl)}" alt="高德地图：${esc(places.map(place=>place.name).join(' → '))}" loading="eager">${overlay}`:`<div class="map-placeholder"><b>${places.length?'地图正在定位':'路线从这里开始'}</b>${preview?.error?esc(preview.error):places.length?'正在从高德加载已选地点和真实底图…':'选定出发地、终点或必去点后，这里会显示地图。'}</div>`;
-      return `<div class="panel map-card"><div class="map-canvas ${preview?.imageUrl?'has-map':''}">${canvas}</div>${places.length?`<div class="map-points">${pointRows}</div><div class="map-caption">高德底图 · 数字对应已定位站点；红线只表示途经顺序，不是实际驾车道路。</div>`:''}</div>`;
+      return `<div class="panel map-card"><div class="map-canvas ${preview?.imageUrl?'has-map':''}">${canvas}</div>${places.length?`<div class="map-points">${pointRows}</div><div class="map-caption">高德底图 · 县市点表示行政地名位置，不是景区入口；红线仅表示途经顺序，不是实际驾车道路。</div>`:''}</div>`;
     }
 
     async function refreshMapPreview(){
@@ -532,7 +547,7 @@
     }
 
     function guideContent(){
-      if(state.stage===1) return `<div class="panel-head"><div><span class="kicker">基础行程</span><h2>先把地点和时间定下来。</h2><p>这里不预设任何目的地。出发地、终点、必去点和日期齐了，才有判断沿途值得停哪里的依据。</p></div></div>${routeEditor()}${timeEditor()}<div class="guide-next"><p>下一步再选节奏、驾驶上限与旅行偏好。</p><button class="primary" type="button" data-stage="2">继续：旅行偏好 →</button></div>`;
+      if(state.stage===1) return `<div class="panel-head"><div><span class="kicker">基础行程</span><h2>先把地点和时间定下来。</h2><p>出发地、终点、必去点和日期齐了，才有判断沿途值得停哪里的依据。</p></div></div><div class="debug-notice"><span>${state.debugSample?'当前填的是调试示例，可直接修改地点与日期。':'当前为空白行程，可重新填入调试示例。'}</span><button type="button" data-action="toggle-debug">${state.debugSample?'清空示例':'填入示例'}</button></div>${routeEditor()}${timeEditor()}<div class="guide-next"><p>下一步再选节奏、驾驶上限与旅行偏好。</p><button class="primary" type="button" data-stage="2">继续：旅行偏好 →</button></div>`;
       if(state.stage===2) return `<div class="panel-head"><div><span class="kicker">旅行偏好</span><h2>哪些条件会改变路线？</h2><p>告诉 Codex 你的驾驶节奏、同行约束和想要的体验。</p></div></div>${questions()}<div style="margin-top:20px">${preferenceEditor()}</div><div class="guide-next"><button class="ghost" type="button" data-stage="1">← 修改基础行程</button><button class="primary" type="button" data-action="ai-candidates" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在规划…':'让 Codex 生成沿途候选 →'}</button></div>`;
       if(state.stage===3){ const sorted=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a)); const index=Math.max(0,Math.min(state.focusCandidate,sorted.length-1)); const c=sorted[index]; if(!c) return `<div class="panel-head"><div><h2>候选点还没生成。</h2><p>完成前两步后，让 Codex 根据你的真实路线生成沿途选择。</p></div></div><button class="primary" type="button" data-action="ai-candidates">生成沿途候选 →</button>`; return `<div class="panel-head"><div><span class="kicker">ONE DECISION AT A TIME</span><h2>这个地方，值不值得拐进去？</h2><p>这些候选来自当前 Codex 会话的规划结果。</p></div><button class="ghost" type="button" data-action="ai-candidates">重新问 Codex</button></div><div class="guide-candidate-focus"><button class="focus-arrow" data-action="focus-prev" aria-label="上一个候选">←</button>${candidateCard(c,true)}<button class="focus-arrow" data-action="focus-next" aria-label="下一个候选">→</button></div><div class="focus-count">${index+1} / ${sorted.length} · 按推荐度排序</div><div class="guide-next"><button class="ghost" type="button" data-stage="2">← 修改条件</button><button class="primary" type="button" data-action="ai-plan" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在生成…':'完成评审，让 Codex 生成完整路书 →'}</button></div>`; }
       return report();
@@ -744,6 +759,16 @@
       state.route.must.push(name); state.stage=1; render(); toast(`${name} 已锁定为必去点。`);
     }
 
+    function toggleDebugExample(){
+      state.debugSample=!state.debugSample;
+      state.route=state.debugSample?structuredClone(debugExample.route):emptyRoute();
+      state.answers=state.debugSample?{...debugExample.answers}:emptyAnswers();
+      state.prefs={...emptyPrefs(),...(state.debugSample?debugExample.prefs:{})};
+      state.candidateStatus={};candidates=[];state.focusCandidate=0;state.stage=1;
+      render();
+      toast(state.debugSample?'调试示例已填入。':'示例已清空。');
+    }
+
     function matchingPlaces(query){
       const q=query.trim().toLocaleLowerCase();
       if(!q) return [];
@@ -811,6 +836,7 @@
       const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;if(key==='pet'&&state.answers.pet!==true)state.answers.boarding=null;render();return;}
       const candidateButton=event.target.closest('[data-candidate]'); if(candidateButton){updateCandidate(candidateButton.dataset.candidate,candidateButton.dataset.statusChoice);return;}
       const action=event.target.closest('[data-action]')?.dataset.action;
+      if(action==='toggle-debug'){toggleDebugExample();return;}
       if(action==='add-stop'){addStop();return;}
       if(action==='remove-stop'){const index=Number(event.target.closest('[data-index]').dataset.index);const removed=state.route.must.splice(index,1)[0];render();toast(`${removed} 已从必去点移除。`);return;}
       if(action==='move-stop'){const el=event.target.closest('[data-index]');const index=Number(el.dataset.index),next=index+Number(el.dataset.dir);if(next>=0&&next<state.route.must.length){[state.route.must[index],state.route.must[next]]=[state.route.must[next],state.route.must[index]];render();}return;}

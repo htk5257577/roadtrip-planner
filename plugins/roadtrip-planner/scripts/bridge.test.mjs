@@ -66,6 +66,9 @@ test("selected cities and counties receive distinct positions on an AMap image",
     }
     if (url.pathname === "/v3/staticmap") {
       assert.equal(url.searchParams.get("size"), "760*600");
+      // AMap static images use 512px world tiles: zoom 6 is the viewport that
+      // contains both fixture cities while matching the overlay's pixel scale.
+      assert.equal(url.searchParams.get("zoom"), "6");
       assert.equal(url.searchParams.get("key"), "test-key");
       res.writeHead(200, { "content-type": "image/png" });
       res.end(Buffer.from("89504e470d0a1a0a", "hex"));
