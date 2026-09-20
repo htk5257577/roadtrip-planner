@@ -14,6 +14,12 @@ test("candidate navigation stays visible on narrow screens", () => {
   assert.doesNotMatch(page, /\.focus-arrow\{display:none\}/);
 });
 
+test("candidate generation buttons use the plain product label", () => {
+  assert.match(page, /state\.stage<3\?'生成沿途候选'/);
+  assert.match(page, /'生成沿途候选 →'/);
+  assert.doesNotMatch(page, /让 Codex 推荐|让 Codex 生成沿途候选/);
+});
+
 test("destination tag heading is not itself an experience tag", () => {
   assert.doesNotMatch(page, /<span class="tag">城市标签<\/span>/);
   assert.match(page, /<span class="tag-label">适合体验<\/span>/);

@@ -1,6 +1,6 @@
 {
   "name": "roadtrip-planner",
-  "version": "0.1.0+codex.20260920100412",
+  "version": "0.1.0+codex.20260920101659",
   "description": "A guided road-trip planner whose page requests are handled by the current Codex conversation, with visible progress and no OpenAI API key.",
   "author": {
     "name": "Roadtrip Planner"
