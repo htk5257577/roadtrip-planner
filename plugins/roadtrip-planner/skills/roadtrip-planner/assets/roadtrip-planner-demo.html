@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Three variants of a road-trip planning workspace, switchable via ?variant=, in one portable prototype. -->
+<!-- Guided road-trip planner. -->
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -23,7 +23,7 @@
     button,input,select{font:inherit}
     button{cursor:pointer}
     button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(35,109,120,.26);outline-offset:2px}
-    .app{min-height:100vh;padding-bottom:96px}
+    .app{min-height:100vh;padding-bottom:32px}
     .topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 22px;color:#fff;background:rgba(13,45,41,.94);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.1)}
     .brand{display:flex;align-items:center;gap:12px;min-width:0}
     .brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:var(--pine-2);background:var(--sun);font:900 18px Georgia,serif;box-shadow:inset 0 -4px 0 rgba(0,0,0,.08)}
@@ -87,7 +87,6 @@
     .route-string{display:flex;align-items:center;gap:6px;padding:12px 0 3px;overflow:auto;scrollbar-width:none}
     .route-node{flex:0 0 auto;padding:7px 9px;border-radius:99px;font-size:9px;font-weight:900;border:1px solid var(--line);background:#fff}.route-node.hard{color:var(--red-dark);border-color:rgba(230,92,61,.28)}.route-node.soft{color:white;background:var(--pine);border-color:var(--pine)}
     .route-arrow{color:#a69b89;font-size:10px}
-    .candidate-list{display:grid;gap:10px}
     .candidate{position:relative;padding:14px;border-radius:17px;border:1px solid var(--line);background:#fffdf8;overflow:hidden}
     .candidate[data-status="selected"]{border-color:rgba(18,63,55,.42);box-shadow:inset 4px 0 0 var(--pine)}
     .candidate[data-status="backup"]{border-color:rgba(243,189,77,.65);box-shadow:inset 4px 0 0 var(--sun)}
@@ -98,11 +97,7 @@
     .candidate-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.fact{padding:7px;border-radius:9px;background:var(--paper);font-size:8px;color:var(--muted)}.fact b{display:block;margin-bottom:2px;color:var(--ink);font-size:10px}
     .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.tag{padding:4px 6px;border-radius:99px;color:var(--blue);background:#e9f2f1;font-size:8px;font-weight:800}
     .candidate-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}.status-btn{padding:8px 6px;color:var(--muted);background:var(--paper);font-size:9px}.status-btn.is-active[data-status-choice="selected"]{color:white;background:var(--pine)}.status-btn.is-active[data-status-choice="backup"]{color:var(--ink);background:var(--sun)}.status-btn.is-active[data-status-choice="excluded"]{color:white;background:#7a706c}
-    .state-summary{padding:14px;border-radius:16px;color:#eaf2ed;background:var(--pine-2)}
-    .state-summary h3{margin:0 0 9px;color:var(--sun);font-family:var(--serif);font-size:16px}.state-summary dl{display:grid;grid-template-columns:60px 1fr;gap:7px 9px;margin:0;font-size:9px;line-height:1.55}.state-summary dt{color:#89aaa0}.state-summary dd{margin:0}
     .ai-note{padding:12px;border-radius:14px;background:#fff0d2;border:1px solid rgba(243,189,77,.4);font-size:9px;line-height:1.65}.ai-note b{color:var(--red-dark)}
-    .empty{display:grid;place-items:center;min-height:220px;padding:30px;text-align:center;color:var(--muted)}
-    .empty b{display:block;margin-bottom:7px;color:var(--ink);font-family:var(--serif);font-size:20px}
     .ai-run-state{display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;padding:7px 18px;color:#cfe1da;background:#17483f;border-bottom:1px solid rgba(255,255,255,.08);font-size:10px;font-weight:800;text-align:center}
     .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}.ai-run-state[data-status="ended"]{color:#d7eee6;background:#33524b}
     .ai-pulse{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;animation:pulse 1.4s infinite}.ai-run-state:not([data-status="loading"]) .ai-pulse{animation:none}
@@ -110,10 +105,7 @@
     button:disabled{cursor:wait;opacity:.58}
     @keyframes pulse{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
 
-    /* Variant A: cartographic command desk */
-    .atlas{padding:18px}.atlas-grid{display:grid;grid-template-columns:300px minmax(430px,1fr) 350px;gap:14px;max-width:1680px;margin:auto}.atlas-left,.atlas-right{display:grid;align-content:start;gap:12px}.atlas-left,.atlas-center,.atlas-right{min-width:0}.atlas-left>.panel,.atlas-right>.panel{padding:15px}.atlas-center{display:grid;align-content:start;gap:12px}.atlas-center>.panel:not(.map-card){padding:14px}.atlas .candidate-list{max-height:690px;overflow:auto;padding-right:3px}
-
-    /* Variant B: guided interview */
+    /* Guided planning workspace */
     .guide-shell{width:min(1180px,calc(100% - 28px));margin:28px auto}.guide-hero{position:relative;overflow:hidden;display:block;min-height:330px;padding:42px 40px;border-radius:30px;color:white;background:linear-gradient(135deg,var(--pine-2),#1d6254);box-shadow:var(--shadow)}
     .guide-hero:after{content:"";position:absolute;width:360px;height:360px;right:-120px;top:-190px;border:70px solid rgba(243,189,77,.13);border-radius:50%}.guide-hero h1{position:relative;margin:7px 0 14px;font:700 clamp(34px,6vw,66px)/.98 var(--serif);letter-spacing:-.04em}.guide-hero p{position:relative;max-width:620px;margin:0;color:#cfe1da;font-size:13px;line-height:1.8}.guide-summary{position:relative;display:grid;align-content:end;gap:8px}.guide-summary .metric{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.13)}.guide-summary .metric span{color:#b9d2ca}
     .guide-hero>div{position:relative;z-index:1;max-width:820px}.guide-hero p{max-width:760px}
@@ -124,33 +116,20 @@
     .guide-candidate-focus{display:grid;grid-template-columns:45px minmax(0,1fr) 45px;gap:12px;align-items:center}.focus-arrow{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);border-radius:50%;color:var(--ink);background:white}.focus-card{padding:22px;border-radius:24px;background:linear-gradient(150deg,#fffdf8,#ece1cd);border:1px solid var(--line)}.focus-card .candidate-title h3{font-size:28px}.focus-card .candidate-reason{font-size:12px}.focus-count{text-align:center;margin-top:12px;color:var(--muted);font-size:10px}
     .guide .pref{padding:10px 12px}.guide .question{padding:14px}.guide-next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}.guide-next p{margin:0;color:var(--muted);font-size:10px}
 
-    /* Variant C: route timeline composer */
-    .timeline-ui{min-height:calc(100vh - 70px);color:#e8f1ec;background:#102b2c}.timeline-ui .stagebar{color:var(--ink)}.timeline-head{display:flex;align-items:end;justify-content:space-between;gap:20px;padding:28px 30px 16px}.timeline-head h1{margin:4px 0 0;font:700 clamp(30px,5vw,54px)/1 var(--serif)}.timeline-head p{max-width:520px;margin:0;color:#9dbab3;font-size:11px;line-height:1.65}.timeline-board{padding:0 30px 30px;overflow:auto}.rail{display:flex;align-items:stretch;min-width:1180px;padding:26px 20px 32px}.rail-node{position:relative;display:flex;flex-direction:column;justify-content:center;min-width:155px;max-width:180px;padding:18px 15px;border-radius:20px;color:var(--ink);background:#fff8eb;border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 30px rgba(0,0,0,.18)}.rail-node:after{content:"";position:absolute;right:-40px;top:50%;width:40px;height:2px;background:#6c8984}.rail-node.soft{color:#eaf1ed;background:#1a554b}.rail-node small{color:var(--red);font-size:8px;font-weight:900;letter-spacing:.1em}.rail-node.soft small{color:var(--sun)}.rail-node b{margin-top:8px;font:700 20px var(--serif)}.rail-node span{margin-top:8px;color:var(--muted);font-size:9px;line-height:1.5}.rail-node.soft span{color:#b8cec7}.rail-gap{position:relative;display:flex;align-items:center;justify-content:center;min-width:82px}.rail-gap:before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#6c8984}.gap-add{position:relative;z-index:2;width:34px;height:34px;border:2px solid #6c8984;border-radius:50%;color:#b6ccc6;background:#102b2c;font-weight:900}
-    .timeline-work{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:16px;padding:0 30px 30px}.timeline-work .panel{padding:18px;background:#f7efdf}.timeline-work .candidate-list{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-work .state-summary{height:100%}.timeline-controls{display:grid;gap:12px}.timeline-controls .panel{color:var(--ink)}
-    .load-bars{display:grid;gap:8px}.load-row{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:8px;font-size:9px}.load-track{position:relative;height:15px;border-radius:99px;background:#dcd4c6;overflow:hidden}.load-drive,.load-play{position:absolute;left:0;height:50%}.load-drive{top:0;background:var(--red)}.load-play{bottom:0;background:var(--sky)}.load-row b{text-align:right}
-
     /* Fixed report preview */
     .generated{padding:0!important;overflow:hidden}.report-hero{position:relative;overflow:hidden;padding:30px;color:white;background:linear-gradient(145deg,#0e302b,#246456)}.report-hero:after{content:"ROUTE";position:absolute;right:-12px;bottom:-25px;color:rgba(255,255,255,.05);font:900 96px Georgia,serif}.report-hero h2{position:relative;max-width:650px;margin:6px 0 10px;font:700 38px/1.05 var(--serif)}.report-hero p{position:relative;max-width:750px;margin:0;color:#cbe0d8;font-size:11px;line-height:1.7}.report-actions{position:relative;display:flex;gap:8px;margin-top:17px}.report-body{padding:20px}.report-body .metrics{margin-bottom:16px}.report-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,.5fr);gap:16px}.day-list{display:grid;gap:8px}.day-row{display:grid;grid-template-columns:55px minmax(140px,.8fr) minmax(220px,1.3fr) 170px;align-items:center;gap:9px;padding:11px;border:1px solid var(--line);border-radius:14px;background:#fffdf8}.day-date{font:900 11px Georgia,serif;color:var(--red)}.day-title b{font-size:11px}.day-title small{display:block;margin-top:3px;color:var(--muted);font-size:8px}.day-plan{font-size:9px;line-height:1.55;color:var(--muted)}.day-bars{display:grid;gap:5px}.bar{display:grid;grid-template-columns:34px 1fr 30px;gap:5px;align-items:center;color:var(--muted);font-size:7px}.bar-track{height:6px;border-radius:99px;background:var(--paper-2);overflow:hidden}.bar-fill{height:100%;border-radius:99px}.bar-fill.drive{background:var(--red)}.bar-fill.play{background:var(--sky)}
     .report-aside{display:grid;align-content:start;gap:10px}.report-block{padding:14px;border-radius:15px;background:var(--paper);border:1px solid rgba(24,59,54,.08)}.report-block h3{margin:0 0 8px;font:700 16px var(--serif)}.report-block p,.report-block li{margin:0;color:var(--muted);font-size:9px;line-height:1.65}.report-block ul{padding-left:16px;margin:0}.warning{background:#fff0db;border-color:rgba(230,92,61,.25)}
 
-    .prototype-switcher{position:fixed;z-index:100;left:50%;bottom:18px;display:grid;grid-template-columns:42px minmax(170px,auto) 42px;align-items:center;transform:translateX(-50%);padding:6px;border-radius:99px;color:white;background:#111817;box-shadow:0 14px 40px rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.13)}
-    .prototype-switcher button{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;color:white;background:rgba(255,255,255,.08);font-size:18px}.prototype-switcher button:hover{background:var(--red)}.variant-label{text-align:center;font-size:10px;font-weight:900;line-height:1.25}.variant-label small{display:block;margin-top:2px;color:#8fa39e;font-size:8px;letter-spacing:.08em}
-    .toast{position:fixed;z-index:120;right:18px;bottom:86px;max-width:300px;padding:12px 14px;border-radius:13px;color:white;background:var(--pine);box-shadow:var(--shadow);font-size:10px;line-height:1.55;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}.toast.is-show{opacity:1;transform:none}
+    .toast{position:fixed;z-index:120;right:18px;bottom:18px;max-width:300px;padding:12px 14px;border-radius:13px;color:white;background:var(--pine);box-shadow:var(--shadow);font-size:10px;line-height:1.55;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}.toast.is-show{opacity:1;transform:none}
     .mobile-only{display:none}
-    @media(max-width:1180px){.atlas-grid{grid-template-columns:280px minmax(0,1fr)}.atlas-right{grid-column:1/3;grid-template-columns:1fr 1fr}.atlas .candidate-list{grid-template-columns:repeat(2,1fr);max-height:none}.timeline-work{grid-template-columns:1fr}.timeline-controls{grid-template-columns:1fr 1fr}}
-    @media(max-width:820px){.topbar{padding:11px 13px}.prototype-badge{display:none}.top-actions .secondary{display:none}.stagebar{padding:9px 12px}.atlas{padding:10px}.atlas-grid{display:block}.atlas-left,.atlas-center,.atlas-right{display:grid;width:100%;margin-bottom:10px}.atlas-right{grid-template-columns:1fr}.atlas .candidate-list{grid-template-columns:1fr}.map-card{min-height:360px}.map-card svg{max-width:100%;height:360px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-shell{width:min(100% - 20px,1180px);margin:10px auto}.guide-hero{min-height:0;padding:24px}.route-band{grid-template-columns:1fr}.route-band-title{padding:0 0 10px;border-right:0;border-bottom:1px solid var(--line)}.route-band .route-string{padding-top:2px}.guide-body,.guide-route-builder{grid-template-columns:1fr}.guide-route-builder .route-editor{padding-right:0;border:0;border-bottom:1px solid var(--line);padding-bottom:18px}.guide-main{padding:18px}.guide-side{position:static;grid-template-columns:1fr}.timeline-head{align-items:flex-start;flex-direction:column;padding:22px 16px 12px}.timeline-board,.timeline-work{padding-left:14px;padding-right:14px}.timeline-work .candidate-list{grid-template-columns:1fr}.timeline-controls{grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}.day-row{grid-template-columns:48px 1fr}.day-plan,.day-bars{grid-column:2}.question-grid{grid-template-columns:1fr}.prototype-switcher{bottom:10px}.mobile-only{display:block}}
-    @media(max-width:520px){.brand-copy span{display:none}.top-actions .primary{padding:9px 10px;font-size:10px}.stage-divider{display:none}.stage{padding:7px 8px}.stage span{display:none}.guide-candidate-focus{grid-template-columns:1fr}.focus-arrow{display:none}.route-inputs{grid-template-columns:1fr}.candidate-facts{grid-template-columns:1fr 1fr}.map-overlay{align-items:stretch;flex-direction:column}.map-legend{max-width:none}.map-mode{align-self:flex-start}.report-hero{padding:24px 18px}.report-body{padding:13px}.day-row{grid-template-columns:44px 1fr}.prototype-switcher{grid-template-columns:36px 150px 36px}.variant-label{font-size:9px}}
-    @media print{.topbar,.stagebar,.prototype-switcher,.report-actions,.toast{display:none!important}.app{padding:0}.generated{box-shadow:none}.report-grid{grid-template-columns:1fr}.day-row{break-inside:avoid}body{background:white}}
+    @media(max-width:820px){.topbar{padding:11px 13px}.prototype-badge{display:none}.top-actions .secondary{display:none}.stagebar{padding:9px 12px}.map-card{min-height:360px}.map-card svg{max-width:100%;height:360px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-shell{width:min(100% - 20px,1180px);margin:10px auto}.guide-hero{min-height:0;padding:24px}.route-band{grid-template-columns:1fr}.route-band-title{padding:0 0 10px;border-right:0;border-bottom:1px solid var(--line)}.route-band .route-string{padding-top:2px}.guide-body,.guide-route-builder{grid-template-columns:1fr}.guide-route-builder .route-editor{padding-right:0;border:0;border-bottom:1px solid var(--line);padding-bottom:18px}.guide-main{padding:18px}.guide-side{position:static;grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}.day-row{grid-template-columns:48px 1fr}.day-plan,.day-bars{grid-column:2}.question-grid{grid-template-columns:1fr}.mobile-only{display:block}}
+    @media(max-width:520px){.brand-copy span{display:none}.top-actions .primary{padding:9px 10px;font-size:10px}.stage-divider{display:none}.stage{padding:7px 8px}.stage span{display:none}.guide-candidate-focus{grid-template-columns:1fr}.focus-arrow{display:none}.route-inputs{grid-template-columns:1fr}.candidate-facts{grid-template-columns:1fr 1fr}.map-overlay{align-items:stretch;flex-direction:column}.map-legend{max-width:none}.map-mode{align-self:flex-start}.report-hero{padding:24px 18px}.report-body{padding:13px}.day-row{grid-template-columns:44px 1fr}}
+    @media print{.topbar,.stagebar,.report-actions,.toast{display:none!important}.app{padding:0}.generated{box-shadow:none}.report-grid{grid-template-columns:1fr}.day-row{break-inside:avoid}body{background:white}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
   <div id="app" class="app"></div>
-  <div class="prototype-switcher" aria-label="原型布局切换">
-    <button type="button" data-variant-nav="prev" aria-label="上一个布局">←</button>
-    <div class="variant-label" id="variantLabel"></div>
-    <button type="button" data-variant-nav="next" aria-label="下一个布局">→</button>
-  </div>
   <div class="toast" id="toast" role="status"></div>
 
   <datalist id="cityOptions">
@@ -158,11 +137,11 @@
   </datalist>
 
   <script>
-    const VARIANTS = [
-      { key: 'atlas', name: '地图工作台' },
-      { key: 'guide', name: '引导式决策' },
-      { key: 'timeline', name: '路线编排器' }
-    ];
+    const pageUrl = new URL(location.href);
+    if (pageUrl.searchParams.has('variant')) {
+      pageUrl.searchParams.delete('variant');
+      history.replaceState(null, '', pageUrl);
+    }
 
     const cityCatalog = {
       '杭州': { lon:120.155, lat:30.274, stay:0, highlight:'启程或返程' },
@@ -238,7 +217,6 @@
     const preferenceLabels = { off:'未选', prefer:'偏好', must:'必有', avoid:'避开' };
 
     const state = {
-      variant: new URLSearchParams(location.search).get('variant') || 'guide',
       stage: 1,
       route: { start:'杭州', end:'杭州', must:['东山岛','澳门','柳州','恩施','宜昌'] },
       prefs: { '美食':'off','海岛':'off','海景':'off','人文':'off','山景':'off','峡谷':'off','少数民族':'off','自驾公路':'off','宠物友好':'off','低强度':'off','低人流':'off' },
@@ -248,7 +226,6 @@
       ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', reportUrl:'', backendReady:false, ended:false },
       webMcpRegistered: false
     };
-    if (!VARIANTS.some(v => v.key === state.variant)) state.variant = 'atlas';
 
     const app = document.getElementById('app');
     const toastEl = document.getElementById('toast');
@@ -477,17 +454,6 @@
       </article>`;
     }
 
-    function candidateList(limit){
-      const list=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a));
-      return `<div class="candidate-list">${list.slice(0,limit||list.length).map(c=>candidateCard(c)).join('')}</div>`;
-    }
-
-    function stateSummary(){
-      if (state.stage === 1) return `<div class="state-summary"><h3>当前只确认了这些</h3><dl><dt>出发 / 返回</dt><dd>${esc(state.route.start)} → ${esc(state.route.end)}</dd><dt>必去点</dt><dd>${state.route.must.map(esc).join('、') || '暂无'}</dd><dt>暂不计算</dt><dd>沿途候选、最终里程、每天安排与驾驶压力</dd></dl></div>`;
-      const prefs=Object.entries(state.prefs).filter(([,mode])=>mode!=='off').map(([key,mode])=>`${key}(${preferenceLabels[mode]})`).join('、') || '暂无';
-      return `<div class="state-summary"><h3>已确认条件</h3><dl><dt>必去</dt><dd>${[state.route.start,...state.route.must,state.route.end].map(esc).join(' → ')}</dd><dt>时间</dt><dd>${datesReady()?`${esc(state.answers.departDate)}—${esc(state.answers.returnDate)}`:'尚未填写完整'}</dd>${state.stage>=3?`<dt>已加入</dt><dd>${selectedCandidates().map(c=>esc(c.name)).join('、')||'暂无'}</dd><dt>备选</dt><dd>${backupCandidates().map(c=>esc(c.name)).join('、')||'暂无'}</dd>`:''}<dt>偏好</dt><dd>${prefs}</dd><dt>车与狗</dt><dd>${state.answers.ev?'纯电车':'未启用纯电约束'} · ${state.answers.pet?'带宠物':'未启用宠物约束'}${state.answers.pet?` · ${state.answers.boarding?'接受短时寄养':'全程同行'}`:''}</dd></dl></div>`;
-    }
-
     function routeOrderBand(){
       return `<section class="panel route-band"><div class="route-band-title"><span class="kicker">当前顺序</span><b>${state.stage<3?'必去点骨架':'当前路线'}</b><small>${state.stage<3?'候选加入后会在这里插入':'与地图和计划保持一致'}</small></div>${routeString()}</section>`;
     }
@@ -527,10 +493,6 @@
       return `<section class="panel generated" id="reportPreview"><div class="report-hero"><span class="kicker" style="color:#f3bd4d">FIXED ROADBOOK PREVIEW</span><h2>把必去点锁住，<br>把沿途选择权留给你。</h2><p>${routeNodes().map(n=>esc(n.name)).join(' → ')}。计划只展示当前结论，不记录来回修改的过程。</p><div class="report-actions"><button type="button" class="secondary" data-action="download">下载独立 HTML</button><button type="button" class="ghost" style="color:white;border-color:rgba(255,255,255,.25)" data-action="print">打印 / PDF</button></div></div><div class="report-body">${metrics()}<div class="report-grid"><div><div class="panel-head"><div><span class="kicker">DAY BY DAY</span><h3>逐日时间轴与驾驶热度</h3><p>红色为驾驶，蓝色为有效游玩；数字由当前选择即时估算。</p></div></div><div class="day-list">${days.map((day,index)=>`<div class="day-row"><div class="day-date">D${index}<br>${day.date}</div><div class="day-title"><b>${esc(day.title)}</b><small>${esc(day.subtitle)}</small></div><div class="day-plan">${esc(day.plan)}<br><b>住宿：</b>${esc(day.stay)}</div><div class="day-bars"><div class="bar"><span>驾驶</span><div class="bar-track"><div class="bar-fill drive" style="width:${Math.min(100,day.drive/10*100)}%"></div></div><b>${day.drive.toFixed(1)}h</b></div><div class="bar"><span>游玩</span><div class="bar-track"><div class="bar-fill play" style="width:${Math.min(100,day.play/9*100)}%"></div></div><b>${day.play.toFixed(1)}h</b></div></div></div>`).join('')}</div></div><aside class="report-aside"><div class="report-block"><h3>这版计划的重点</h3><ul><li>${selectedCandidates().length} 个候选点已被你正式加入。</li><li>必去点始终锁定，不参与 AI 淘汰。</li><li>落脚休息采用区间，不伪装成旅游目的地。</li></ul></div><div class="report-block warning"><h3>需要处理的压力</h3><p>${overtime.length?`有 ${overtime.length} 个长转场超过 ${state.answers.maxDrive} 小时舒适值，正式规划时需拆成弹性休息区间。`:'没有转场超过当前舒适驾驶阈值。'}</p></div><div class="report-block"><h3>宠物与纯电</h3><p>${state.answers.pet?'景区、轮渡、跨境和住宿需逐项核验宠物规则；不把留车内作为默认方案。':'本次未启用宠物约束。'} ${state.answers.ev?'正式路线要把充电、排队和到站余量计入时长。':'本次未启用纯电约束。'}</p></div><div class="report-block"><h3>演示边界</h3><p>当前里程与时长是原型估算。生产版会接入地图、实时政策与预订数据，并显示来源与更新时间。</p></div></aside></div></div></section>`;
     }
 
-    function atlasVariant(){
-      return `<div class="atlas"><div class="atlas-grid"><aside class="atlas-left"><section class="panel"><div class="panel-head"><div><span class="kicker">01 · MUST GO</span><h3>先锁定骨架</h3><p>红色锚点不会被 AI 调整。</p></div></div>${routeEditor()}</section><section class="panel"><div class="panel-head"><div><span class="kicker">02 · SIGNALS</span><h3>体验关键词</h3></div></div>${preferenceEditor()}</section><section class="panel"><div class="panel-head"><div><span class="kicker">NECESSARY ONLY</span><h3>必要信息</h3></div></div>${questions()}</section></aside><main class="atlas-center">${metrics()}${mapView()}<section class="panel"><span class="kicker">LIVE ROUTE</span>${routeString()}<div class="ai-note"><b>AI 判断：</b>凯里在当前偏好下得分最高，因为它同时补足贵州美食、人文与山水，且比梵净山减少宠物分离和额外绕行。</div></section>${state.stage===4?report():''}</main><aside class="atlas-right"><section class="panel"><div class="panel-head"><div><span class="kicker">03 · REVIEW</span><h3>沿途候选</h3><p>加入才会改变地图与行程；备选不会。</p></div><button type="button" class="ghost" data-stage="4">预览成品</button></div>${candidateList()}</section>${stateSummary()}</aside></div></div>`;
-    }
-
     function guideContent(){
       if(state.stage===1) return `<div class="guide-route-builder"><div>${routeEditor()}</div><div><div class="panel-head"><div><span class="kicker">先定必去</span><h2>这里只搭骨架，<br>还不计算行程。</h2><p>先确认一定要去的地方。沿途停哪里、开多久、赶不赶，等下一步补齐时间和节奏后再算。</p></div></div><div class="ai-note"><b>现在只做一件事：</b>确认出发地、返回地和非去不可的地方。右侧地图会持续保留，并在后续选择中实时改线。</div></div></div><div class="guide-next"><p>下一步只回答会真正改变路线的问题。</p><button class="primary" type="button" data-stage="2">继续：必要问题 →</button></div>`;
       if(state.stage===2) return `<div class="panel-head"><div><span class="kicker">MINIMUM INTERVIEW</span><h2>六个答案，足够开始。</h2><p>其余信息交给 Codex 检索和判断，不让你先填一张长表。</p></div></div>${questions()}<div style="margin-top:20px">${preferenceEditor()}</div><div class="guide-next"><button class="ghost" type="button" data-stage="1">← 返回骨架</button><button class="primary" type="button" data-action="ai-candidates" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在规划…':'让 Codex 生成沿途候选 →'}</button></div>`;
@@ -542,25 +504,8 @@
       return `<div class="guide"><div class="guide-shell"><section class="guide-hero"><div><span class="kicker" style="color:#f3bd4d">先把路线搭起来</span><h1>先定下非去不可，<br>再挑沿途值得停。</h1><p>把一定要去的地方先放进路线，再看看沿途哪些地方值得多留一晚。每加一站，都把能玩什么、要多开多久、建议留几天说清楚。</p></div></section>${routeOrderBand()}<div class="guide-body"><main class="panel guide-main">${guideContent()}</main><aside class="guide-side"><div class="guide-map-label"><div><span class="kicker">路线预览</span><b>随选择实时更新</b></div><small>${state.stage<3?'当前只显示必去骨架':'候选加入后立即改线'}</small></div>${mapView()}${globalDashboard()}</aside></div></div></div>`;
     }
 
-    function railView(){
-      const nodes=routeNodes();
-      return `<div class="rail">${nodes.map((node,index)=>`${index?'<div class="rail-gap"><button class="gap-add" type="button" data-stage="3" aria-label="查看此区间候选">＋</button></div>':''}<article class="rail-node ${node.kind}"><small>${node.kind==='hard'?'LOCKED · 必去':'SELECTED · 已加入'}</small><b>${esc(node.name)}</b><span>${esc(node.candidate?.reason || coordFor(node.name)?.highlight || '用户锁定的路线锚点')}</span></article>`).join('')}</div>`;
-    }
-
-    function loadBars(){
-      const days=schedule();
-      if(!days.length) return `<div class="empty" style="min-height:120px"><div><b>还不能计算</b>填写出发、返程日期和单日舒适驾驶后，再显示每天开多久、玩多久。</div></div>`;
-      return `<div class="load-bars">${days.slice(0,12).map(day=>`<div class="load-row"><span>${day.date}</span><div class="load-track"><div class="load-drive" style="width:${Math.min(100,day.drive/10*100)}%"></div><div class="load-play" style="width:${Math.min(100,day.play/9*100)}%"></div></div><b>${(day.drive+day.play).toFixed(1)}h</b></div>`).join('')}</div>`;
-    }
-
-    function timelineVariant(){
-      return `<div class="timeline-ui"><div class="timeline-head"><div><span class="kicker" style="color:#f3bd4d">ROUTE COMPOSER</span><h1>把旅程当成一条可编辑的线。</h1></div><p>菱形节点是你锁定的承诺；绿色节点是 Codex 候选。所有选择立即回写到同一条路线、驾驶热度和最终路书。</p></div><div class="timeline-board">${railView()}</div><div class="timeline-work"><section class="panel"><div class="panel-head"><div><span class="kicker">CANDIDATE TRAY</span><h2>把值得的地方放进旅程</h2><p>路线选择留在页面，复杂判断交给 Codex。</p></div><button class="primary" type="button" data-action="ai-plan">让 Codex 生成路书</button></div>${state.stage===4?report():candidateList(6)}</section><aside class="timeline-controls"><section class="panel"><div class="panel-head"><div><span class="kicker">LOAD MAP</span><h3>每天开多久 / 玩多久</h3></div></div>${loadBars()}<div class="helper"><span style="color:var(--red)">上半红色：驾驶</span> · <span style="color:var(--blue)">下半蓝色：游玩</span></div></section><section class="panel"><div class="panel-head"><div><span class="kicker">QUICK EDIT</span><h3>条件抽屉</h3></div></div>${questions()}<div style="margin-top:12px">${preferenceEditor()}</div></section>${stateSummary()}</aside></div></div>`;
-    }
-
     function render(){
-      let content = state.variant==='guide' ? guideVariant() : state.variant==='timeline' ? timelineVariant() : atlasVariant();
-      app.innerHTML = header() + content;
-      const meta=VARIANTS.find(v=>v.key===state.variant); document.getElementById('variantLabel').innerHTML=`${meta.key.toUpperCase()} — ${meta.name}<small>← → 切换三种产品方向</small>`;
+      app.innerHTML = header() + guideVariant();
     }
 
     function toast(message){ clearTimeout(toastTimer); toastEl.textContent=message; toastEl.classList.add('is-show'); toastTimer=setTimeout(()=>toastEl.classList.remove('is-show'),2600); }
@@ -727,12 +672,7 @@
       });
     }
 
-    function setVariant(direction){
-      const index=VARIANTS.findIndex(v=>v.key===state.variant); const next=(index+(direction==='next'?1:-1)+VARIANTS.length)%VARIANTS.length; state.variant=VARIANTS[next].key;
-      const url=new URL(location.href); url.searchParams.set('variant',state.variant); history.replaceState({},'',url); render();
-    }
-
-    function showState(){ state.stage=1; if(state.variant==='atlas') toast('左侧就是完整条件；红色锚点为必去。'); else toast('已确认条件显示在右侧深绿色卡片中。'); render(); }
+    function showState(){ state.stage=1; toast('已确认条件显示在右侧深绿色卡片中。'); render(); }
 
     function goToStage(nextStage){
       if(nextStage >= 3 && !planningReady()){
@@ -768,7 +708,6 @@
     }
 
     document.addEventListener('click',event=>{
-      const variantButton=event.target.closest('[data-variant-nav]'); if(variantButton){setVariant(variantButton.dataset.variantNav);return;}
       const stageButton=event.target.closest('[data-stage]'); if(stageButton){const nextStage=Number(stageButton.dataset.stage);if(nextStage===4){requestCodexPlan();return;}goToStage(nextStage);return;}
       const prefButton=event.target.closest('[data-pref]'); if(prefButton){const key=prefButton.dataset.pref;const index=preferenceCycles.indexOf(state.prefs[key]||'off');state.prefs[key]=preferenceCycles[(index+1)%preferenceCycles.length];render();return;}
       const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=!state.answers[key];render();return;}
@@ -794,8 +733,6 @@
 
     document.addEventListener('keydown',event=>{
       if(event.key==='Enter'&&event.target?.id==='newMustStop'){ addStop(); return; }
-      const tag=document.activeElement?.tagName; if(['INPUT','TEXTAREA','SELECT'].includes(tag)||document.activeElement?.isContentEditable) return;
-      if(event.key==='ArrowLeft') setVariant('prev'); if(event.key==='ArrowRight') setVariant('next');
     });
 
     render();

@@ -88,4 +88,4 @@ Keep the final plan concise, scannable, and free of planning-history chatter. Ma
 
 ## Bundled interface
 
-`assets/roadtrip-planner-demo.html` is served by the local plugin server and has three layouts switchable through `?variant=atlas`, `?variant=guide`, and `?variant=timeline`. It keeps the active page state in memory, exposes WebMCP tools when the host supports them, and queues explicit candidate/report requests for this conversation. Page-only route previews remain estimates; the final report must distinguish them from facts verified by Codex and travel tools.
+`assets/roadtrip-planner-demo.html` is served by the local plugin server as one guided planning flow. It keeps the active page state in memory, exposes WebMCP tools when the host supports them, and queues explicit candidate/report requests for this conversation. Page-only route previews remain estimates; the final report must distinguish them from facts verified by Codex and travel tools.
