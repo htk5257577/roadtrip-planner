@@ -30,6 +30,8 @@
     .brand-copy{min-width:0}.brand-copy b{display:block;font-family:var(--serif);font-size:18px}.brand-copy span{display:block;margin-top:2px;color:#bcd0ca;font-size:10px;letter-spacing:.08em}
     .top-actions{display:flex;align-items:center;gap:8px}
     .prototype-badge{padding:7px 10px;border:1px solid rgba(255,255,255,.18);border-radius:99px;color:#dce7e1;font-size:10px;font-weight:800}
+    .session-end{border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:9px 11px;color:#d7e7e1;background:transparent;font-size:10px;font-weight:800}
+    .session-end:hover{background:rgba(255,255,255,.1)}
     .primary,.secondary,.ghost,.danger,.status-btn{border:0;border-radius:12px;padding:10px 14px;font-weight:900}
     .primary{color:white;background:var(--red);box-shadow:0 7px 18px rgba(230,92,61,.22)}
     .primary:hover{background:var(--red-dark)}
@@ -102,7 +104,7 @@
     .empty{display:grid;place-items:center;min-height:220px;padding:30px;text-align:center;color:var(--muted)}
     .empty b{display:block;margin-bottom:7px;color:var(--ink);font-family:var(--serif);font-size:20px}
     .ai-run-state{display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;padding:7px 18px;color:#cfe1da;background:#17483f;border-bottom:1px solid rgba(255,255,255,.08);font-size:10px;font-weight:800;text-align:center}
-    .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}
+    .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}.ai-run-state[data-status="ended"]{color:#d7eee6;background:#33524b}
     .ai-pulse{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;animation:pulse 1.4s infinite}.ai-run-state:not([data-status="loading"]) .ai-pulse{animation:none}
     .ai-report-frame{display:block;width:100%;height:76vh;min-height:680px;border:0;background:white}.ai-result-summary{padding:16px 20px;color:var(--ink);background:#fff0d2;border-bottom:1px solid var(--line);font-size:11px;line-height:1.65}.ai-result-summary b{color:var(--red-dark)}
     button:disabled{cursor:wait;opacity:.58}
@@ -243,7 +245,7 @@
       answers: { departDate:'', returnDate:'', departTime:'19:00', maxDrive:'', pace:'', pet:false, ev:false, boarding:false },
       candidateStatus: { quanzhou:'none', chaoshan:'none', zhuhai:'none', zhaoxing:'none', kaili:'none', zhenyuan:'none', fanjing:'none' },
       focusCandidate: 0,
-      ai: { status:'checking', message:'正在连接本机 Codex…', source:'static', summary:'', reportUrl:'', backendReady:false },
+      ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', reportUrl:'', backendReady:false, ended:false },
       webMcpRegistered: false
     };
     if (!VARIANTS.some(v => v.key === state.variant)) state.variant = 'atlas';
@@ -387,13 +389,13 @@
       const actionLabel=state.stage<3?'让 Codex 推荐':'让 Codex 生成完整路书';
       return `<header class="topbar">
         <div class="brand"><div class="brand-mark">R</div><div class="brand-copy"><b>路书工坊</b><span>CODEX-NATIVE ROADTRIP PLANNER</span></div></div>
-        <div class="top-actions"><span class="prototype-badge">${state.ai.backendReady?'Codex 已连接':'等待 Codex'}</span><button class="secondary" type="button" data-action="show-state">查看已确认条件</button><button class="primary" type="button" data-action="${action}" ${working?'disabled':''}>${working?'Codex 运行中…':actionLabel}</button></div>
+        <div class="top-actions"><span class="prototype-badge">${working?'Codex 正在处理':state.ai.backendReady?'当前会话在线':'等待当前会话'}</span><button class="secondary" type="button" data-action="show-state">查看已确认条件</button><button class="session-end" type="button" data-action="end-session" ${working||state.ai.ended?'disabled':''}>结束会话</button><button class="primary" type="button" data-action="${action}" ${working||state.ai.ended?'disabled':''}>${working?'Codex 运行中…':actionLabel}</button></div>
       </header>${aiStatusStrip()}${stageBar()}`;
     }
 
     function aiStatusStrip(){
       const status=state.ai.status==='idle'&&state.ai.backendReady?'ready':state.ai.status;
-      const fallback=state.ai.backendReady?'本机 Codex 已登录。需要判断时才会运行 AI，普通选择仍即时完成。':'请通过本地启动服务打开本页，file:// 页面无法调用 Codex。';
+      const fallback=state.ai.backendReady?'当前 Codex 会话正在等待网页操作；运行过程在 Codex 对话中可见。':'请回到 Codex 对话，让它启动页面并保持等待。';
       return `<div class="ai-run-state" data-status="${esc(status)}"><i class="ai-pulse"></i><span>${esc(state.ai.message||fallback)}</span></div>`;
     }
 
@@ -582,20 +584,38 @@
 
     async function checkCodexStatus(){
       if(location.protocol==='file:'){
-        state.ai={...state.ai,status:'error',backendReady:false,message:'当前是 file:// 静态页。请运行本地启动服务后使用 http://127.0.0.1:4317。'};
+        state.ai={...state.ai,status:'error',backendReady:false,message:'当前是 file:// 静态页。请让 Codex 启动本地页面并保持等待。'};
         render();
         return;
       }
       try{
         const response=await fetch('/api/status',{cache:'no-store'});
         const data=await response.json();
-        state.ai.backendReady=Boolean(data.codexAvailable&&data.loggedIn);
-        state.ai.status=state.ai.backendReady?'idle':'error';
-        state.ai.message=state.ai.backendReady?'本机 Codex 已连接；页面只在推荐和生成阶段运行 AI。':data.loginMessage||'Codex 尚未就绪。';
+        const ready=data.mode==='current-codex-thread'&&Boolean(data.runnerConnected);
+        const changed=state.ai.backendReady!==ready||state.ai.status==='checking';
+        state.ai.backendReady=ready;
+        if(!state.ai.ended&&state.ai.status!=='loading'&&changed){
+          state.ai.status=ready?'idle':'error';
+          state.ai.message=ready?'当前 Codex 会话正在等待操作；点击生成后，请在 Codex 对话中查看规划过程。':'当前 Codex 会话尚未进入等待状态，请回到 Codex 对话。';
+        }
+        if(changed) render();
       }catch(error){
         state.ai={...state.ai,status:'error',backendReady:false,message:`无法连接本地规划服务：${error.message}`};
+        render();
       }
-      render();
+    }
+
+    async function waitForJob(jobId){
+      while(true){
+        const response=await fetch(`/api/jobs/${encodeURIComponent(jobId)}`,{cache:'no-store'});
+        const data=await response.json();
+        if(!response.ok||!data.ok) throw new Error(data.error||'无法读取任务进度');
+        const job=data.job;
+        if(job.status==='completed') return job.result;
+        if(job.status==='failed') throw new Error(job.error||'Codex 未能完成任务');
+        if(job.message&&job.message!==state.ai.message) setAiState('loading',job.message);
+        await new Promise(resolve=>setTimeout(resolve,1500));
+      }
     }
 
     function applyCodexCandidates(data){
@@ -629,13 +649,14 @@
       if(!planningReady()){
         state.stage=2;render();toast('先填写出发、返程日期和单日舒适驾驶。');return;
       }
-      if(!state.ai.backendReady){toast('Codex 尚未连接，请先通过本地启动服务打开页面。');return;}
-      setAiState('loading','Codex 正在读取条件、核验路线并生成沿途候选，通常需要 1—3 分钟…');
+      if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
+      setAiState('loading','请求已提交；当前 Codex 会话将领取任务，过程会显示在 Codex 对话中。');
       try{
         const response=await fetch('/api/codex/candidates',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(plannerState())});
         const data=await response.json();
         if(!response.ok||!data.ok) throw new Error(data.error||'候选生成失败');
-        applyCodexCandidates(data);
+        const result=await waitForJob(data.job.id);
+        applyCodexCandidates(result);
         state.ai.status='idle';
         state.ai.message=`Codex 已返回 ${candidates.length} 个候选。选择本身不会再次消耗 AI，直到你要求生成最终路书。`;
         render();
@@ -648,22 +669,36 @@
       if(!planningReady()){
         state.stage=2;render();toast('先填写完整的必要信息。');return;
       }
-      if(!state.ai.backendReady){toast('Codex 尚未连接，请先通过本地启动服务打开页面。');return;}
-      setAiState('loading','Codex 正在重新核验最终路线，并生成南线同款完整 HTML 路书；这一步可能需要几分钟…');
+      if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
+      setAiState('loading','请求已提交；当前 Codex 会话将规划完整路书，过程会显示在 Codex 对话中。');
       try{
         const response=await fetch('/api/codex/plan',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(plannerState())});
         const data=await response.json();
         if(!response.ok||!data.ok) throw new Error(data.error||'完整路书生成失败');
+        const result=await waitForJob(data.job.id);
         state.ai.status='idle';
         state.ai.message='Codex 已完成完整路书。页面下方已载入最终报告。';
-        state.ai.summary=data.summary||'';
-        state.ai.reportUrl=data.reportUrl||'/generated-plan';
+        state.ai.summary=result.summary||'';
+        state.ai.reportUrl=result.reportUrl||'/generated-plan';
         state.stage=4;
         render();
         setTimeout(()=>document.getElementById('reportPreview')?.scrollIntoView({behavior:'smooth',block:'start'}),0);
       }catch(error){
         state.ai.status='error';state.ai.message=`Codex 路书生成失败：${error.message}`;render();
       }
+    }
+
+    async function endSession(){
+      if(state.ai.status==='loading') return;
+      try{
+        const response=await fetch('/api/bridge/stop',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});
+        const data=await response.json();
+        if(!response.ok||!data.ok) throw new Error(data.error||'结束请求失败');
+        state.ai.ended=true;
+        state.ai.status='ended';
+        state.ai.message='已通知当前 Codex 会话结束等待；已生成的路书仍可在本页查看。';
+        render();
+      }catch(error){toast(error.message);}
     }
 
     async function registerPlannerTools(){
@@ -678,14 +713,14 @@
       });
       await document.modelContext.registerTool({
         name:'roadtrip_generate_candidates',
-        description:'Ask the local signed-in Codex engine to generate route-aware optional stops from the current planner state.',
+        description:'Submit the current planner state to the active Codex conversation for route-aware optional stops.',
         inputSchema:{type:'object',properties:{},additionalProperties:false},
         annotations:{readOnlyHint:false,openWorldHint:true},
         execute:async()=>{await requestCodexCandidates();return {status:state.ai.status,summary:state.ai.summary,candidateCount:candidates.length};}
       });
       await document.modelContext.registerTool({
         name:'roadtrip_generate_report',
-        description:'Ask the local signed-in Codex engine to generate the final full HTML roadbook from the reviewed planner state.',
+        description:'Submit the reviewed planner state to the active Codex conversation for a full HTML roadbook.',
         inputSchema:{type:'object',properties:{},additionalProperties:false},
         annotations:{readOnlyHint:false,openWorldHint:true},
         execute:async()=>{await requestCodexPlan();return {status:state.ai.status,reportUrl:state.ai.reportUrl,summary:state.ai.summary};}
@@ -744,6 +779,7 @@
       if(action==='move-stop'){const el=event.target.closest('[data-index]');const index=Number(el.dataset.index),next=index+Number(el.dataset.dir);if(next>=0&&next<state.route.must.length){[state.route.must[index],state.route.must[next]]=[state.route.must[next],state.route.must[index]];render();}return;}
       if(action==='generate'||action==='ai-plan'){requestCodexPlan();return;}
       if(action==='ai-candidates'){requestCodexCandidates();return;}
+      if(action==='end-session'){endSession();return;}
       if(action==='show-state'){showState();return;}
       if(action==='focus-prev'){state.focusCandidate=(state.focusCandidate-1+candidates.length)%candidates.length;render();return;}
       if(action==='focus-next'){state.focusCandidate=(state.focusCandidate+1)%candidates.length;render();return;}
@@ -764,6 +800,7 @@
 
     render();
     checkCodexStatus();
+    if(location.protocol!=='file:') setInterval(checkCodexStatus,5000);
     registerPlannerTools().catch(()=>{});
   </script>
 </body>

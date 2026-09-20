@@ -1,18 +1,21 @@
 {
   "name": "roadtrip-planner",
-  "version": "0.1.0",
-  "description": "A Codex-native guided road-trip planner that turns page decisions into real AI candidate reviews and a full HTML roadbook without an OpenAI API key.",
+  "version": "0.1.0+codex.20260920025748",
+  "description": "A guided road-trip planner whose page requests are handled by the current Codex conversation, with visible progress and no OpenAI API key.",
   "author": {
     "name": "Roadtrip Planner"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "Roadtrip Planner",
-    "shortDescription": "在网页里做选择，再由 Codex 生成完整自驾路书",
-    "longDescription": "从必去点、日期、宠物和纯电条件出发，用引导式页面评审沿途候选，并调用本机已登录的 Codex 生成南线模板风格的完整 HTML 路书。无需 OpenAI API Key。",
+    "shortDescription": "\u5728\u7f51\u9875\u91cc\u505a\u9009\u62e9\uff0c\u518d\u7531 Codex \u751f\u6210\u5b8c\u6574\u81ea\u9a7e\u8def\u4e66",
+    "longDescription": "\u4ece\u5fc5\u53bb\u70b9\u3001\u65e5\u671f\u3001\u5ba0\u7269\u548c\u7eaf\u7535\u6761\u4ef6\u51fa\u53d1\uff0c\u7528\u5f15\u5bfc\u5f0f\u9875\u9762\u8bc4\u5ba1\u6cbf\u9014\u5019\u9009\uff1b\u5f53\u524d Codex \u4f1a\u8bdd\u6301\u7eed\u7b49\u5f85\u9875\u9762\u64cd\u4f5c\uff0c\u5728\u5bf9\u8bdd\u4e2d\u5c55\u793a\u89c4\u5212\u8fc7\u7a0b\uff0c\u518d\u628a\u5b8c\u6574 HTML \u8def\u4e66\u66f4\u65b0\u56de\u9875\u9762\u3002\u65e0\u9700 OpenAI API Key\u3002",
     "developerName": "Roadtrip Planner",
     "category": "Travel",
-    "capabilities": ["Interactive", "Write"],
-    "defaultPrompt": "启动 Roadtrip Planner，让我在页面里规划一次自驾旅行。"
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": "\u542f\u52a8 Roadtrip Planner\uff0c\u8ba9\u6211\u5728\u9875\u9762\u91cc\u89c4\u5212\u4e00\u6b21\u81ea\u9a7e\u65c5\u884c\u3002"
   }
 }
