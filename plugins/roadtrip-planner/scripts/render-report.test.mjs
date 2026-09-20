@@ -9,14 +9,18 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const example = JSON.parse(readFileSync(join(root, "scripts/fixtures/report-data.json"), "utf8"));
 const css = readFileSync(join(root, "assets/south-line.css"), "utf8");
 
-test("generated report uses the full south-line layout and reading order", () => {
+test("generated report leads with four overviews and one collapsible daily spine", () => {
   const html = renderRoadbook(example);
   const sections = [...html.matchAll(/<section\b[^>]*id="([^"]+)"/g)].map(match => match[1]);
-  assert.deepEqual(sections, ["todo", "brief", "stops", "pace", "route", "transport", "stay", "map-section", "days", "tips", "sources-section"]);
+  assert.deepEqual(sections, ["todo", "brief", "pace", "map-section", "days", "practical"]);
   assert.ok(html.includes(`<style>${css}</style>`));
-  for (const className of ["hero-stats", "stop-card card", "heat-grid", "route-ledger card", "hotel-area card", "day-flow", "slot-card", "map-route-legend"]) {
+  for (const className of ["hero-stats", "heat-grid", "hotel-area card", "day-flow", "slot-card", "map-route-legend", "day card is-collapsed", "reference-panel card"]) {
     assert.ok(html.includes(className), `${className} missing`);
   }
+  assert.match(html, /id="expand-all-days"/);
+  assert.match(html, /data-open-day="day-1"/);
+  assert.match(html, /aria-expanded="false"/);
+  assert.doesNotMatch(html, /class="stop-plan"|每站到底怎么玩/);
   assert.match(html, /data-roadbook-template="south-line-v1"/);
   assert.doesNotMatch(html, /{{[A-Z_]+}}|securityJsCode|0106n12000rrctq3jAA64/);
 });
@@ -24,6 +28,8 @@ test("generated report uses the full south-line layout and reading order", () =>
 test("report data must provide complete daily content", () => {
   assert.throws(() => renderRoadbook({ ...example, dayBalance: [] }), /dayBalance/);
   assert.throws(() => renderRoadbook({ ...example, days: [{ ...example.days[0], slots: [] }] }), /每天必须有时间块/);
+  const summaryOnly = { ...example, stopSummaries: example.stopSummaries.map(({ schedule, ...stop }) => stop) };
+  assert.match(renderRoadbook(summaryOnly), /data-open-day="day-1"/);
 });
 
 test("final report title and hero route show places without planning-status labels", () => {

@@ -21,7 +21,7 @@
     <div class="hero-mark">{{DAY_MARK}}</div>
   </header>
   <nav class="jumpbar" aria-label="页面导航"><div class="shell">
-    <a href="#todo">待办</a><a href="#brief">行前</a><a href="#stops">每站多久</a><a href="#pace">时间热力图</a><a href="#route">路线</a><a href="#stay">住宿</a><a href="#map-section">地图</a><a href="#days">逐时行程</a><a href="#tips">避坑</a>
+    <a href="#todo">出发前</a><a href="#brief">行前须知</a><a href="#pace">时间分配</a><a href="#map-section">全程路线</a><a href="#days">逐日行程</a><a href="#practical">实用资料</a>
   </div></nav>
   <main class="shell">
     <section id="todo" class="todo-wrap card">
@@ -32,47 +32,29 @@
       <div class="section-head"><div><div class="section-kicker">01 · PREP</div><h2>行前须知</h2></div><p class="section-note">{{BRIEF_NOTE}}</p></div>
       <div id="pretrip-grid" class="grid pre-grid">{{PRETRIP}}</div>
     </section>
-    <section id="stops">
-      <div class="section-head"><div><div class="section-kicker">02 · STOPS</div><h2>每站到底怎么玩</h2></div><p class="section-note">每站展开到具体日期、时段、地点和保留价值。</p></div>
-      <div id="stop-grid" class="stop-grid">{{STOPS}}</div>
-      <div id="route-decision" class="route-decision">{{ROUTE_DECISION}}</div>
-    </section>
     <section id="pace">
-      <div class="section-head"><div><div class="section-kicker">03 · RHYTHM</div><h2>每日时间热力图</h2></div><p class="section-note">绿色为有效游玩，红色为驾驶，黄色为吃饭、充电与缓冲。</p></div>
+      <div class="section-head"><div><div class="section-kicker">02 · RHYTHM</div><h2>每日时间图</h2></div><p class="section-note">先看每天怎么玩、开多久；具体安排在逐日行程里。</p></div>
       <div id="heatmap" class="heat-wrap card">{{HEATMAP}}</div>
     </section>
-    <section id="route">
-      <div class="section-head"><div><div class="section-kicker">04 · DRIVE</div><h2>路线账本</h2></div><p class="section-note">道路数据与排程估算分开标注；长途日不叠加打卡景点。</p></div>
-      <div id="route-ledger" class="route-ledger card">{{ROUTE_LEDGER}}</div>
-    </section>
-    <section id="transport">
-      <div class="section-head"><div><div class="section-kicker">05 · MODE</div><h2>大交通</h2></div><p class="section-note">驾车、补能、轮渡和其他重要转场。</p></div>
-      <div id="transport-grid" class="grid transport-grid">{{TRANSPORT}}</div>
-    </section>
-    <section id="stay">
-      <div class="section-head"><div><div class="section-kicker">06 · SLEEP</div><h2>住宿落点</h2></div><p class="section-note">先定片区；宠物与充电政策以下单前确认结果为准。</p></div>
-      <div id="hotel-grid" class="grid hotel-grid">{{HOTELS}}</div>
-      <div id="source-strip" class="source-strip">{{SOURCE_STRIP}}</div>
-      <p class="disclaimer">{{DISCLAIMER}}</p>
-    </section>
     <section id="map-section">
-      <div class="section-head"><div><div class="section-kicker">07 · MAP</div><h2>一条线看全程</h2></div><p class="section-note">地图按落点顺序呈现；连线不是逐弯导航轨迹。</p></div>
+      <div class="section-head"><div><div class="section-kicker">03 · MAP</div><h2>一条线看全程</h2></div><p class="section-note">每站看点和停留时间都在下方；点目的地直达那一天。</p></div>
       <div id="map">{{MAP}}</div>
-      <p id="map-caption" class="map-caption">离线时可看示意，点击下方编号可打开地图导航。</p>
+      <p id="map-caption" class="map-caption">离线时可看示意；下方可跳到当天行程，也可单独打开地图位置。</p>
       <ol id="map-route-legend" class="map-route-legend" aria-label="全程路线落点">{{MAP_LEGEND}}</ol>
+      <div id="route-decision" class="route-decision">{{ROUTE_DECISION}}</div>
     </section>
     <section id="days">
-      <div class="section-head"><div><div class="section-kicker">08 · HOUR BY HOUR</div><h2>从几点到几点，我在哪里做什么</h2></div><p class="section-note">每一天先看横向顺序，再从上往下读完整时段。</p></div>
-      <div class="timeline-guide"><b>阅读方式：</b>左侧是时间，中间红线是当天进度，右侧依次写地点、安排和移动。</div>
+      <div class="section-head"><div><div class="section-kicker">04 · DAY BY DAY</div><h2>逐日行程</h2></div><p class="section-note">先看每天的路线和时间分配，点开再看具体时段。</p></div>
+      <div class="day-controls"><span>共 {{DAY_MARK}} 天 · 默认收起</span><div><button type="button" id="expand-all-days">展开全部</button><button type="button" id="collapse-all-days">收起全部</button></div></div>
       <div id="timeline" class="timeline">{{TIMELINE}}</div>
     </section>
-    <section id="tips">
-      <div class="section-head"><div><div class="section-kicker">09 · RULES</div><h2>这趟的底线</h2></div><p class="section-note">它们比多打一个景点更重要。</p></div>
-      <div id="tips-grid" class="grid tips-grid">{{TIPS}}</div>
-    </section>
-    <section id="sources-section">
-      <div class="section-head"><div><div class="section-kicker">10 · SOURCES</div><h2>核验入口</h2></div><p class="section-note">出发前再次核对开放状态、政策与路况。</p></div>
-      <div id="sources" class="sources card">{{SOURCES}}</div>
+    <section id="practical">
+      <div class="section-head"><div><div class="section-kicker">05 · FIELD NOTES</div><h2>实用资料</h2></div><p class="section-note">具体执行时再查，不打断上面的行程阅读。</p></div>
+      <div class="reference-stack">
+        <details class="reference-panel card"><summary>住宿片区与备选 <span>{{HOTEL_COUNT}} 处</span></summary><div id="hotel-grid" class="grid hotel-grid">{{HOTELS}}</div></details>
+        <details class="reference-panel card"><summary>跨城路线与转场 <span>{{LEG_COUNT}} 段</span></summary><div id="route-ledger" class="route-ledger">{{ROUTE_LEDGER}}</div><div id="transport-grid" class="grid transport-grid">{{TRANSPORT}}</div></details>
+        <details class="reference-panel card"><summary>同行提醒与核验资料 <span>出发前再看</span></summary><div id="tips-grid" class="grid tips-grid">{{TIPS}}</div><div id="sources" class="sources">{{SOURCES}}</div><div id="source-strip" class="source-strip">{{SOURCE_STRIP}}</div><p class="disclaimer">{{DISCLAIMER}}</p></details>
+      </div>
     </section>
   </main>
   <button class="print" onclick="window.print()" aria-label="打印或存为 PDF">打印 / PDF</button>
