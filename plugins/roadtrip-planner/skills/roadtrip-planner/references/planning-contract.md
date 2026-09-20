@@ -16,7 +16,7 @@ trip
   max_daily_drive / max_detour_hours / pace
   ev_highway_range_km        only for pure EVs; observed range
   interests{}               prefer | must | avoid; canonical destination tags
-  candidates[]              proposed | selected | backup | excluded
+  candidates[]              none | selected | excluded
   route[]                   hard anchors plus selected candidates
   days[]                    drive, charge, play, rest, lodging
   uncertainties[]           fact, freshness, impact, fallback

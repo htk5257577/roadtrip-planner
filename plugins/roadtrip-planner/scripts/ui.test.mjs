@@ -48,7 +48,12 @@ test("mock candidates and final preview render without invoking the backend", ()
   assert.match(app.innerHTML, /固定模拟数据/);
   assert.match(app.innerHTML, /上一个/);
   assert.match(app.innerHTML, /下一个/);
+  assert.doesNotMatch(app.innerHTML, /放入备选|data-status-choice="backup"/);
+  vm.runInContext("updateCandidate('mock-quanzhou','excluded')", context);
+  assert.equal(vm.runInContext("plannerState().candidates.find(c=>c.id==='mock-quanzhou').status", context), "excluded");
+  assert.doesNotMatch(vm.runInContext("plannerState().routeOrder.join(' → ')", context), /泉州/);
   vm.runInContext("updateCandidate('mock-quanzhou','selected'); previewMockPlan()", context);
+  assert.equal(vm.runInContext("plannerState().candidates.find(c=>c.id==='mock-quanzhou').status", context), "selected");
   assert.match(app.innerHTML, /模拟路书 · 未调用 CODEX/);
   assert.match(app.innerHTML, /泉州/);
   assert.match(app.innerHTML, /待核验/);

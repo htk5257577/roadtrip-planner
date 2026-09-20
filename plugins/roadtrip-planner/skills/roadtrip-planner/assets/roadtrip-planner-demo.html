@@ -89,14 +89,13 @@
     .route-arrow{color:#a69b89;font-size:10px}
     .candidate{position:relative;padding:14px;border-radius:17px;border:1px solid var(--line);background:#fffdf8;overflow:hidden}
     .candidate[data-status="selected"]{border-color:rgba(18,63,55,.42);box-shadow:inset 4px 0 0 var(--pine)}
-    .candidate[data-status="backup"]{border-color:rgba(243,189,77,.65);box-shadow:inset 4px 0 0 var(--sun)}
     .candidate[data-status="excluded"]{opacity:.58;filter:grayscale(.4)}
     .candidate-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.candidate-title h3{margin:0;font-family:var(--serif);font-size:18px}.candidate-title small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
     .score{display:grid;place-items:center;min-width:45px;height:45px;border-radius:50%;color:white;background:var(--pine);font:900 14px Georgia,serif}.score small{font:700 7px var(--sans)}
     .candidate-reason{margin:10px 0;color:var(--ink);font-size:10px;line-height:1.6}
     .candidate-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.fact{padding:7px;border-radius:9px;background:var(--paper);font-size:8px;color:var(--muted)}.fact b{display:block;margin-bottom:2px;color:var(--ink);font-size:10px}
     .tags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:9px}.tag{padding:4px 6px;border-radius:99px;color:var(--blue);background:#e9f2f1;font-size:8px;font-weight:800}.tag-label{margin-right:3px;color:var(--muted);font-size:9px;font-weight:800}.candidate-warning{margin:9px 0 0;color:var(--red-dark);font-size:10px;font-weight:800}
-    .candidate-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:10px}.status-btn{padding:8px 6px;color:var(--muted);background:var(--paper);font-size:9px}.status-btn.is-active[data-status-choice="selected"]{color:white;background:var(--pine)}.status-btn.is-active[data-status-choice="backup"]{color:var(--ink);background:var(--sun)}.status-btn.is-active[data-status-choice="excluded"]{color:white;background:#7a706c}
+    .candidate-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:10px}.status-btn{padding:8px 6px;color:var(--muted);background:var(--paper);font-size:9px}.status-btn.is-active[data-status-choice="selected"]{color:white;background:var(--pine)}.status-btn.is-active[data-status-choice="excluded"]{color:white;background:#7a706c}
     .ai-note{padding:12px;border-radius:14px;background:#fff0d2;border:1px solid rgba(243,189,77,.4);font-size:9px;line-height:1.65}.ai-note b{color:var(--red-dark)}
     .ai-run-state{display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;padding:7px 18px;color:#cfe1da;background:#17483f;border-bottom:1px solid rgba(255,255,255,.08);font-size:10px;font-weight:800;text-align:center}
     .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}.ai-run-state[data-status="ended"]{color:#d7eee6;background:#33524b}.ai-run-state[data-status="mock"]{color:#423211;background:#f3bd4d}
@@ -237,9 +236,9 @@
     const mockCandidateResult = {
       summary:'模拟候选，仅用于检查页面交互；绕路、时长、宠物与充电信息均未核验。',
       candidates:[
-        {id:'mock-quanzhou',name:'泉州',segment:'杭州 → 东山',after:debugExample.route.start,order:1,detour:35,drive:1.1,stay:1,tags:['地方美食','历史街巷'],pet:'户外街巷可作为备选，具体场所待核验',ev:'市区补能点待核验',reason:'测试沿途美食和人文类候选的展示。',lon:118.675,lat:24.874,highlight:'古城街巷与本地小吃'},
+        {id:'mock-quanzhou',name:'泉州',segment:'杭州 → 东山',after:debugExample.route.start,order:1,detour:35,drive:1.1,stay:1,tags:['地方美食','历史街巷'],pet:'户外街巷可能适合带狗，具体场所待核验',ev:'市区补能点待核验',reason:'测试沿途美食和人文类候选的展示。',lon:118.675,lat:24.874,highlight:'古城街巷与本地小吃'},
         {id:'mock-chaozhou',name:'潮州',segment:'东山 → 柳州',after:debugExample.route.must[0],order:2,detour:45,drive:1.3,stay:1,tags:['地方美食','历史街巷','河流'],pet:'餐馆和景点规则待核验',ev:'入城补能待核验',reason:'测试同一路段加入城市后的地图与路线变化。',lon:116.622,lat:23.658,highlight:'古城、江边与地方风味'},
-        {id:'mock-wuzhou',name:'梧州',segment:'东山 → 柳州',after:debugExample.route.must[0],order:3,detour:20,drive:.7,stay:1,tags:['历史街巷','地方美食','河流'],pet:'室内场所规则待核验',ev:'城区停车补能待核验',reason:'测试同一路段多个候选的备选和排除。',lon:111.279,lat:23.476,highlight:'骑楼街区与河岸'},
+        {id:'mock-wuzhou',name:'梧州',segment:'东山 → 柳州',after:debugExample.route.must[0],order:3,detour:20,drive:.7,stay:1,tags:['历史街巷','地方美食','河流'],pet:'室内场所规则待核验',ev:'城区停车补能待核验',reason:'测试同一路段多个候选的加入和排除。',lon:111.279,lat:23.476,highlight:'骑楼街区与河岸'},
         {id:'mock-zhaoxing',name:'肇兴侗寨',segment:'柳州 → 恩施',after:debugExample.route.must[1],order:4,detour:95,drive:1.8,stay:1,tags:['民族文化','山岳'],pet:'寨内与接驳规则待核验',ev:'山区补能和续航待核验',reason:'测试山地人文候选与宠物提示。',lon:109.175,lat:25.909,highlight:'村寨步行与山地风景'},
         {id:'mock-kaili',name:'凯里',segment:'柳州 → 恩施',after:debugExample.route.must[1],order:5,detour:180,drive:2.8,stay:1.5,tags:['地方美食','民族文化'],pet:'场所规则待核验',ev:'山地续航待核验',reason:'测试超过绕路上限时的提醒。',lon:107.977,lat:26.583,highlight:'地方风味与民族文化'},
         {id:'mock-yichang',name:'宜昌',segment:'恩施 → 赤壁',after:debugExample.route.must[2],order:6,detour:25,drive:.8,stay:1,tags:['河流','峡谷','地方美食'],pet:'游船和景点规则待核验',ev:'城区补能待核验',reason:'测试最后一个路段插入候选点。',lon:111.286,lat:30.692,highlight:'沿江风景与本地饮食'}
@@ -268,7 +267,6 @@
     const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
     const statusOf = id => state.candidateStatus[id] || 'none';
     const selectedCandidates = () => candidates.filter(c => statusOf(c.id) === 'selected');
-    const backupCandidates = () => candidates.filter(c => statusOf(c.id) === 'backup');
     const excludedCandidates = () => candidates.filter(c => statusOf(c.id) === 'excluded');
     const locations = Array.isArray(window.ROADTRIP_LOCATIONS) ? window.ROADTRIP_LOCATIONS : [];
     const locationByLabel = new Map(locations.map(place=>[place[4],place]));
@@ -428,7 +426,7 @@
     }
 
     function stageBar(){
-      const stages = [['基础行程','地点与时间'],['旅行偏好','只问会改变路线的'],['候选点','加入 / 备选 / 排除'],['成品','固定模板计划']];
+      const stages = [['基础行程','地点与时间'],['旅行偏好','只问会改变路线的'],['候选点','加入 / 排除'],['成品','固定模板计划']];
       return `<nav class="stagebar" aria-label="规划步骤">${stages.map((item,index) => `<button type="button" class="stage ${state.stage===index+1?'is-active':''}" data-stage="${index+1}"><i>${index+1}</i><span>${item[0]}</span></button>${index<stages.length-1?'<span class="stage-divider"></span>':''}`).join('')}</nav>`;
     }
 
@@ -531,12 +529,12 @@
       const sign=value=>value>0?'+':'';
       const sourceLabel=impact.source==='codex'?'Codex 核验增量':impact.source==='mock'?'模拟绕路数据':impact.source==='amap'?'高德道路增量':impact.source==='unlocated'?'地点待定位':'粗略估算';
       return `<article class="candidate ${focus?'focus-card':''}" data-status="${status}">
-        <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='backup'?'备选，不计入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${score}<small>/100</small></div></div>
+        <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${score}<small>/100</small></div></div>
         <p class="candidate-reason"><b>为什么出现：</b>${esc(c.reason)}</p>
         <div class="candidate-facts"><div class="fact"><b>${impact.km===null?'待核验':`${sign(impact.km)}${impact.km} km`}</b>${sourceLabel}</div><div class="fact"><b>${impact.drive===null?'待核验':`${sign(impact.drive)}${impact.drive} h`}</b>额外驾驶${state.answers.ev?'＋补能':''}</div><div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
         ${impact.drive!==null && Number(state.answers.maxDetour)<999 && impact.drive>Number(state.answers.maxDetour)?`<p class="candidate-warning">比你设定的绕路上限多 ${+(impact.drive-Number(state.answers.maxDetour)).toFixed(1)} 小时</p>`:''}
         <div class="tags"><span class="tag-label">适合体验</span>${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div><div class="tags"><span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>
-        <div class="candidate-actions"><button type="button" class="status-btn ${status==='selected'?'is-active':''}" data-candidate="${c.id}" data-status-choice="selected">加入路线</button><button type="button" class="status-btn ${status==='backup'?'is-active':''}" data-candidate="${c.id}" data-status-choice="backup">放入备选</button><button type="button" class="status-btn ${status==='excluded'?'is-active':''}" data-candidate="${c.id}" data-status-choice="excluded">排除</button></div>
+        <div class="candidate-actions"><button type="button" class="status-btn ${status==='selected'?'is-active':''}" data-candidate="${c.id}" data-status-choice="selected">加入路线</button><button type="button" class="status-btn ${status==='excluded'?'is-active':''}" data-candidate="${c.id}" data-status-choice="excluded">排除</button></div>
       </article>`;
     }
 
@@ -546,7 +544,7 @@
 
     function globalDashboard(){
       const ready=planningReady(), stats=routeStats(), located=ready&&stats.km!==null;
-      const selected=selectedCandidates().length, backups=backupCandidates().length;
+      const selected=selectedCandidates().length, excluded=excludedCandidates().length;
       const reviewed=candidates.filter(c=>statusOf(c.id)!=='none').length;
       const stageName=['','基础行程','旅行偏好','候选评审','计划预览'][state.stage];
       const cell=(value,label,pending=false)=>`<div class="global-cell"><b class="${pending?'pending':''}">${value}</b><span>${label}</span></div>`;
@@ -554,7 +552,7 @@
       const cells=[
         cell(state.route.must.length,'已锁定必去点'),
         cell(selectionVisible?selected:'—',selectionVisible?'已加入沿途点':'候选尚未生成',!selectionVisible),
-        cell(selectionVisible?backups:'—',selectionVisible?'已放入备选':'候选尚未评审',!selectionVisible),
+        cell(selectionVisible?excluded:'—',selectionVisible?'已排除沿途点':'候选尚未评审',!selectionVisible),
         cell(datesReady()?`${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天`:'—',datesReady()?'可用旅行时间':'时间尚未填完整',!datesReady()),
         cell(located?stats.km.toLocaleString('zh-CN',{maximumFractionDigits:1}):'待核验',located?(stats.source==='amap'?'高德道路快照 · km':'粗略估算 · km'):'路线里程',!located),
         cell(located?`${stats.drive}h`:'待核验',located?`驾驶＋${state.answers.ev?'补能':'休息'}估算`:'驾驶时长',!located),
@@ -585,7 +583,7 @@
     function guideContent(){
       if(state.stage===1) return `<div class="panel-head"><div><span class="kicker">基础行程</span><h2>先把地点和时间定下来。</h2><p>出发地、终点、必去点和日期齐了，才有判断沿途值得停哪里的依据。</p></div></div><div class="debug-notice"><span>${state.debugSample?'当前填的是调试示例，可直接修改地点与日期。':'当前为空白行程，可重新填入调试示例。'}</span><button type="button" data-action="toggle-debug">${state.debugSample?'清空示例':'填入示例'}</button></div>${routeEditor()}${timeEditor()}<div class="mock-controls"><p>调试页面：载入固定的示例路线和 6 个模拟候选，直接检查后续交互；不会调用 Codex，也不会保存当前输入。</p><button type="button" data-action="mock-candidates">载入模拟候选 →</button></div><div class="guide-next"><p>下一步再选节奏、驾驶上限与旅行偏好。</p><button class="primary" type="button" data-stage="2">继续：旅行偏好 →</button></div>`;
       if(state.stage===2) return `<div class="panel-head"><div><span class="kicker">旅行偏好</span><h2>哪些条件会改变路线？</h2><p>告诉 Codex 你的驾驶节奏、同行约束和想要的体验。</p></div></div>${questions()}<div style="margin-top:20px">${preferenceEditor()}</div><div class="mock-controls"><p>仅用于界面调试：载入固定示例路线及模拟候选，当前填写的条件会被替换。</p><button type="button" data-action="mock-candidates">载入模拟候选 →</button></div><div class="guide-next"><button class="ghost" type="button" data-stage="1">← 修改基础行程</button><button class="primary" type="button" data-action="ai-candidates" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在规划…':'让 Codex 生成沿途候选 →'}</button></div>`;
-      if(state.stage===3){ const sorted=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a)); const index=Math.max(0,Math.min(state.focusCandidate,sorted.length-1)); const c=sorted[index]; if(!c) return `<div class="panel-head"><div><h2>候选点还没生成。</h2><p>完成前两步后，让 Codex 根据你的真实路线生成沿途选择。</p></div></div><button class="primary" type="button" data-action="ai-candidates">生成沿途候选 →</button>`; return `<div class="panel-head"><div><span class="kicker">ONE DECISION AT A TIME</span><h2>这个地方，值不值得拐进去？</h2><p>${state.ai.source==='mock'?'以下是固定模拟数据，只用于检查页面，不代表 Codex 的规划结论。':'这些候选来自当前 Codex 会话的规划结果。'}</p></div><button class="ghost" type="button" data-action="ai-candidates">重新问 Codex</button></div><div class="guide-candidate-focus"><button class="focus-arrow" data-action="focus-prev" aria-label="上一个候选"><span aria-hidden="true">←</span><span class="arrow-label">上一个</span></button>${candidateCard(c,true)}<button class="focus-arrow" data-action="focus-next" aria-label="下一个候选"><span class="arrow-label">下一个</span><span aria-hidden="true">→</span></button></div><div class="focus-count">${index+1} / ${sorted.length} · 按推荐度排序</div>${state.ai.source==='mock'?'<div class="mock-controls"><p>完成加入／备选／排除后，可以直接查看模拟成品排版；不会调用 Codex。</p><button type="button" data-action="mock-plan">预览模拟路书 →</button></div>':''}<div class="guide-next"><button class="ghost" type="button" data-stage="2">← 修改条件</button><button class="primary" type="button" data-action="ai-plan" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在生成…':'完成评审，让 Codex 生成完整路书 →'}</button></div>`; }
+      if(state.stage===3){ const sorted=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a)); const index=Math.max(0,Math.min(state.focusCandidate,sorted.length-1)); const c=sorted[index]; if(!c) return `<div class="panel-head"><div><h2>候选点还没生成。</h2><p>完成前两步后，让 Codex 根据你的真实路线生成沿途选择。</p></div></div><button class="primary" type="button" data-action="ai-candidates">生成沿途候选 →</button>`; return `<div class="panel-head"><div><span class="kicker">ONE DECISION AT A TIME</span><h2>这个地方，值不值得拐进去？</h2><p>${state.ai.source==='mock'?'以下是固定模拟数据，只用于检查页面，不代表 Codex 的规划结论。':'这些候选来自当前 Codex 会话的规划结果。'}</p></div><button class="ghost" type="button" data-action="ai-candidates">重新问 Codex</button></div><div class="guide-candidate-focus"><button class="focus-arrow" data-action="focus-prev" aria-label="上一个候选"><span aria-hidden="true">←</span><span class="arrow-label">上一个</span></button>${candidateCard(c,true)}<button class="focus-arrow" data-action="focus-next" aria-label="下一个候选"><span class="arrow-label">下一个</span><span aria-hidden="true">→</span></button></div><div class="focus-count">${index+1} / ${sorted.length} · 按推荐度排序</div>${state.ai.source==='mock'?'<div class="mock-controls"><p>完成加入或排除后，可以直接查看模拟成品排版；不会调用 Codex。</p><button type="button" data-action="mock-plan">预览模拟路书 →</button></div>':''}<div class="guide-next"><button class="ghost" type="button" data-stage="2">← 修改条件</button><button class="primary" type="button" data-action="ai-plan" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在生成…':'完成评审，让 Codex 生成完整路书 →'}</button></div>`; }
       return report();
     }
 
@@ -872,7 +870,7 @@
 
     function updateCandidate(id,nextStatus){
       const current=statusOf(id); state.candidateStatus[id]=current===nextStatus?'none':nextStatus; state.stage=3; render();
-      const candidate=candidates.find(c=>c.id===id); const label=state.candidateStatus[id]==='selected'?'已加入路线':state.candidateStatus[id]==='backup'?'已放入备选':state.candidateStatus[id]==='excluded'?'已排除':'已恢复待决定'; toast(`${candidate.name}${label}。`);
+      const candidate=candidates.find(c=>c.id===id); const label=state.candidateStatus[id]==='selected'?'已加入路线':state.candidateStatus[id]==='excluded'?'已排除':'已恢复待决定'; toast(`${candidate.name}${label}。`);
     }
 
     function standaloneReport(){
