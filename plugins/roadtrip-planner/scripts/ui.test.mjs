@@ -111,6 +111,8 @@ test("Codex preview, full report, and text refinement are three separate page jo
   assert.equal(calls[1].state.review.preview.summary, "路线预览已核验");
   assert.equal(vm.runInContext("state.stage", context), 5);
   assert.ok(app.innerHTML.includes('data-action="refine-open"'));
+  assert.ok(app.innerHTML.includes('class="completed-report"'));
+  assert.ok(!app.innerHTML.includes('class="guide-body"'));
   await vm.runInContext("requestCodexRefine()", context);
   assert.equal(calls[2].url, "/api/codex/refine");
   assert.equal(calls[2].state.instruction, "把恩施留久一点");

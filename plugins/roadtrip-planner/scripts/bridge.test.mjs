@@ -1,16 +1,18 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { promisify } from "node:util";
+import { renderRoadbook } from "./render-report.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const serverPath = join(scriptDir, "server.mjs");
 const bridgePath = join(scriptDir, "bridge-client.mjs");
+const exampleDataPath = join(scriptDir, "fixtures/report-data.json");
 const execFileAsync = promisify(execFile);
 
 async function bridge(base, ...args) {
@@ -171,9 +173,13 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const planSubmitted = await json(base, "/api/codex/plan", reviewedState);
     const planJob = await waitingPlan;
     assert.equal(planJob.id, planSubmitted.data.job.id);
-    const result = { status: "completed", title: "测试路书", summary: "已完成", route: "杭州 → 恩施 → 杭州", reportPath: planJob.reportPath };
+    const reportData = JSON.parse(await readFile(exampleDataPath, "utf8"));
+    const result = { status: "completed", title: "测试路书", summary: "已完成", route: "杭州 → 恩施 → 杭州", reportPath: planJob.reportPath, dataPath: planJob.dataPath };
     assert.equal((await json(base, `/api/bridge/jobs/${planJob.id}/complete`, { result })).status, 400);
-    await writeFile(planJob.reportPath, `<!doctype html><title>测试路书</title>${"行程".repeat(600)}`);
+    await writeFile(planJob.dataPath, JSON.stringify(reportData));
+    await writeFile(planJob.reportPath, `<!doctype html><title>看起来相似但不是固定模板</title>${"行程".repeat(600)}`);
+    assert.equal((await json(base, `/api/bridge/jobs/${planJob.id}/complete`, { result })).status, 400);
+    await writeFile(planJob.reportPath, renderRoadbook(reportData));
     const planResultPath = join(workspace, "plan-result.json");
     await writeFile(planResultPath, JSON.stringify(result));
     assert.equal((await bridge(base, "complete", planJob.id, planResultPath)).status, "completed");
@@ -190,9 +196,11 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const beforeRefine=await (await fetch(new URL("/generated-plan",base))).text();
     assert.equal((await json(base,`/api/bridge/jobs/${refineJob.id}/complete`,{result:{...result,reportPath:refineJob.reportPath}})).status,400);
     assert.equal(await (await fetch(new URL("/generated-plan",base))).text(),beforeRefine);
-    await writeFile(refineJob.revisionPath,`<!doctype html><title>微调版</title>${"放松行程".repeat(600)}`);
+    const refinedData={...reportData,title:"微调版",hero:{...reportData.hero,title:"微调版"}};
+    await writeFile(refineJob.revisionDataPath,JSON.stringify(refinedData));
+    await writeFile(refineJob.revisionPath,renderRoadbook(refinedData));
     const refineResultPath=join(workspace,"refine-result.json");
-    await writeFile(refineResultPath,JSON.stringify({...result,summary:"微调完成",reportPath:refineJob.revisionPath}));
+    await writeFile(refineResultPath,JSON.stringify({...result,summary:"微调完成",reportPath:refineJob.revisionPath,dataPath:refineJob.revisionDataPath}));
     assert.equal((await bridge(base,"complete",refineJob.id,refineResultPath)).status,"completed");
     assert.match(await (await fetch(new URL("/generated-plan",base))).text(),/微调版/);
 

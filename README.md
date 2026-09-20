@@ -19,7 +19,7 @@ Codex 会在本机启动 `127.0.0.1:4317` 页面，并在同一轮对话中等�
 - 能运行本地服务并写入当前工作目录的权限。
 - 如需在路线预览中显示真实高德底图与所选地点的图钉，启动本地服务的环境须设置 `AMAP_MAPS_API_KEY`（高德 Web 服务 Key）。这只用于地图定位与图片，不是 OpenAI API Key；缺少时规划流程仍可使用，但地图会明确提示未配置。
 
-网页中普通的路线选择即时更新；第 3 步生成沿途候选、第 4 步生成路线预览、第 5 步生成完整路书，以及成品页的文字微调，会分别把任务交给当前 Codex 对话。第 4 步显示 Codex 核对过的全程和逐日数据，第 5 步才按南线报告的阅读顺序输出单文件 HTML。页面状态目前不会跨刷新保存。此桥接流程需要启动任务持续运行；浏览器不能唤醒已结束的 Codex 任务。
+网页中普通的路线选择即时更新；第 3 步生成沿途候选、第 4 步生成路线预览、第 5 步生成完整路书，以及成品页的文字微调，会分别把任务交给当前 Codex 对话。第 4 步显示 Codex 核对过的全程和逐日数据；第 5 步先生成行程数据，再由固定渲染器输出与南线报告同版式的单文件 HTML，避免 AI 自由发挥造成排版漂移。页面状态目前不会跨刷新保存。此桥接流程需要启动任务持续运行；浏览器不能唤醒已结束的 Codex 任务。
 
 当前评审版暂时预填了杭州—东山县—柳州—恩施—赤壁及时间、同行条件，方便检查地图和交互；可在第一步点击“清空示例”，正式发布前会移除这个调试预填。
 
@@ -30,6 +30,7 @@ Codex 会在本机启动 `127.0.0.1:4317` 页面，并在同一轮对话中等�
 - `plugins/roadtrip-planner/skills/roadtrip-planner/`：规划流程；
 - `plugins/roadtrip-planner/scripts/server.mjs`：仅监听本机的网页服务；
 - `plugins/roadtrip-planner/scripts/bridge-client.mjs`：当前 Codex 会话领取任务和回传结果的本地桥接工具；
-- `plugins/roadtrip-planner/assets/roadbook-template.html`：不含个人行程的通用报告结构参考。
+- `plugins/roadtrip-planner/assets/roadbook-template.html` 与 `assets/south-line.css`：不含个人行程或密钥的固定南线版式。
+- `plugins/roadtrip-planner/scripts/render-report.mjs`：把 Codex 写出的行程数据渲染为统一版式，并用于微调后的重新生成。
 
 不要提交个人 API 凭据、真实路书、临时报告或 `.env` 文件。本仓库不包含这些数据。

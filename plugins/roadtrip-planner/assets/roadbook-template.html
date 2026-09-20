@@ -1,45 +1,82 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-roadbook-template="south-line-v1">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>自驾路书 · 通用结构参考</title>
-  <style>
-    :root{--pine:#173e38;--ink:#243933;--muted:#71817b;--sand:#f7f2e8;--paper:#fffdf8;--line:#e9e1d5;--coral:#d66548;--blue:#4d8790}
-    *{box-sizing:border-box}body{margin:0;background:var(--sand);color:var(--ink);font:16px/1.7 system-ui,"PingFang SC",sans-serif}
-    main{width:min(1100px,calc(100% - 32px));margin:auto;padding:24px 0 64px}
-    h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2rem,5vw,4rem);line-height:1.18}h2{font-size:clamp(1.35rem,2.5vw,2rem)}
-    .hero{padding:clamp(28px,5vw,60px);border-radius:28px;background:linear-gradient(135deg,#102f2a,#27675a);color:white}.eyebrow{color:#f3c56f;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-    .route{font-size:1.1rem;font-weight:700}.muted{color:var(--muted)}.hero .muted{color:#cbdad3}
-    .metrics,.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin:16px 0 28px}.jumpbar{display:flex;gap:12px;overflow:auto;padding:14px 0;white-space:nowrap}.jumpbar a{padding:6px 10px;border-radius:99px;background:#fffdf8;text-decoration:none;font-size:.8rem}
-    .metric,.card{padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--paper)}.metric strong{display:block;font-size:1.6rem;color:var(--coral)}
-    section{margin:28px 0}.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .stop,.day,.stay,.ledger{margin:10px 0;padding:18px 20px;border-left:4px solid var(--coral);border-radius:14px;background:var(--paper)}
-    .meta{color:var(--muted);font-size:.9rem}.bar{height:8px;overflow:hidden;border-radius:99px;background:#e8e5df}.bar i{display:block;height:100%;background:var(--coral)}.bar.play i{background:var(--blue)}
-    .map{min-height:320px;display:grid;place-items:center;border:1px dashed #aabbb4;border-radius:20px;background:#e9eee8;text-align:center;padding:24px}
-    .timeline-time{font-weight:800;color:var(--coral)}a{color:#1e6c75}ul{padding-left:20px}.source-note{font-size:.88rem;color:var(--muted)}
-    @media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.section-head{display:block}}
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173f3a">
+  <title>{{DOCUMENT_TITLE}}</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <style>{{SOUTH_LINE_CSS}}</style>
 </head>
 <body>
-<main>
-  <header class="hero"><span class="eyebrow">ROAD BOOK · 季节 / 年份</span><h1>有辨识度的旅行标题</h1><p>一句话说明每段风景、人文或美食如何连成这趟旅行。</p><p class="route">出发地 → 已确认的目的地 → 终点</p></header>
-  <nav class="jumpbar" aria-label="页面导航"><a href="#todo">待办</a><a href="#brief">行前</a><a href="#stops">每站多久</a><a href="#pace">时间热力图</a><a href="#route-ledger">路线</a><a href="#stay">住宿</a><a href="#map-section">地图</a><a href="#days">逐时行程</a><a href="#tips">避坑</a></nav>
-  <div class="metrics" aria-label="全程概览">
-    <div class="metric"><strong>—</strong>旅行天数</div><div class="metric"><strong>—</strong>预计里程</div>
-    <div class="metric"><strong>—</strong>驾驶与补能</div><div class="metric"><strong>—</strong>有效游玩</div>
-  </div>
-  <section id="todo"><div class="section-head"><h2>出发前倒计时</h2></div><div class="card">按紧急度列出预订、证件、景区宠物政策和补能准备；标明截止时间。</div></section>
-  <section id="brief"><div class="section-head"><h2>01 · 行前须知</h2></div><div class="two"><div class="card">天气、节假日与道路风险</div><div class="card">宠物与纯电车行前清单</div></div></section>
-  <section id="stops"><div class="section-head"><h2>02 · 每站到底怎么玩</h2></div><article class="stop"><h3>目的地名称 · 建议停留多久</h3><p>独有价值、具体景点与美食，分日期写清活动和时间投入。</p><p class="meta">抵达与离开时段 · 住宿片区 · 可删减项</p></article></section>
-  <section id="pace"><div class="section-head"><h2>03 · 每日时间热力图</h2></div><div class="card"><p>日期 · 驾驶 0h / 游玩 0h</p><div class="bar"><i style="width:45%"></i></div><div class="bar play" style="margin-top:8px"><i style="width:65%"></i></div></div></section>
-  <section id="route-ledger"><div class="section-head"><h2>04 · 路线账本</h2></div><div class="ledger">每段起终点、道路公里、驾驶时间、补能与休息；标出估算或核验来源。</div></section>
-  <section id="transport"><div class="section-head"><h2>05 · 大交通与补能</h2></div><div class="card">重要跨境、轮渡、山路等交通约束；纯电车的充电落点和余量。</div></section>
-  <section id="stay"><div class="section-head"><h2>06 · 住宿落点</h2></div><div class="stay">逐晚列住宿区域及宠物/充电可行性；弹性休息只写地理区间。</div></section>
-  <section id="map-section"><div class="section-head"><h2>07 · 一条线看全程</h2></div><div class="map">真实地图可加载时显示点位；离线时保留城市顺序和可读路线。示意连线不冒充驾车导航轨迹。</div></section>
-  <section id="days"><div class="section-head"><h2>08 · 从几点到几点，我在哪里做什么</h2></div><article class="day"><h3>日期 · 当天主题</h3><p><span class="timeline-time">09:00–11:00</span> 地点、活动、用时。</p><p><span class="timeline-time">11:00–14:00</span> 道路转场与补能；餐食安排、落脚区域和宠物注意。</p></article></section>
-  <section id="tips"><div class="section-head"><h2>09 · 这趟的底线</h2></div><div class="two"><div class="card">宠物、纯电和住宿政策</div><div class="card">天气、拥堵、改线与取消边界</div></div></section>
-  <section id="sources"><h2>10 · 核验入口</h2><p class="source-note">附来源链接与更新时间；明确区分已核验和推测。</p></section>
-</main>
+  <header class="hero" {{HERO_STYLE}}>
+    <div class="shell">
+      <div class="eyebrow"><span>{{EYEBROW}}</span><strong>{{BADGE}}</strong></div>
+      <h1>{{HERO_TITLE}}</h1>
+      <p class="hero-lede">{{HERO_LEDE}}</p>
+      <p class="route-string">{{ROUTE}}</p>
+      <div class="hero-stats">{{HERO_STATS}}</div>
+    </div>
+    <div class="hero-mark">{{DAY_MARK}}</div>
+  </header>
+  <nav class="jumpbar" aria-label="页面导航"><div class="shell">
+    <a href="#todo">待办</a><a href="#brief">行前</a><a href="#stops">每站多久</a><a href="#pace">时间热力图</a><a href="#route">路线</a><a href="#stay">住宿</a><a href="#map-section">地图</a><a href="#days">逐时行程</a><a href="#tips">避坑</a>
+  </div></nav>
+  <main class="shell">
+    <section id="todo" class="todo-wrap card">
+      <div class="todo-title"><h2>出发前倒计时</h2><small>今天能订的，别等明天</small></div>
+      <div id="checklist">{{CHECKLIST}}</div>
+    </section>
+    <section id="brief">
+      <div class="section-head"><div><div class="section-kicker">01 · PREP</div><h2>行前须知</h2></div><p class="section-note">{{BRIEF_NOTE}}</p></div>
+      <div id="pretrip-grid" class="grid pre-grid">{{PRETRIP}}</div>
+    </section>
+    <section id="stops">
+      <div class="section-head"><div><div class="section-kicker">02 · STOPS</div><h2>每站到底怎么玩</h2></div><p class="section-note">每站展开到具体日期、时段、地点和保留价值。</p></div>
+      <div id="stop-grid" class="stop-grid">{{STOPS}}</div>
+      <div id="route-decision" class="route-decision">{{ROUTE_DECISION}}</div>
+    </section>
+    <section id="pace">
+      <div class="section-head"><div><div class="section-kicker">03 · RHYTHM</div><h2>每日时间热力图</h2></div><p class="section-note">绿色为有效游玩，红色为驾驶，黄色为吃饭、充电与缓冲。</p></div>
+      <div id="heatmap" class="heat-wrap card">{{HEATMAP}}</div>
+    </section>
+    <section id="route">
+      <div class="section-head"><div><div class="section-kicker">04 · DRIVE</div><h2>路线账本</h2></div><p class="section-note">道路数据与排程估算分开标注；长途日不叠加打卡景点。</p></div>
+      <div id="route-ledger" class="route-ledger card">{{ROUTE_LEDGER}}</div>
+    </section>
+    <section id="transport">
+      <div class="section-head"><div><div class="section-kicker">05 · MODE</div><h2>大交通</h2></div><p class="section-note">驾车、补能、轮渡和其他重要转场。</p></div>
+      <div id="transport-grid" class="grid transport-grid">{{TRANSPORT}}</div>
+    </section>
+    <section id="stay">
+      <div class="section-head"><div><div class="section-kicker">06 · SLEEP</div><h2>住宿落点</h2></div><p class="section-note">先定片区；宠物与充电政策以下单前确认结果为准。</p></div>
+      <div id="hotel-grid" class="grid hotel-grid">{{HOTELS}}</div>
+      <div id="source-strip" class="source-strip">{{SOURCE_STRIP}}</div>
+      <p class="disclaimer">{{DISCLAIMER}}</p>
+    </section>
+    <section id="map-section">
+      <div class="section-head"><div><div class="section-kicker">07 · MAP</div><h2>一条线看全程</h2></div><p class="section-note">地图按落点顺序呈现；连线不是逐弯导航轨迹。</p></div>
+      <div id="map">{{MAP}}</div>
+      <p id="map-caption" class="map-caption">离线时可看示意，点击下方编号可打开地图导航。</p>
+      <ol id="map-route-legend" class="map-route-legend" aria-label="全程路线落点">{{MAP_LEGEND}}</ol>
+    </section>
+    <section id="days">
+      <div class="section-head"><div><div class="section-kicker">08 · HOUR BY HOUR</div><h2>从几点到几点，我在哪里做什么</h2></div><p class="section-note">每一天先看横向顺序，再从上往下读完整时段。</p></div>
+      <div class="timeline-guide"><b>阅读方式：</b>左侧是时间，中间红线是当天进度，右侧依次写地点、安排和移动。</div>
+      <div id="timeline" class="timeline">{{TIMELINE}}</div>
+    </section>
+    <section id="tips">
+      <div class="section-head"><div><div class="section-kicker">09 · RULES</div><h2>这趟的底线</h2></div><p class="section-note">它们比多打一个景点更重要。</p></div>
+      <div id="tips-grid" class="grid tips-grid">{{TIPS}}</div>
+    </section>
+    <section id="sources-section">
+      <div class="section-head"><div><div class="section-kicker">10 · SOURCES</div><h2>核验入口</h2></div><p class="section-note">出发前再次核对开放状态、政策与路况。</p></div>
+      <div id="sources" class="sources card">{{SOURCES}}</div>
+    </section>
+  </main>
+  <button class="print" onclick="window.print()" aria-label="打印或存为 PDF">打印 / PDF</button>
+  <footer><div class="shell">{{FOOTER}}</div></footer>
+  {{MAP_SCRIPT}}
 </body>
 </html>

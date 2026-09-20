@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderRoadbook } from "./render-report.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(scriptDir, "..");
@@ -13,6 +14,7 @@ const locationsPath = join(pluginRoot, "skills", "roadtrip-planner", "assets", "
 const workspaceRoot = resolve(process.env.ROADTRIP_WORKSPACE || process.cwd());
 const outputDir = join(workspaceRoot, "roadtrip-planner-output");
 const reportPath = join(outputDir, "generated-roadtrip-plan.html");
+const reportDataPath = join(outputDir, "report-data.json");
 const port = Number(process.env.ROADTRIP_PORT ?? 4317);
 const host = "127.0.0.1";
 const amapKey = process.env.AMAP_MAPS_API_KEY || "";
@@ -178,7 +180,8 @@ function nextJob() {
     workspaceRoot,
     outputDir,
     reportPath,
-    ...(job.type === "refine" ? { revisionPath: job.revisionPath } : {})
+    dataPath: reportDataPath,
+    ...(job.type === "refine" ? { revisionPath: job.revisionPath, revisionDataPath: job.revisionDataPath } : {})
   };
 }
 
@@ -191,9 +194,13 @@ function enqueue(type, state = null) {
     id: randomUUID(), type, state, status: "queued",
     message: "已提交，等待当前 Codex 会话领取。",
     createdAt: now, updatedAt: now, result: null, error: null,
-    reportBaseline: existsSync(reportPath) ? statSync(reportPath).mtimeMs : -1
+    reportBaseline: existsSync(reportPath) ? statSync(reportPath).mtimeMs : -1,
+    dataBaseline: existsSync(reportDataPath) ? statSync(reportDataPath).mtimeMs : -1
   };
-  if (type === "refine") job.revisionPath = join(outputDir, `revision-${job.id}.html`);
+  if (type === "refine") {
+    job.revisionPath = join(outputDir, `revision-${job.id}.html`);
+    job.revisionDataPath = join(outputDir, `revision-${job.id}.json`);
+  }
   jobs.set(job.id, job);
   pending.push(job);
   for (const wake of waiters) wake();
@@ -236,12 +243,21 @@ function validateResult(job, result) {
   }
   if (job.type === "plan" || job.type === "refine") {
     const destination = job.type === "refine" ? job.revisionPath : reportPath;
-    if (result.status !== "completed" || result.reportPath !== destination || !existsSync(destination) ||
-        (job.type === "plan" && statSync(destination).mtimeMs <= job.reportBaseline) || statSync(destination).size < 1000) {
-      throw new Error(job.type === "refine" ? "微调后的路书尚未写入指定文件" : "最终路书尚未写入指定 HTML 文件");
+    const dataDestination = job.type === "refine" ? job.revisionDataPath : reportDataPath;
+    if (result.status !== "completed" || result.reportPath !== destination || result.dataPath !== dataDestination ||
+        !existsSync(destination) || !existsSync(dataDestination) ||
+        (job.type === "plan" && (statSync(destination).mtimeMs <= job.reportBaseline || statSync(dataDestination).mtimeMs <= job.dataBaseline))) {
+      throw new Error(job.type === "refine" ? "微调后的数据与路书尚未写入指定文件" : "最终路书数据与 HTML 尚未写入指定文件");
     }
-    if (job.type === "refine") renameSync(destination, reportPath);
-    return { ...result, reportPath, reportUrl: `/generated-plan?v=${job.id}` };
+    const data = JSON.parse(readFileSync(dataDestination, "utf8"));
+    if (readFileSync(destination, "utf8") !== renderRoadbook(data)) {
+      throw new Error("路书不是由南线固定模板渲染，请使用 render-report.mjs 生成");
+    }
+    if (job.type === "refine") {
+      renameSync(destination, reportPath);
+      renameSync(dataDestination, reportDataPath);
+    }
+    return { ...result, reportPath, dataPath: reportDataPath, reportUrl: `/generated-plan?v=${job.id}` };
   }
   throw new Error("无法完成该任务");
 }
@@ -309,7 +325,7 @@ const server = createServer(async (req, res) => {
           (state.review?.preview?.status !== "completed" ||
            JSON.stringify(state.review.preview.routeOrder) !== JSON.stringify(state.routeOrder) ||
            state.review.mock === true)) throw new Error("请先让 Codex 生成并确认当前路线的预览");
-      if (type === "refine" && (!existsSync(reportPath) ||
+      if (type === "refine" && (!existsSync(reportPath) || !existsSync(reportDataPath) ||
           typeof state.instruction !== "string" || !state.instruction.trim() || state.instruction.length > 2000)) {
         throw new Error("请先生成完整报告，并填写不超过 2000 字的微调要求");
       }
