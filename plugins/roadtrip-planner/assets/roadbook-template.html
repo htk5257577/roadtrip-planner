@@ -9,38 +9,37 @@
     *{box-sizing:border-box}body{margin:0;background:var(--sand);color:var(--ink);font:16px/1.7 system-ui,"PingFang SC",sans-serif}
     main{width:min(1100px,calc(100% - 32px));margin:auto;padding:24px 0 64px}
     h1,h2,h3,p{margin-top:0}h1{font-size:clamp(2rem,5vw,4rem);line-height:1.18}h2{font-size:clamp(1.35rem,2.5vw,2rem)}
-    .hero{padding:clamp(28px,5vw,60px);border-radius:28px;background:var(--pine);color:white}.eyebrow{color:#f3c56f;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    .hero{padding:clamp(28px,5vw,60px);border-radius:28px;background:linear-gradient(135deg,#102f2a,#27675a);color:white}.eyebrow{color:#f3c56f;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
     .route{font-size:1.1rem;font-weight:700}.muted{color:var(--muted)}.hero .muted{color:#cbdad3}
-    .metrics,.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin:16px 0 28px}
+    .metrics,.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin:16px 0 28px}.jumpbar{display:flex;gap:12px;overflow:auto;padding:14px 0;white-space:nowrap}.jumpbar a{padding:6px 10px;border-radius:99px;background:#fffdf8;text-decoration:none;font-size:.8rem}
     .metric,.card{padding:20px;border:1px solid var(--line);border-radius:20px;background:var(--paper)}.metric strong{display:block;font-size:1.6rem;color:var(--coral)}
     section{margin:28px 0}.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .stop,.day,.stay{margin:10px 0;padding:18px 20px;border-left:4px solid var(--coral);border-radius:14px;background:var(--paper)}
+    .stop,.day,.stay,.ledger{margin:10px 0;padding:18px 20px;border-left:4px solid var(--coral);border-radius:14px;background:var(--paper)}
     .meta{color:var(--muted);font-size:.9rem}.bar{height:8px;overflow:hidden;border-radius:99px;background:#e8e5df}.bar i{display:block;height:100%;background:var(--coral)}.bar.play i{background:var(--blue)}
     .map{min-height:320px;display:grid;place-items:center;border:1px dashed #aabbb4;border-radius:20px;background:#e9eee8;text-align:center;padding:24px}
-    .timeline-time{font-weight:800;color:var(--coral)}a{color:#1e6c75}ul{padding-left:20px}
+    .timeline-time{font-weight:800;color:var(--coral)}a{color:#1e6c75}ul{padding-left:20px}.source-note{font-size:.88rem;color:var(--muted)}
     @media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.section-head{display:block}}
   </style>
 </head>
 <body>
 <main>
-  <header class="hero">
-    <span class="eyebrow">Route verdict</span>
-    <h1>旅行标题</h1>
-    <p class="route">出发地 → 已确认的目的地 → 终点</p>
-    <p class="muted">一句话说明这条路线为什么成立、哪里最值得停留、哪里有时间压力。</p>
-  </header>
+  <header class="hero"><span class="eyebrow">ROAD BOOK · 季节 / 年份</span><h1>有辨识度的旅行标题</h1><p>一句话说明每段风景、人文或美食如何连成这趟旅行。</p><p class="route">出发地 → 已确认的目的地 → 终点</p></header>
+  <nav class="jumpbar" aria-label="页面导航"><a href="#todo">待办</a><a href="#brief">行前</a><a href="#stops">每站多久</a><a href="#pace">时间热力图</a><a href="#route-ledger">路线</a><a href="#stay">住宿</a><a href="#map-section">地图</a><a href="#days">逐时行程</a><a href="#tips">避坑</a></nav>
   <div class="metrics" aria-label="全程概览">
     <div class="metric"><strong>—</strong>旅行天数</div><div class="metric"><strong>—</strong>预计里程</div>
     <div class="metric"><strong>—</strong>驾驶与补能</div><div class="metric"><strong>—</strong>有效游玩</div>
   </div>
-  <section id="before"><div class="section-head"><h2>1 · 出发前要办</h2></div><div class="card">列出需要预订、核验和准备的事项；注明截止时间与规则来源。</div></section>
-  <section id="stops"><div class="section-head"><h2>2 · 每站值在哪里</h2></div><article class="stop"><h3>目的地名称 · 建议停留时长</h3><p>一句话概括独有体验；写明具体景点、活动、餐饮和宠物可行性。</p><p class="meta">抵达时段、离开时段、住宿区域、可删减项。</p></article></section>
-  <section id="heat"><div class="section-head"><h2>3 · 每天开多久、玩多久</h2></div><div class="card"><p>日期 · 驾驶 0h / 游玩 0h</p><div class="bar"><i style="width:45%"></i></div><div class="bar play" style="margin-top:8px"><i style="width:65%"></i></div></div></section>
-  <section id="map"><div class="section-head"><h2>4 · 一条线看全程</h2></div><div class="map">根据实际路线绘制地图或离线示意；不要把示意直线称为道路导航轨迹。</div></section>
-  <section id="daily"><div class="section-head"><h2>5 · 逐日时间轴</h2></div><article class="day"><h3>日期 · 当天主题</h3><p><span class="timeline-time">09:00–11:00</span> 去哪里、做什么、预计能玩多久。</p><p><span class="timeline-time">11:00–14:00</span> 驾驶与补能；说明预计距离和不确定性。</p></article></section>
-  <section id="stays"><div class="section-head"><h2>6 · 每晚住哪里</h2></div><div class="stay">逐晚列住宿区域；临时休息点只写地理区间，不伪装成游玩目的地。</div></section>
-  <section id="rules" class="two"><div class="card"><h2>宠物与纯电</h2><p>景区、交通、住宿和充电逐项核验，不默认将宠物留在车内。</p></div><div class="card"><h2>天气、拥堵与备选</h2><p>写清触发条件、替代安排和取消边界。</p></div></section>
-  <section id="sources"><h2>来源与更新时间</h2><ul><li>把已核验事实与估算分开标注，附可打开的来源链接。</li></ul></section>
+  <section id="todo"><div class="section-head"><h2>出发前倒计时</h2></div><div class="card">按紧急度列出预订、证件、景区宠物政策和补能准备；标明截止时间。</div></section>
+  <section id="brief"><div class="section-head"><h2>01 · 行前须知</h2></div><div class="two"><div class="card">天气、节假日与道路风险</div><div class="card">宠物与纯电车行前清单</div></div></section>
+  <section id="stops"><div class="section-head"><h2>02 · 每站到底怎么玩</h2></div><article class="stop"><h3>目的地名称 · 建议停留多久</h3><p>独有价值、具体景点与美食，分日期写清活动和时间投入。</p><p class="meta">抵达与离开时段 · 住宿片区 · 可删减项</p></article></section>
+  <section id="pace"><div class="section-head"><h2>03 · 每日时间热力图</h2></div><div class="card"><p>日期 · 驾驶 0h / 游玩 0h</p><div class="bar"><i style="width:45%"></i></div><div class="bar play" style="margin-top:8px"><i style="width:65%"></i></div></div></section>
+  <section id="route-ledger"><div class="section-head"><h2>04 · 路线账本</h2></div><div class="ledger">每段起终点、道路公里、驾驶时间、补能与休息；标出估算或核验来源。</div></section>
+  <section id="transport"><div class="section-head"><h2>05 · 大交通与补能</h2></div><div class="card">重要跨境、轮渡、山路等交通约束；纯电车的充电落点和余量。</div></section>
+  <section id="stay"><div class="section-head"><h2>06 · 住宿落点</h2></div><div class="stay">逐晚列住宿区域及宠物/充电可行性；弹性休息只写地理区间。</div></section>
+  <section id="map-section"><div class="section-head"><h2>07 · 一条线看全程</h2></div><div class="map">真实地图可加载时显示点位；离线时保留城市顺序和可读路线。示意连线不冒充驾车导航轨迹。</div></section>
+  <section id="days"><div class="section-head"><h2>08 · 从几点到几点，我在哪里做什么</h2></div><article class="day"><h3>日期 · 当天主题</h3><p><span class="timeline-time">09:00–11:00</span> 地点、活动、用时。</p><p><span class="timeline-time">11:00–14:00</span> 道路转场与补能；餐食安排、落脚区域和宠物注意。</p></article></section>
+  <section id="tips"><div class="section-head"><h2>09 · 这趟的底线</h2></div><div class="two"><div class="card">宠物、纯电和住宿政策</div><div class="card">天气、拥堵、改线与取消边界</div></div></section>
+  <section id="sources"><h2>10 · 核验入口</h2><p class="source-note">附来源链接与更新时间；明确区分已核验和推测。</p></section>
 </main>
 </body>
 </html>

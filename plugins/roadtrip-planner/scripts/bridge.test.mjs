@@ -120,7 +120,7 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.match(locationsScript, /赤壁市/);
     assert.match(locationsScript, /东山县/);
 
-    const state = { route: { start: "杭州", end: "杭州", must: ["恩施"] }, answers: { departDate: "2026-10-01" } };
+    const state = { route: { start: "杭州", end: "杭州", must: ["恩施"] }, answers: { departDate: "2026-10-01" }, routeOrder:["杭州","恩施","杭州"] };
     assert.equal((await json(base, "/api/codex/candidates", state)).status, 503);
 
     const waiting = bridge(base, "wait");
@@ -132,7 +132,7 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.equal(candidateJob.id, submitted.data.job.id);
     assert.equal(candidateJob.type, "candidates");
     assert.deepEqual(candidateJob.state.route.must, ["恩施"]);
-    assert.equal((await json(base, "/api/codex/plan", state)).status, 409);
+    assert.equal((await json(base, "/api/codex/plan", state)).status, 400);
 
     await bridge(base, "progress", candidateJob.id, "正在比较绕路成本");
     assert.equal((await json(base, `/api/jobs/${candidateJob.id}`)).data.job.message, "正在比较绕路成本");
@@ -147,9 +147,28 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.equal((await bridge(base, "complete", candidateJob.id, candidateResultPath)).status, "completed");
     assert.equal((await json(base, `/api/jobs/${candidateJob.id}`)).data.job.status, "completed");
 
+    const previewFixture = {
+      status:"completed",summary:"路线已核对",routeOrder:state.routeOrder,
+      totals:{distanceKm:1100,driveHours:14,chargeHours:2,playHours:25,pressure:"均衡",distanceSource:"测试道路数据"},
+      days:[{date:"10/1",title:"沿途体验",route:"杭州 → 恩施",distanceKm:600,driveHours:7,chargeHours:1,playHours:4,activities:"山水",lodging:"恩施城区"}],
+      notes:["路段需再核验"],sourceNotes:["测试资料"]
+    };
+    const previewResultPath=join(workspace,"preview.json");
+    await writeFile(previewResultPath,JSON.stringify(previewFixture));
+    const waitingPreview = bridge(base,"wait");
+    await waitForRunner(base);
+    assert.equal((await json(base,"/api/codex/plan",state)).status,400);
+    const previewSubmitted = await json(base,"/api/codex/preview",state);
+    assert.equal(previewSubmitted.status,202);
+    const previewJob = await waitingPreview;
+    assert.equal(previewJob.type,"preview");
+    assert.equal((await json(base,`/api/bridge/jobs/${previewJob.id}/complete`,{result:{...previewFixture,routeOrder:["杭州","杭州"]}})).status,400);
+    assert.equal((await bridge(base,"complete",previewJob.id,previewResultPath)).status,"completed");
+    const reviewedState={...state,review:{preview:previewFixture,mock:false}};
+
     const waitingPlan = bridge(base, "wait");
     await waitForRunner(base);
-    const planSubmitted = await json(base, "/api/codex/plan", state);
+    const planSubmitted = await json(base, "/api/codex/plan", reviewedState);
     const planJob = await waitingPlan;
     assert.equal(planJob.id, planSubmitted.data.job.id);
     const result = { status: "completed", title: "测试路书", summary: "已完成", route: "杭州 → 恩施 → 杭州", reportPath: planJob.reportPath };
@@ -158,7 +177,24 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const planResultPath = join(workspace, "plan-result.json");
     await writeFile(planResultPath, JSON.stringify(result));
     assert.equal((await bridge(base, "complete", planJob.id, planResultPath)).status, "completed");
-    assert.equal((await json(base, `/api/jobs/${planJob.id}`)).data.job.result.reportUrl, "/generated-plan");
+    assert.match((await json(base, `/api/jobs/${planJob.id}`)).data.job.result.reportUrl, /^\/generated-plan\?v=/);
+
+    const waitingRefine=bridge(base,"wait");
+    await waitForRunner(base);
+    assert.equal((await json(base,"/api/codex/refine",{...reviewedState,instruction:""})).status,400);
+    const refineSubmitted=await json(base,"/api/codex/refine",{...reviewedState,instruction:"让行程更松弛"});
+    assert.equal(refineSubmitted.status,202);
+    const refineJob=await waitingRefine;
+    assert.equal(refineJob.type,"refine");
+    assert.ok(refineJob.revisionPath.endsWith(`revision-${refineJob.id}.html`));
+    const beforeRefine=await (await fetch(new URL("/generated-plan",base))).text();
+    assert.equal((await json(base,`/api/bridge/jobs/${refineJob.id}/complete`,{result:{...result,reportPath:refineJob.reportPath}})).status,400);
+    assert.equal(await (await fetch(new URL("/generated-plan",base))).text(),beforeRefine);
+    await writeFile(refineJob.revisionPath,`<!doctype html><title>微调版</title>${"放松行程".repeat(600)}`);
+    const refineResultPath=join(workspace,"refine-result.json");
+    await writeFile(refineResultPath,JSON.stringify({...result,summary:"微调完成",reportPath:refineJob.revisionPath}));
+    assert.equal((await bridge(base,"complete",refineJob.id,refineResultPath)).status,"completed");
+    assert.match(await (await fetch(new URL("/generated-plan",base))).text(),/微调版/);
 
     const waitingStop = bridge(base, "wait");
     await waitForRunner(base);

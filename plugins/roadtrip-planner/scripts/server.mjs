@@ -2,7 +2,7 @@
 
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, statSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -177,7 +177,8 @@ function nextJob() {
     state: job.state,
     workspaceRoot,
     outputDir,
-    reportPath
+    reportPath,
+    ...(job.type === "refine" ? { revisionPath: job.revisionPath } : {})
   };
 }
 
@@ -192,6 +193,7 @@ function enqueue(type, state = null) {
     createdAt: now, updatedAt: now, result: null, error: null,
     reportBaseline: existsSync(reportPath) ? statSync(reportPath).mtimeMs : -1
   };
+  if (type === "refine") job.revisionPath = join(outputDir, `revision-${job.id}.html`);
   jobs.set(job.id, job);
   pending.push(job);
   for (const wake of waiters) wake();
@@ -215,12 +217,31 @@ function validateResult(job, result) {
     }
     return result;
   }
-  if (job.type === "plan") {
-    if (result.status !== "completed" || result.reportPath !== reportPath || !existsSync(reportPath) ||
-        statSync(reportPath).mtimeMs <= job.reportBaseline || statSync(reportPath).size < 1000) {
-      throw new Error("最终路书尚未写入指定 HTML 文件");
+  if (job.type === "preview") {
+    const totals = result.totals;
+    const expected = job.state.routeOrder;
+    if (result.status !== "completed" || typeof result.summary !== "string" ||
+        !Array.isArray(result.routeOrder) || !Array.isArray(expected) ||
+        JSON.stringify(result.routeOrder) !== JSON.stringify(expected) ||
+        !totals || !["distanceKm", "driveHours", "chargeHours", "playHours"].every(key => Number.isFinite(totals[key]) && totals[key] >= 0) ||
+        typeof totals.pressure !== "string" || typeof totals.distanceSource !== "string" ||
+        !Array.isArray(result.days) || !result.days.length ||
+        result.days.some(day => !["date", "title", "route", "activities", "lodging"].every(key => typeof day[key] === "string") ||
+          !["distanceKm", "driveHours", "chargeHours", "playHours"].every(key => Number.isFinite(day[key]) && day[key] >= 0)) ||
+        !Array.isArray(result.notes) || !result.notes.every(note => typeof note === "string") ||
+        !Array.isArray(result.sourceNotes) || !result.sourceNotes.every(note => typeof note === "string")) {
+      throw new Error("预览数据不完整，或路线与已选地点不一致");
     }
-    return { ...result, reportUrl: "/generated-plan" };
+    return result;
+  }
+  if (job.type === "plan" || job.type === "refine") {
+    const destination = job.type === "refine" ? job.revisionPath : reportPath;
+    if (result.status !== "completed" || result.reportPath !== destination || !existsSync(destination) ||
+        (job.type === "plan" && statSync(destination).mtimeMs <= job.reportBaseline) || statSync(destination).size < 1000) {
+      throw new Error(job.type === "refine" ? "微调后的路书尚未写入指定文件" : "最终路书尚未写入指定 HTML 文件");
+    }
+    if (job.type === "refine") renameSync(destination, reportPath);
+    return { ...result, reportPath, reportUrl: `/generated-plan?v=${job.id}` };
   }
   throw new Error("无法完成该任务");
 }
@@ -276,14 +297,22 @@ const server = createServer(async (req, res) => {
       sendJson(res, job ? 200 : 404, job ? { ok: true, job: publicJob(job) } : { ok: false, error: "任务不存在" });
       return;
     }
-    if (req.method === "POST" && ["/api/codex/candidates", "/api/codex/plan"].includes(url.pathname)) {
+    if (req.method === "POST" && ["/api/codex/candidates", "/api/codex/preview", "/api/codex/plan", "/api/codex/refine"].includes(url.pathname)) {
       if (!runnerConnected()) {
         sendJson(res, 503, { ok: false, error: "当前 Codex 会话尚未进入等待状态，请回到 Codex 对话。" });
         return;
       }
       const state = await readJsonBody(req);
       if (!state?.route || !state?.answers) throw new Error("页面条件不完整");
-      const type = url.pathname.endsWith("candidates") ? "candidates" : "plan";
+      const type = url.pathname.split("/").at(-1);
+      if ((type === "plan" || type === "refine") &&
+          (state.review?.preview?.status !== "completed" ||
+           JSON.stringify(state.review.preview.routeOrder) !== JSON.stringify(state.routeOrder) ||
+           state.review.mock === true)) throw new Error("请先让 Codex 生成并确认当前路线的预览");
+      if (type === "refine" && (!existsSync(reportPath) ||
+          typeof state.instruction !== "string" || !state.instruction.trim() || state.instruction.length > 2000)) {
+        throw new Error("请先生成完整报告，并填写不超过 2000 字的微调要求");
+      }
       const job = enqueue(type, state);
       sendJson(res, 202, { ok: true, job: publicJob(job) });
       return;
@@ -334,7 +363,7 @@ const server = createServer(async (req, res) => {
       } else if (match[2] === "complete") {
         job.result = validateResult(job, body.result);
         job.status = "completed";
-        job.message = job.type === "plan" ? "完整路书已生成。" : "沿途候选已生成。";
+        job.message = ({ plan:"完整路书已生成。", preview:"路线预览已生成。", refine:"路书微调已完成。", candidates:"沿途候选已生成。" })[job.type];
       } else {
         job.status = "failed";
         job.error = String(body.error || "Codex 未能完成任务").slice(0, 1000);
