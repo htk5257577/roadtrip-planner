@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(scriptDir, "..");
 const pagePath = join(pluginRoot, "skills", "roadtrip-planner", "assets", "roadtrip-planner-demo.html");
+const locationsPath = join(pluginRoot, "skills", "roadtrip-planner", "assets", "locations.js");
 const workspaceRoot = resolve(process.env.ROADTRIP_WORKSPACE || process.cwd());
 const outputDir = join(workspaceRoot, "roadtrip-planner-output");
 const reportPath = join(outputDir, "generated-roadtrip-plan.html");
@@ -163,6 +164,10 @@ const server = createServer(async (req, res) => {
   try {
     if (req.method === "GET" && (url.pathname === "/" || url.pathname === "/app")) {
       serveFile(res, pagePath, true);
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/locations.js") {
+      serveFile(res, locationsPath);
       return;
     }
     if (req.method === "GET" && url.pathname === "/api/status") {

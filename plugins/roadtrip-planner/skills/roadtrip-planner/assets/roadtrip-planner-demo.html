@@ -61,6 +61,7 @@
     .must-actions{display:flex;gap:3px}.mini{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;color:var(--muted);background:var(--paper)}
     .mini:hover{color:var(--ink);background:var(--paper-2)}
     .add-row{display:grid;grid-template-columns:1fr auto;gap:7px}
+    .place-field{position:relative;min-width:0}.place-field input{width:100%}.place-results{position:absolute;z-index:30;top:calc(100% + 4px);left:0;right:0;max-height:260px;overflow:auto;padding:5px;border:1px solid var(--line);border-radius:12px;background:#fffdf8;box-shadow:var(--shadow)}.place-results[hidden]{display:none}.place-option{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 10px;border:0;border-radius:8px;color:var(--ink);background:transparent;text-align:left;font-size:11px}.place-option:hover,.place-option.is-active{background:#eaf3f2}.place-option small{color:var(--muted);font-size:9px}.place-empty{padding:10px;color:var(--muted);font-size:10px}.framework-block{margin-top:18px;padding-top:17px;border-top:1px solid var(--line)}.framework-block .question-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.framework-block h3{margin:0 0 10px;font:700 19px var(--serif)}.validation-hint{margin-top:12px;color:var(--red-dark);font-size:10px}
     .helper{margin:8px 0 0;color:var(--muted);font-size:9px;line-height:1.55}
     .pref-grid{display:flex;flex-wrap:wrap;gap:7px}
     .pref{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:7px 9px;color:var(--muted);background:#fffdf8;font-size:10px;font-weight:800}
@@ -122,7 +123,7 @@
 
     .toast{position:fixed;z-index:120;right:18px;bottom:18px;max-width:300px;padding:12px 14px;border-radius:13px;color:white;background:var(--pine);box-shadow:var(--shadow);font-size:10px;line-height:1.55;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}.toast.is-show{opacity:1;transform:none}
     .mobile-only{display:none}
-    @media(max-width:820px){.topbar{padding:11px 13px}.prototype-badge{display:none}.top-actions .secondary{display:none}.stagebar{padding:9px 12px}.map-card{min-height:360px}.map-card svg{max-width:100%;height:360px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-shell{width:min(100% - 20px,1180px);margin:10px auto}.guide-hero{min-height:0;padding:24px}.route-band{grid-template-columns:1fr}.route-band-title{padding:0 0 10px;border-right:0;border-bottom:1px solid var(--line)}.route-band .route-string{padding-top:2px}.guide-body,.guide-route-builder{grid-template-columns:1fr}.guide-route-builder .route-editor{padding-right:0;border:0;border-bottom:1px solid var(--line);padding-bottom:18px}.guide-main{padding:18px}.guide-side{position:static;grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}.day-row{grid-template-columns:48px 1fr}.day-plan,.day-bars{grid-column:2}.question-grid{grid-template-columns:1fr}.mobile-only{display:block}}
+    @media(max-width:820px){.topbar{padding:11px 13px}.prototype-badge{display:none}.top-actions .secondary{display:none}.stagebar{padding:9px 12px}.map-card{min-height:360px}.map-card svg{max-width:100%;height:360px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.guide-shell{width:min(100% - 20px,1180px);margin:10px auto}.guide-hero{min-height:0;padding:24px}.route-band{grid-template-columns:1fr}.route-band-title{padding:0 0 10px;border-right:0;border-bottom:1px solid var(--line)}.route-band .route-string{padding-top:2px}.guide-body,.guide-route-builder{grid-template-columns:1fr}.guide-route-builder .route-editor{padding-right:0;border:0;border-bottom:1px solid var(--line);padding-bottom:18px}.guide-main{padding:18px}.guide-side{position:static;grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}.day-row{grid-template-columns:48px 1fr}.day-plan,.day-bars{grid-column:2}.question-grid,.framework-block .question-grid{grid-template-columns:1fr}.mobile-only{display:block}}
     @media(max-width:520px){.brand-copy span{display:none}.top-actions .primary{padding:9px 10px;font-size:10px}.stage-divider{display:none}.stage{padding:7px 8px}.stage span{display:none}.guide-candidate-focus{grid-template-columns:1fr}.focus-arrow{display:none}.route-inputs{grid-template-columns:1fr}.candidate-facts{grid-template-columns:1fr 1fr}.map-overlay{align-items:stretch;flex-direction:column}.map-legend{max-width:none}.map-mode{align-self:flex-start}.report-hero{padding:24px 18px}.report-body{padding:13px}.day-row{grid-template-columns:44px 1fr}}
     @media print{.topbar,.stagebar,.report-actions,.toast{display:none!important}.app{padding:0}.generated{box-shadow:none}.report-grid{grid-template-columns:1fr}.day-row{break-inside:avoid}body{background:white}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
@@ -132,10 +133,7 @@
   <div id="app" class="app"></div>
   <div class="toast" id="toast" role="status"></div>
 
-  <datalist id="cityOptions">
-    <option>杭州</option><option>泉州</option><option>东山岛</option><option>潮汕</option><option>澳门</option><option>珠海</option><option>广州</option><option>深圳</option><option>香港</option><option>柳州</option><option>贵阳</option><option>凯里</option><option>镇远</option><option>梵净山</option><option>肇兴侗寨</option><option>张家界</option><option>恩施</option><option>宜昌</option><option>西安</option><option>兰州</option><option>西宁</option><option>青海湖</option><option>甘南</option><option>成都</option>
-  </datalist>
-
+  <script src="locations.js"></script>
   <script>
     const pageUrl = new URL(location.href);
     if (pageUrl.searchParams.has('variant')) {
@@ -169,15 +167,7 @@
       '成都': { lon:104.066, lat:30.572, stay:1.5, highlight:'川味、街巷与城市休整' }
     };
 
-    let candidates = [
-      { id:'quanzhou', name:'泉州', segment:'杭州 → 东山岛', after:'杭州', order:1, detour:24, drive:.4, stay:.8, tags:['人文','美食','低绕行'], pet:'古城户外段友好', ev:'城区补能成熟', reason:'把一段长途南下拆开，同时获得不可替代的闽南古城体验。' },
-      { id:'chaoshan', name:'潮汕', segment:'东山岛 → 澳门', after:'东山岛', order:1, detour:36, drive:.7, stay:.6, tags:['美食','人文','夜生活'], pet:'餐饮时需轮流照看', ev:'城市快充密集', reason:'顺着海岸线换口味，半天也能形成完整的牛肉火锅与老城体验。' },
-      { id:'zhuhai', name:'珠海', segment:'东山岛 → 澳门', after:'东山岛', order:2, detour:18, drive:.3, stay:.5, tags:['海景','宠物友好','缓冲'], pet:'适合作澳门寄养/接驳基地', ev:'补能非常容易', reason:'它不是核心景点，而是把澳门过境、宠物安排和补能变得从容的功能型停留。' },
-      { id:'zhaoxing', name:'肇兴侗寨', segment:'柳州 → 恩施', after:'柳州', order:1, detour:112, drive:1.9, stay:1, tags:['人文','山景','少数民族'], pet:'寨内步行需确认住宿', ev:'县城补满再进山', reason:'人文浓度强，但会把路线向东南拉回；适合把侗寨放在贵州第一优先的人。' },
-      { id:'kaili', name:'凯里', segment:'柳州 → 恩施', after:'柳州', order:2, detour:28, drive:.5, stay:1.5, tags:['美食','人文','山水','宠物友好'], pet:'苗寨户外与河谷更易同行', ev:'凯里补能后再走县道', reason:'酸汤、苗寨和巴拉河能同时补足贵州风景与美食，路线代价最低。' },
-      { id:'zhenyuan', name:'镇远', segment:'柳州 → 恩施', after:'柳州', order:3, detour:74, drive:1.2, stay:1, tags:['古城','夜景','山水'], pet:'古城户外较友好', ev:'古城外围补能', reason:'山水古城的完整度高，夜间价值大，但与泉州、澳门都有一定街区体验重合。' },
-      { id:'fanjing', name:'梵净山', segment:'柳州 → 恩施', after:'柳州', order:4, detour:168, drive:2.8, stay:1, tags:['山景','徒步','自然'], pet:'核心景区通常不适合随行', ev:'山脚补能需预留', reason:'单体风景强，却会增加寄养和排队风险；若后面已有恩施峡谷，体验也更接近。' }
-    ];
+    let candidates = [];
 
     // 高德 Web Service 道路距离快照，采集于 2026-09-18。
     // 未命中的自定义组合会回退为经纬度估算，并在界面中明确标记。
@@ -218,10 +208,10 @@
 
     const state = {
       stage: 1,
-      route: { start:'杭州', end:'杭州', must:['东山岛','澳门','柳州','恩施','宜昌'] },
+      route: { start:'', end:'', must:[] },
       prefs: { '美食':'off','海岛':'off','海景':'off','人文':'off','山景':'off','峡谷':'off','少数民族':'off','自驾公路':'off','宠物友好':'off','低强度':'off','低人流':'off' },
-      answers: { departDate:'', returnDate:'', departTime:'19:00', maxDrive:'', pace:'', pet:false, ev:false, boarding:false },
-      candidateStatus: { quanzhou:'none', chaoshan:'none', zhuhai:'none', zhaoxing:'none', kaili:'none', zhenyuan:'none', fanjing:'none' },
+      answers: { departDate:'', returnDate:'', departTime:'', maxDrive:'', pace:'', pet:false, ev:false, boarding:false },
+      candidateStatus: {},
       focusCandidate: 0,
       ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', reportUrl:'', backendReady:false, ended:false },
       webMcpRegistered: false
@@ -236,31 +226,41 @@
     const selectedCandidates = () => candidates.filter(c => statusOf(c.id) === 'selected');
     const backupCandidates = () => candidates.filter(c => statusOf(c.id) === 'backup');
     const excludedCandidates = () => candidates.filter(c => statusOf(c.id) === 'excluded');
-    const coordFor = name => cityCatalog[name] || null;
+    const locations = Array.isArray(window.ROADTRIP_LOCATIONS) ? window.ROADTRIP_LOCATIONS : [];
+    const locationByLabel = new Map(locations.map(place=>[place[4],place]));
+    const coordFor = name => {
+      if(cityCatalog[name]) return cityCatalog[name];
+      const place=locationByLabel.get(name);
+      if(!place || place[5] !== 2) return null;
+      return cityCatalog[place[1].replace(/市$|地区$|自治州$|盟$/,'')] || null;
+    };
     const datesReady = () => {
       if (!state.answers.departDate || !state.answers.returnDate) return false;
       const start = new Date(`${state.answers.departDate}T00:00:00`);
       const end = new Date(`${state.answers.returnDate}T00:00:00`);
       return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
     };
-    const planningReady = () => datesReady() && Number(state.answers.maxDrive) > 0;
+    const frameworkReady = () => Boolean(state.route.start && state.route.end && state.route.must.length && state.answers.departTime && datesReady());
+    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0;
 
     function roadLeg(from,to){
       const exact=roadLegs[`${from.name}>${to.name}`];
       if(exact) return { ...exact, source:'amap' };
+      if(!Number.isFinite(from.lon)||!Number.isFinite(from.lat)||!Number.isFinite(to.lon)||!Number.isFinite(to.lat)) return { km:null, hours:null, source:'unlocated' };
       const km=haversine(from,to)*1.22;
       return { km, hours:km/82, source:'estimate' };
     }
 
     function routeRoadStats(nodes){
-      let km=0, driveHours=0, exactLegs=0;
+      let km=0, driveHours=0, exactLegs=0, unlocated=0;
       const legs=[];
       for(let i=1;i<nodes.length;i++){
         const leg=roadLeg(nodes[i-1],nodes[i]);
-        km+=leg.km; driveHours+=leg.hours; if(leg.source==='amap')exactLegs++;
+        if(leg.source==='unlocated') unlocated++;
+        else {km+=leg.km; driveHours+=leg.hours; if(leg.source==='amap')exactLegs++;}
         legs.push({ from:nodes[i-1].name, to:nodes[i].name, ...leg });
       }
-      return { km, driveHours, chargeHours:state.answers.ev?km/330*.45:0, source:exactLegs===legs.length?'amap':exactLegs?'mixed':'estimate', legs };
+      return { km:unlocated?null:km, driveHours:unlocated?null:driveHours, chargeHours:unlocated?null:state.answers.ev?km/330*.45:0, source:unlocated?'unlocated':exactLegs===legs.length?'amap':exactLegs?'mixed':'estimate', legs };
     }
 
     function candidateScore(c){
@@ -282,7 +282,7 @@
     }
 
     function routeNodes(selectedOverride){
-      const anchors = [state.route.start, ...state.route.must, state.route.end].map((name, index) => ({ name, kind:'hard', index, ...(coordFor(name) || {}) }));
+      const anchors = [state.route.start, ...state.route.must, state.route.end].filter(Boolean).map((name, index) => ({ name, kind:'hard', index, ...(coordFor(name) || {}) }));
       const included=(selectedOverride || selectedCandidates()).slice().sort((a,b) => a.order-b.order);
       included.forEach(candidate => {
         const anchorNames = anchors.map(n => n.name);
@@ -299,6 +299,7 @@
       const withCandidate=[...without,candidate];
       const base=routeRoadStats(routeNodes(without));
       const next=routeRoadStats(routeNodes(withCandidate));
+      if(base.km===null||next.km===null) return {km:null,drive:null,source:'unlocated'};
       const baseTotalHours=base.driveHours+base.chargeHours;
       const nextTotalHours=next.driveHours+next.chargeHours;
       return {
@@ -309,7 +310,7 @@
     }
 
     function haversine(a,b){
-      if (!a || !b || !Number.isFinite(a.lat) || !Number.isFinite(b.lat)) return 360;
+      if (!a || !b || !Number.isFinite(a.lat) || !Number.isFinite(b.lat)) return null;
       const toRad = v => v * Math.PI / 180;
       const dLat = toRad(b.lat-a.lat), dLon = toRad(b.lon-a.lon);
       const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
@@ -320,10 +321,10 @@
       const nodes = routeNodes();
       const road=routeRoadStats(nodes);
       const km=road.km;
-      const drive=road.driveHours+road.chargeHours;
+      const drive=road.driveHours===null?null:road.driveHours+road.chargeHours;
       const stayDays = nodes.slice(1,-1).reduce((sum,node) => sum + (node.candidate?.stay ?? coordFor(node.name)?.stay ?? 1),0);
       const play = stayDays * 7;
-      if (!planningReady()) return { km:Number(km.toFixed(1)), drive:Number(drive.toFixed(1)), play:Math.round(play), pressure:null, availableDays:null, load:null, source:road.source, road };
+      if (!planningReady() || km===null) return { km:km===null?null:Number(km.toFixed(1)), drive:drive===null?null:Number(drive.toFixed(1)), play:Math.round(play), pressure:null, availableDays:null, load:null, source:road.source, road };
       const availableDays = Math.floor((new Date(`${state.answers.returnDate}T00:00:00`)-new Date(`${state.answers.departDate}T00:00:00`))/86400000)+1;
       const load = (drive / Number(state.answers.maxDrive) + stayDays) / availableDays;
       const pressure = load <= .72 ? '舒缓' : load <= .98 ? '均衡' : '偏赶';
@@ -377,21 +378,35 @@
     }
 
     function stageBar(){
-      const stages = [['必去点','锁定骨架'],['必要问题','只问会改变路线的'],['候选点','加入 / 备选 / 排除'],['成品','固定模板计划']];
+      const stages = [['基础行程','地点与时间'],['旅行偏好','只问会改变路线的'],['候选点','加入 / 备选 / 排除'],['成品','固定模板计划']];
       return `<nav class="stagebar" aria-label="规划步骤">${stages.map((item,index) => `<button type="button" class="stage ${state.stage===index+1?'is-active':''}" data-stage="${index+1}"><i>${index+1}</i><span>${item[0]}</span></button>${index<stages.length-1?'<span class="stage-divider"></span>':''}`).join('')}</nav>`;
+    }
+
+    function placeInput(field,placeholder){
+      const value=field==='must'?'':state.route[field];
+      const id=field==='must'?'newMustStop':`route-${field}`;
+      return `<div class="place-field"><input id="${id}" type="text" value="${esc(value)}" placeholder="${esc(placeholder)}" data-place-field="${field}" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="${id}-results" autocomplete="off"><div class="place-results" id="${id}-results" role="listbox" hidden></div></div>`;
     }
 
     function routeEditor(){
       return `<div class="route-editor">
         <div class="route-inputs">
-          <label class="field"><span>从哪里出发</span><input value="${esc(state.route.start)}" list="cityOptions" data-route-field="start"></label>
-          <label class="field"><span>最终回到</span><input value="${esc(state.route.end)}" list="cityOptions" data-route-field="end"></label>
+          <div class="field"><span>从哪里出发</span>${placeInput('start','搜索出发地')}</div>
+          <div class="field"><span>最终到哪里</span>${placeInput('end','搜索终点')}</div>
         </div>
-        <span class="kicker">LOCKED ANCHORS</span>
-        <div class="must-list">${state.route.must.map((name,index) => `<div class="must-stop"><span class="lock">◆</span><div><b>${esc(name)}</b><small>必去 · AI 不得删除</small></div><div class="must-actions"><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="-1" aria-label="上移">↑</button><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="1" aria-label="下移">↓</button><button type="button" class="mini" data-action="remove-stop" data-index="${index}" aria-label="删除">×</button></div></div>`).join('')}</div>
-        <div class="add-row"><input id="newMustStop" list="cityOptions" placeholder="输入新的必去点"><button type="button" class="primary" data-action="add-stop">锁定</button></div>
-        <p class="helper">顺序就是当前行车顺序。候选城市会插在这些锚点之间，但不会替换它们。</p>
+        <span class="kicker">一定要去</span>
+        <div class="must-list">${state.route.must.length?state.route.must.map((name,index) => `<div class="must-stop"><span class="lock">◆</span><div><b>${esc(name)}</b><small>必去 · AI 不得删除</small></div><div class="must-actions"><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="-1" aria-label="上移">↑</button><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="1" aria-label="下移">↓</button><button type="button" class="mini" data-action="remove-stop" data-index="${index}" aria-label="删除">×</button></div></div>`).join(''):'<p class="helper">还没有必去点，至少添加一个。</p>'}</div>
+        <div class="add-row">${placeInput('must','搜索城市、县，或输入景点')}<button type="button" class="primary" data-action="add-stop">加入必去</button></div>
+        <p class="helper">支持全国省、市、区县模糊搜索；也可输入景点或海岛名称。必去点按加入顺序排列，可随时调整。行政区划数据为 2026 年 4 月快照。</p>
       </div>`;
+    }
+
+    function timeEditor(){
+      return `<div class="framework-block"><h3>什么时候出发与结束？</h3><div class="question-grid">
+        <label class="question"><span>出发日期</span><input type="date" value="${state.answers.departDate}" data-answer="departDate"></label>
+        <label class="question"><span>结束日期</span><input type="date" value="${state.answers.returnDate}" data-answer="returnDate"></label>
+        <label class="question"><span>出发时间</span><input type="time" value="${state.answers.departTime}" data-answer="departTime"></label>
+      </div><p class="helper">先确定可用时间，下一步才能判断加入沿途点是否值得。</p></div>`;
     }
 
     function preferenceEditor(){
@@ -400,9 +415,6 @@
 
     function questions(){
       return `<div class="question-grid">
-        <label class="question"><span>出发日期</span><input type="date" value="${state.answers.departDate}" data-answer="departDate"></label>
-        <label class="question"><span>返程日期</span><input type="date" value="${state.answers.returnDate}" data-answer="returnDate"></label>
-        <label class="question"><span>出发时间</span><input type="time" value="${state.answers.departTime}" data-answer="departTime"></label>
         <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select></label>
         <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select></label>
         <div class="question"><button type="button" class="toggle ${state.answers.pet?'is-on':''}" data-toggle="pet"><span>带宠物</span><i></i></button><button type="button" class="toggle ${state.answers.ev?'is-on':''}" data-toggle="ev"><span>纯电车</span><i></i></button><button type="button" class="toggle ${state.answers.boarding?'is-on':''}" data-toggle="boarding"><span>可短时寄养</span><i></i></button></div>
@@ -410,16 +422,18 @@
     }
 
     function metrics(){
-      if (state.stage === 1) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b class="is-pending">尚未选择</b><span>沿途候选点</span></div><div class="metric"><b class="is-pending">暂不估算</b><span>最终路线与里程</span></div><div class="metric"><b class="is-pending">待填写</b><span>日期与驾驶压力</span></div></div>`;
+      if (state.stage === 1) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b class="is-pending">尚未选择</b><span>沿途候选点</span></div><div class="metric"><b class="is-pending">暂不估算</b><span>最终路线与里程</span></div><div class="metric"><b class="is-pending">${datesReady()?`${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1} 天`:'待填写'}</b><span>可用旅行时间</span></div></div>`;
       if (!planningReady()) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b class="is-pending">待填写</b><span>出发与返程日期</span></div><div class="metric"><b class="is-pending">待选择</b><span>单日舒适驾驶</span></div><div class="metric"><b class="is-pending">尚未计算</b><span>驾驶压力</span></div></div>`;
       const stats = routeStats();
+      if(stats.km===null) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b>${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天</b><span>可用旅行时间</span></div><div class="metric"><b class="is-pending">待核验</b><span>路线里程</span></div><div class="metric"><b class="is-pending">待核验</b><span>驾驶压力</span></div></div>`;
       const scope = selectedCandidates().length ? '当前路线' : '仅必去点基线';
       const sourceLabel=stats.source==='amap'?'高德道路快照':'含估算路段';
       return `<div class="metrics"><div class="metric"><b>${stats.km.toLocaleString('zh-CN',{maximumFractionDigits:1})}</b><span>${scope} · ${sourceLabel} km</span></div><div class="metric"><b>${stats.drive}h</b><span>驾驶＋${state.answers.ev?'补能':'休息'}估算</span></div><div class="metric"><b>${stats.availableDays}天</b><span>已确认可用时间</span></div><div class="metric"><b>${stats.pressure}</b><span>${scope} · 驾驶压力</span></div></div>`;
     }
 
     function routeString(){
-      return `<div class="route-string">${routeNodes().map((node,index) => `${index?'<span class="route-arrow">→</span>':''}<span class="route-node ${node.kind}">${node.kind==='hard'?'◆':'＋'} ${esc(node.name)}</span>`).join('')}</div>`;
+      const nodes=routeNodes();
+      return `<div class="route-string">${nodes.length?nodes.map((node,index) => `${index?'<span class="route-arrow">→</span>':''}<span class="route-node ${node.kind}">${node.kind==='hard'?'◆':'＋'} ${esc(node.name)}</span>`).join(''):'<span class="helper">选择出发地、必去点与终点后，这里会显示顺序。</span>'}</div>`;
     }
 
     function mapView(){
@@ -427,16 +441,17 @@
       const optionalNodes = state.stage >= 3 ? candidates.filter(c => statusOf(c.id) !== 'selected').map(c => ({...coordFor(c.name),name:c.name,kind:'optional',status:statusOf(c.id)})).filter(n => n.lon) : [];
       const all = [...nodes, ...optionalNodes];
       const lons = all.map(n=>n.lon), lats=all.map(n=>n.lat);
-      const minLon=Math.min(...lons)-.6,maxLon=Math.max(...lons)+.6,minLat=Math.min(...lats)-.5,maxLat=Math.max(...lats)+.5;
+      const minLon=lons.length?Math.min(...lons)-.6:73,maxLon=lons.length?Math.max(...lons)+.6:135,minLat=lats.length?Math.min(...lats)-.5:18,maxLat=lats.length?Math.max(...lats)+.5:54;
       const project = n => ({ x:55+(n.lon-minLon)/(maxLon-minLon)*750, y:45+(maxLat-n.lat)/(maxLat-minLat)*360 });
       const points = nodes.map(n => {const p=project(n);return `${p.x.toFixed(1)},${p.y.toFixed(1)}`}).join(' ');
       const routeLabels = nodes.map((n,index) => { const p=project(n); const fill=n.kind==='hard'?'#e65c3d':'#123f37'; return `<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})"><circle r="14" fill="${fill}" stroke="#fffdf6" stroke-width="3"></circle><text x="0" y="4" text-anchor="middle" fill="white" font-size="10" font-weight="900">${index+1}</text><text x="0" y="31" text-anchor="middle" fill="#183b36" font-size="10" font-weight="900" paint-order="stroke" stroke="#fffdf6" stroke-width="4">${esc(n.name)}</text></g>`; }).join('');
       const optional = all.filter(n=>n.kind==='optional').map(n => { const p=project(n); const excluded=n.status==='excluded'; return `<g opacity="${excluded ? .35 : .72}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})"><circle r="8" fill="#fffdf6" stroke="${excluded?'#756c68':'#236d78'}" stroke-width="3" stroke-dasharray="${n.status==='backup'?'0':'3 2'}"></circle><text x="0" y="22" text-anchor="middle" fill="#236d78" font-size="8" font-weight="800" paint-order="stroke" stroke="#fffdf6" stroke-width="3">${esc(n.name)}</text></g>`; }).join('');
-      const legend = state.stage < 3 ? `<div class="legend-row"><span><i class="dot locked"></i>必去点</span></div><div>目前只画路线骨架，不代表最终道路，也暂不计算里程和驾驶压力。</div>` : `<div class="legend-row"><span><i class="dot locked"></i>必去点</span><span><i class="dot selected"></i>已加入候选</span><span><i class="dot optional"></i>待决定</span></div><div>候选只有在“加入路线”后，才会进入里程和行程计算。</div>`;
+      const missing=routeNodes().length-nodes.length;
+      const legend = state.stage < 3 ? `<div class="legend-row"><span><i class="dot locked"></i>已定位地点</span></div><div>${missing?'有 '+missing+' 个地点暂无坐标，地图与里程待 Codex 核验。':'目前只画地点顺序示意，不代表实际道路。'}</div>` : `<div class="legend-row"><span><i class="dot locked"></i>必去点</span><span><i class="dot selected"></i>已加入候选</span><span><i class="dot optional"></i>待决定</span></div><div>${missing?'部分地点尚未定位，不显示未经核验的总里程。':'候选只有在“加入路线”后，才会进入里程和行程计算。'}</div>`;
       return `<div class="panel map-card"><svg viewBox="0 0 860 450" role="img" aria-label="路线总览示意地图">
         <defs><filter id="routeShadow"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#183b36" flood-opacity=".24"/></filter><pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="#183b36" stroke-opacity=".07"/></pattern></defs>
         <rect width="860" height="450" fill="url(#grid)"></rect><path d="M40 118 C170 25 270 83 365 48 S585 90 820 27 M14 330 C180 250 252 351 408 286 S667 304 846 210" fill="none" stroke="#6f9d91" stroke-opacity=".25" stroke-width="2"></path>
-        <polyline points="${points}" fill="none" stroke="#fffdf6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#routeShadow)"></polyline><polyline points="${points}" fill="none" stroke="#e65c3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8"></polyline>${optional}${routeLabels}
+        ${nodes.length>1&&!missing?`<polyline points="${points}" fill="none" stroke="#fffdf6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#routeShadow)"></polyline><polyline points="${points}" fill="none" stroke="#e65c3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8"></polyline>`:''}${optional}${routeLabels}${!nodes.length?'<text x="430" y="210" text-anchor="middle" fill="#315c55" font-size="22" font-weight="800">路线从这里开始</text><text x="430" y="242" text-anchor="middle" fill="#6e7c75" font-size="13">选择地点后显示路线预览</text>':''}
       </svg><div class="map-overlay"><div class="map-legend">${legend}</div><div class="map-mode">${state.stage<3?'仅显示骨架':'路线随选择更新'}</div></div></div>`;
     }
 
@@ -444,11 +459,11 @@
       const status=statusOf(c.id), score=candidateScore(c);
       const impact=state.ai.source==='codex'?{km:c.detour,drive:c.drive,source:'codex'}:candidateImpact(c);
       const sign=value=>value>0?'+':'';
-      const sourceLabel=impact.source==='codex'?'Codex 核验增量':impact.source==='amap'?'高德道路增量':'含估算路段';
+      const sourceLabel=impact.source==='codex'?'Codex 核验增量':impact.source==='amap'?'高德道路增量':impact.source==='unlocated'?'地点待定位':'粗略估算';
       return `<article class="candidate ${focus?'focus-card':''}" data-status="${status}">
         <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='backup'?'备选，不计入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${score}<small>/100</small></div></div>
         <p class="candidate-reason"><b>为什么出现：</b>${esc(c.reason)}</p>
-        <div class="candidate-facts"><div class="fact"><b>${sign(impact.km)}${impact.km} km</b>${sourceLabel}</div><div class="fact"><b>${sign(impact.drive)}${impact.drive} h</b>额外驾驶${state.answers.ev?'＋补能':''}</div><div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
+        <div class="candidate-facts"><div class="fact"><b>${impact.km===null?'待核验':`${sign(impact.km)}${impact.km} km`}</b>${sourceLabel}</div><div class="fact"><b>${impact.drive===null?'待核验':`${sign(impact.drive)}${impact.drive} h`}</b>额外驾驶${state.answers.ev?'＋补能':''}</div><div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
         <div class="tags">${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}<span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>
         <div class="candidate-actions"><button type="button" class="status-btn ${status==='selected'?'is-active':''}" data-candidate="${c.id}" data-status-choice="selected">加入路线</button><button type="button" class="status-btn ${status==='backup'?'is-active':''}" data-candidate="${c.id}" data-status-choice="backup">放入备选</button><button type="button" class="status-btn ${status==='excluded'?'is-active':''}" data-candidate="${c.id}" data-status-choice="excluded">排除</button></div>
       </article>`;
@@ -459,21 +474,21 @@
     }
 
     function globalDashboard(){
-      const ready=planningReady(), stats=routeStats();
+      const ready=planningReady(), stats=routeStats(), located=ready&&stats.km!==null;
       const selected=selectedCandidates().length, backups=backupCandidates().length;
       const reviewed=candidates.filter(c=>statusOf(c.id)!=='none').length;
-      const stageName=['','路线骨架','必要信息','候选评审','计划预览'][state.stage];
+      const stageName=['','基础行程','旅行偏好','候选评审','计划预览'][state.stage];
       const cell=(value,label,pending=false)=>`<div class="global-cell"><b class="${pending?'pending':''}">${value}</b><span>${label}</span></div>`;
       const selectionVisible=state.stage>=3;
       const cells=[
         cell(state.route.must.length,'已锁定必去点'),
         cell(selectionVisible?selected:'—',selectionVisible?'已加入沿途点':'候选尚未生成',!selectionVisible),
         cell(selectionVisible?backups:'—',selectionVisible?'已放入备选':'候选尚未评审',!selectionVisible),
-        cell(ready?`${stats.availableDays}天`:'—',ready?'可用旅行时间':'时间尚未填完整',!ready),
-        cell(ready?stats.km.toLocaleString('zh-CN',{maximumFractionDigits:1}):'—',ready?(stats.source==='amap'?'高德道路快照 · km':'含估算路段 · km'):'路线里程待计算',!ready),
-        cell(ready?`${stats.drive}h`:'—',ready?`驾驶＋${state.answers.ev?'补能':'休息'}估算`:'驾驶时长待计算',!ready),
+        cell(datesReady()?`${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天`:'—',datesReady()?'可用旅行时间':'时间尚未填完整',!datesReady()),
+        cell(located?stats.km.toLocaleString('zh-CN',{maximumFractionDigits:1}):'待核验',located?(stats.source==='amap'?'高德道路快照 · km':'粗略估算 · km'):'路线里程',!located),
+        cell(located?`${stats.drive}h`:'待核验',located?`驾驶＋${state.answers.ev?'补能':'休息'}估算`:'驾驶时长',!located),
         cell(ready?`${stats.play}h`:'—',ready?'目的地建议体验':'游玩时间待安排',!ready),
-        cell(ready?stats.pressure:'—',ready?'当前驾驶压力':'驾驶压力待计算',!ready)
+        cell(located?stats.pressure:'待核验',located?'当前驾驶压力':'驾驶压力',!located)
       ].join('');
       const foot=[
         datesReady()?`${state.answers.departDate}—${state.answers.returnDate}`:'日期待填写',
@@ -481,7 +496,7 @@
         state.stage>=3?`候选已处理 ${reviewed}/${candidates.length}`:'候选尚未开始',
         state.answers.ev?'纯电车':null,
         state.answers.pet?'带宠物':null,
-        ready?(stats.source==='amap'?`${roadSnapshot.provider} · ${roadSnapshot.capturedAt}`:'部分路段尚无高德快照'):null
+        located?(stats.source==='amap'?`${roadSnapshot.provider} · ${roadSnapshot.capturedAt}`:'路段为粗略估算，需 Codex 核验'):null
       ].filter(Boolean).map(item=>`<span>${esc(item)}</span>`).join('');
       return `<section class="panel global-state"><div class="global-state-head"><div><span class="kicker" style="color:#f3bd4d">全局状态</span><h3>${stageName}</h3><p>只展示当前已经能够确定或计算的结果</p></div><span class="phase-chip">STEP ${state.stage} / 4</span></div><div class="global-state-grid">${cells}</div><div class="global-state-foot">${foot}</div></section>`;
     }
@@ -494,9 +509,9 @@
     }
 
     function guideContent(){
-      if(state.stage===1) return `<div class="guide-route-builder"><div>${routeEditor()}</div><div><div class="panel-head"><div><span class="kicker">先定必去</span><h2>这里只搭骨架，<br>还不计算行程。</h2><p>先确认一定要去的地方。沿途停哪里、开多久、赶不赶，等下一步补齐时间和节奏后再算。</p></div></div><div class="ai-note"><b>现在只做一件事：</b>确认出发地、返回地和非去不可的地方。右侧地图会持续保留，并在后续选择中实时改线。</div></div></div><div class="guide-next"><p>下一步只回答会真正改变路线的问题。</p><button class="primary" type="button" data-stage="2">继续：必要问题 →</button></div>`;
-      if(state.stage===2) return `<div class="panel-head"><div><span class="kicker">MINIMUM INTERVIEW</span><h2>六个答案，足够开始。</h2><p>其余信息交给 Codex 检索和判断，不让你先填一张长表。</p></div></div>${questions()}<div style="margin-top:20px">${preferenceEditor()}</div><div class="guide-next"><button class="ghost" type="button" data-stage="1">← 返回骨架</button><button class="primary" type="button" data-action="ai-candidates" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在规划…':'让 Codex 生成沿途候选 →'}</button></div>`;
-      if(state.stage===3){ const sorted=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a)); const index=Math.max(0,Math.min(state.focusCandidate,sorted.length-1)); const c=sorted[index]; return `<div class="panel-head"><div><span class="kicker">ONE DECISION AT A TIME</span><h2>这个地方，值不值得拐进去？</h2><p>${state.ai.source==='codex'?'这些候选来自本机 Codex 的真实规划结果。':'当前显示备用候选；连接 Codex 后会重新生成。'}</p></div><button class="ghost" type="button" data-action="ai-candidates">重新问 Codex</button></div><div class="guide-candidate-focus"><button class="focus-arrow" data-action="focus-prev" aria-label="上一个候选">←</button>${candidateCard(c,true)}<button class="focus-arrow" data-action="focus-next" aria-label="下一个候选">→</button></div><div class="focus-count">${index+1} / ${sorted.length} · 按推荐度排序</div><div class="guide-next"><button class="ghost" type="button" data-stage="2">← 修改条件</button><button class="primary" type="button" data-action="ai-plan" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在生成…':'完成评审，让 Codex 生成完整路书 →'}</button></div>`; }
+      if(state.stage===1) return `<div class="panel-head"><div><span class="kicker">基础行程</span><h2>先把地点和时间定下来。</h2><p>这里不预设任何目的地。出发地、终点、必去点和日期齐了，才有判断沿途值得停哪里的依据。</p></div></div>${routeEditor()}${timeEditor()}<div class="guide-next"><p>下一步再选节奏、驾驶上限与旅行偏好。</p><button class="primary" type="button" data-stage="2">继续：旅行偏好 →</button></div>`;
+      if(state.stage===2) return `<div class="panel-head"><div><span class="kicker">旅行偏好</span><h2>哪些条件会改变路线？</h2><p>告诉 Codex 你的驾驶节奏、同行约束和想要的体验。</p></div></div>${questions()}<div style="margin-top:20px">${preferenceEditor()}</div><div class="guide-next"><button class="ghost" type="button" data-stage="1">← 修改基础行程</button><button class="primary" type="button" data-action="ai-candidates" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在规划…':'让 Codex 生成沿途候选 →'}</button></div>`;
+      if(state.stage===3){ const sorted=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a)); const index=Math.max(0,Math.min(state.focusCandidate,sorted.length-1)); const c=sorted[index]; if(!c) return `<div class="panel-head"><div><h2>候选点还没生成。</h2><p>完成前两步后，让 Codex 根据你的真实路线生成沿途选择。</p></div></div><button class="primary" type="button" data-action="ai-candidates">生成沿途候选 →</button>`; return `<div class="panel-head"><div><span class="kicker">ONE DECISION AT A TIME</span><h2>这个地方，值不值得拐进去？</h2><p>这些候选来自当前 Codex 会话的规划结果。</p></div><button class="ghost" type="button" data-action="ai-candidates">重新问 Codex</button></div><div class="guide-candidate-focus"><button class="focus-arrow" data-action="focus-prev" aria-label="上一个候选">←</button>${candidateCard(c,true)}<button class="focus-arrow" data-action="focus-next" aria-label="下一个候选">→</button></div><div class="focus-count">${index+1} / ${sorted.length} · 按推荐度排序</div><div class="guide-next"><button class="ghost" type="button" data-stage="2">← 修改条件</button><button class="primary" type="button" data-action="ai-plan" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在生成…':'完成评审，让 Codex 生成完整路书 →'}</button></div>`; }
       return report();
     }
 
@@ -591,8 +606,11 @@
     }
 
     async function requestCodexCandidates(){
+      if(!frameworkReady()){
+        state.stage=1;render();toast('先完成第一步的地点与时间。');return;
+      }
       if(!planningReady()){
-        state.stage=2;render();toast('先填写出发、返程日期和单日舒适驾驶。');return;
+        state.stage=2;render();toast('先选择单日舒适驾驶时间。');return;
       }
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       setAiState('loading','请求已提交；当前 Codex 会话将领取任务，过程会显示在 Codex 对话中。');
@@ -611,6 +629,9 @@
     }
 
     async function requestCodexPlan(){
+      if(!frameworkReady()){
+        state.stage=1;render();toast('先完成第一步的地点与时间。');return;
+      }
       if(!planningReady()){
         state.stage=2;render();toast('先填写完整的必要信息。');return;
       }
@@ -675,10 +696,16 @@
     function showState(){ state.stage=1; toast('已确认条件显示在右侧深绿色卡片中。'); render(); }
 
     function goToStage(nextStage){
+      if(nextStage >= 2 && !frameworkReady()){
+        state.stage=1;
+        render();
+        toast('先选出发地、终点、至少一个必去点，并填好出发与结束时间。');
+        return false;
+      }
       if(nextStage >= 3 && !planningReady()){
         state.stage=2;
         render();
-        toast('先填写出发、返程日期和单日舒适驾驶，再计算路线。');
+        toast('先选择单日舒适驾驶时间。');
         return false;
       }
       state.stage=nextStage;
@@ -691,6 +718,46 @@
       if(!name) return toast('先输入一个必去点。');
       if([state.route.start,...state.route.must,state.route.end].includes(name)) return toast('这个地点已经在路线中。');
       state.route.must.push(name); state.stage=1; render(); toast(`${name} 已锁定为必去点。`);
+    }
+
+    function matchingPlaces(query){
+      const q=query.trim().toLocaleLowerCase();
+      if(!q) return [];
+      return locations.map((place,index)=>({place,index})).filter(({place})=>place[1].toLocaleLowerCase().includes(q)||place[4].toLocaleLowerCase().includes(q)||place[0].includes(q)).sort((a,b)=>{
+        const score=({place})=>place[1]===query?0:place[1].startsWith(query)?1:place[5]===2?2:place[5]===3?3:4;
+        return score(a)-score(b)||a.place[4].length-b.place[4].length;
+      }).slice(0,8);
+    }
+
+    function showPlaceResults(input){
+      const list=input.parentElement.querySelector('.place-results');
+      const matches=matchingPlaces(input.value);
+      list.innerHTML=matches.length?matches.map(({place,index})=>`<button type="button" class="place-option" role="option" data-place-option="${index}"><b>${esc(place[1])}</b><small>${esc([place[2],place[3]].filter((item,i,items)=>item&&item!==place[1]&&items.indexOf(item)===i).join(' · ')||'省级地区')}</small></button>`).join(''):`<div class="place-empty">未找到行政区划。${input.dataset.placeField==='must'?'可直接把景点或海岛加入必去点。':'可继续输入具体地点。'}</div>`;
+      list.hidden=!input.value.trim();
+      input.setAttribute('aria-expanded',String(!list.hidden));
+    }
+
+    function choosePlace(input,index){
+      const place=locations[index];
+      if(!place) return;
+      input.value=place[4];
+      if(input.dataset.placeField!=='must'){
+        state.route[input.dataset.placeField]=place[4];
+        render();
+      }else{
+        input.parentElement.querySelector('.place-results').hidden=true;
+        input.setAttribute('aria-expanded','false');
+        input.focus();
+      }
+    }
+
+    function commitPlaceText(input){
+      if(input.dataset.placeField==='must') return;
+      const value=input.value.trim();
+      if(state.route[input.dataset.placeField]!==value){
+        state.route[input.dataset.placeField]=value;
+        render();
+      }
     }
 
     function updateCandidate(id,nextStatus){
@@ -706,6 +773,13 @@
     function downloadReport(){
       const blob=new Blob([standaloneReport()],{type:'text/html;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='我的自驾旅行计划.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000); toast('已生成可独立打开的 HTML 路书。');
     }
+
+    document.addEventListener('pointerdown',event=>{
+      const option=event.target.closest('[data-place-option]');
+      if(!option) return;
+      event.preventDefault();
+      choosePlace(option.closest('.place-field').querySelector('input'),Number(option.dataset.placeOption));
+    });
 
     document.addEventListener('click',event=>{
       const stageButton=event.target.closest('[data-stage]'); if(stageButton){const nextStage=Number(stageButton.dataset.stage);if(nextStage===4){requestCodexPlan();return;}goToStage(nextStage);return;}
@@ -727,12 +801,40 @@
     });
 
     document.addEventListener('change',event=>{
-      if(event.target.matches('[data-route-field]')){state.route[event.target.dataset.routeField]=event.target.value.trim()||'杭州';render();}
+      if(event.target.matches('[data-place-field]')){commitPlaceText(event.target);return;}
       if(event.target.matches('[data-answer]')){state.answers[event.target.dataset.answer]=event.target.value;render();}
     });
 
+    document.addEventListener('input',event=>{
+      if(event.target.matches('[data-place-field]')) showPlaceResults(event.target);
+    });
+
+    document.addEventListener('focusout',event=>{
+      if(!event.target.matches('[data-place-field]')) return;
+      setTimeout(()=>{const list=event.target.parentElement?.querySelector('.place-results');if(list){list.hidden=true;event.target.setAttribute('aria-expanded','false');}},100);
+    });
+
     document.addEventListener('keydown',event=>{
-      if(event.key==='Enter'&&event.target?.id==='newMustStop'){ addStop(); return; }
+      if(!event.target?.matches('[data-place-field]')) return;
+      const input=event.target,list=input.parentElement.querySelector('.place-results');
+      if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+        event.preventDefault();
+        if(list.hidden) showPlaceResults(input);
+        const options=[...list.querySelectorAll('[data-place-option]')];
+        if(!options.length) return;
+        const active=options.findIndex(option=>option.classList.contains('is-active'));
+        const next=active<0?(event.key==='ArrowDown'?0:options.length-1):(active+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
+        options.forEach((option,index)=>option.classList.toggle('is-active',index===next));
+        options[next]?.scrollIntoView({block:'nearest'});
+      }
+      if(event.key==='Enter'){
+        const options=[...list.querySelectorAll('[data-place-option]')];
+        const active=options.findIndex(option=>option.classList.contains('is-active'));
+        if(!list.hidden&&options.length){event.preventDefault();choosePlace(input,Number(options[Math.max(0,active)].dataset.placeOption));}
+        else if(input.dataset.placeField==='must'){event.preventDefault();addStop();}
+        else{event.preventDefault();commitPlaceText(input);}
+      }
+      if(event.key==='Escape'){list.hidden=true;input.setAttribute('aria-expanded','false');}
     });
 
     render();

@@ -61,6 +61,11 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const initial = await json(base, "/api/status");
     assert.equal(initial.data.mode, "current-codex-thread");
     assert.equal(initial.data.runnerConnected, false);
+    const locationsResponse = await fetch(new URL("/locations.js", base));
+    assert.equal(locationsResponse.status, 200);
+    const locationsScript = await locationsResponse.text();
+    assert.match(locationsScript, /赤壁市/);
+    assert.match(locationsScript, /东山县/);
 
     const state = { route: { start: "杭州", end: "杭州", must: ["恩施"] }, answers: { departDate: "2026-10-01" } };
     assert.equal((await json(base, "/api/codex/candidates", state)).status, 503);
