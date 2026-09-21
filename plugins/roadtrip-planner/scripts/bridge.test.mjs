@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,7 +41,7 @@ async function json(base, path, body) {
 
 async function startServer(workspace, extraEnv = {}) {
   const child = spawn(process.execPath, [serverPath], {
-    env: { ...process.env, ROADTRIP_WORKSPACE: workspace, ROADTRIP_PORT: "0", ...extraEnv },
+    env: { ...process.env, ROADTRIP_WORKSPACE: workspace, ROADTRIP_PORT: "0", ROADTRIP_CONFIG_DIR: join(workspace, "private-config"), ROADTRIP_FLYAI_CONFIG_PATH: join(workspace, "flyai-config.json"), AMAP_MAPS_API_KEY: "", FLYAI_API_KEY: "", ...extraEnv },
     stdio: ["ignore", "pipe", "pipe"]
   });
   let output = "";
@@ -109,6 +109,38 @@ test("selected cities and counties receive distinct positions on an AMap image",
   }
 });
 
+test("first-run credentials persist locally without appearing in setup responses", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "roadtrip-setup-test-"));
+  let child;
+  try {
+    let running = await startServer(workspace);
+    child = running.child;
+    const initial = await json(running.base, "/api/setup/status");
+    assert.equal(initial.data.amap.configured, false);
+    assert.equal(initial.data.flyai.configured, false);
+    const saved = await json(running.base, "/api/setup/credentials", { amapKey: "local-test-amap", flyaiKey: "local-test-flyai" });
+    assert.equal(saved.data.amap.configured, true);
+    assert.equal(saved.data.flyai.configured, true);
+    assert.equal(saved.data.flyai.available, saved.data.flyai.installed);
+    assert.doesNotMatch(JSON.stringify(saved.data), /local-test-amap|local-test-flyai/);
+    const file = join(workspace, "private-config", "credentials.json");
+    assert.equal((await stat(file)).mode & 0o777, 0o600);
+    child.kill("SIGTERM");
+    await new Promise(resolve => child.once("exit", resolve));
+    running = await startServer(workspace);
+    child = running.child;
+    const restored = await json(running.base, "/api/setup/status");
+    assert.equal(restored.data.amap.configured, true);
+    assert.equal(restored.data.flyai.configured, true);
+    const cleared = await json(running.base, "/api/setup/credentials", { amapKey: null, flyaiKey: null });
+    assert.equal(cleared.data.amap.configured, false);
+    assert.equal(cleared.data.flyai.configured, false);
+  } finally {
+    child?.kill("SIGTERM");
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
 test("page jobs are handled by the waiting conversation bridge", async () => {
   const workspace = await mkdtemp(join(tmpdir(), "roadtrip-bridge-test-"));
   const { child, base } = await startServer(workspace);
@@ -116,6 +148,9 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const initial = await json(base, "/api/status");
     assert.equal(initial.data.mode, "current-codex-thread");
     assert.equal(initial.data.runnerConnected, false);
+    const setup = await json(base, "/api/setup/status");
+    assert.equal(setup.data.amap.configured, false);
+    assert.equal(setup.data.flyai.configured, false);
     const locationsResponse = await fetch(new URL("/locations.js", base));
     assert.equal(locationsResponse.status, 200);
     const locationsScript = await locationsResponse.text();
@@ -148,6 +183,14 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     await writeFile(candidateResultPath, JSON.stringify(candidates));
     assert.equal((await bridge(base, "complete", candidateJob.id, candidateResultPath)).status, "completed");
     assert.equal((await json(base, `/api/jobs/${candidateJob.id}`)).data.job.status, "completed");
+    assert.equal((await json(base, "/api/codex/candidates", { ...state, instruction: "   " })).status, 400);
+    const waitingRevision = bridge(base, "wait");
+    await waitForRunner(base);
+    const revised = await json(base, "/api/codex/candidates", { ...state, instruction: "多推荐有特色的海滨城市" });
+    assert.equal(revised.status, 202);
+    const revisionJob = await waitingRevision;
+    assert.equal(revisionJob.state.instruction, "多推荐有特色的海滨城市");
+    assert.equal((await bridge(base, "complete", revisionJob.id, candidateResultPath)).status, "completed");
 
     const previewFixture = {
       status:"completed",summary:"路线已核对",routeOrder:state.routeOrder,
@@ -164,9 +207,13 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.equal(previewSubmitted.status,202);
     const previewJob = await waitingPreview;
     assert.equal(previewJob.type,"preview");
+    assert.deepEqual(previewJob.state.capabilities,{amap:false,flyai:false});
     assert.equal((await json(base,`/api/bridge/jobs/${previewJob.id}/complete`,{result:{...previewFixture,routeOrder:["杭州","杭州"]}})).status,400);
     assert.equal((await bridge(base,"complete",previewJob.id,previewResultPath)).status,"completed");
-    const reviewedState={...state,review:{preview:previewFixture,mock:false}};
+    const sanitizedPreview=(await json(base,`/api/jobs/${previewJob.id}`)).data.job.result;
+    assert.equal(sanitizedPreview.totals.distanceKm,null);
+    assert.equal(sanitizedPreview.days[0].driveHours,null);
+    const reviewedState={...state,review:{preview:sanitizedPreview,mock:false}};
 
     const waitingPlan = bridge(base, "wait");
     await waitForRunner(base);
@@ -174,11 +221,16 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const planJob = await waitingPlan;
     assert.equal(planJob.id, planSubmitted.data.job.id);
     const reportData = JSON.parse(await readFile(exampleDataPath, "utf8"));
+    reportData.capabilities=planJob.state.capabilities;
     const result = { status: "completed", title: "测试路书", summary: "已完成", route: "杭州 → 恩施 → 杭州", reportPath: planJob.reportPath, dataPath: planJob.dataPath };
     assert.equal((await json(base, `/api/bridge/jobs/${planJob.id}/complete`, { result })).status, 400);
     await writeFile(planJob.dataPath, JSON.stringify(reportData));
     await writeFile(planJob.reportPath, `<!doctype html><title>看起来相似但不是固定模板</title>${"行程".repeat(600)}`);
     assert.equal((await json(base, `/api/bridge/jobs/${planJob.id}/complete`, { result })).status, 400);
+    await writeFile(planJob.dataPath, JSON.stringify({ ...reportData, sample: true }));
+    await writeFile(planJob.reportPath, renderRoadbook({ ...reportData, sample: true }));
+    assert.equal((await json(base, `/api/bridge/jobs/${planJob.id}/complete`, { result })).status, 400);
+    await writeFile(planJob.dataPath, JSON.stringify(reportData));
     await writeFile(planJob.reportPath, renderRoadbook(reportData));
     const planResultPath = join(workspace, "plan-result.json");
     await writeFile(planResultPath, JSON.stringify(result));

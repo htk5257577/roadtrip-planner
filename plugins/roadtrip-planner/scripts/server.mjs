@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, statSync } from "node:
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderRoadbook } from "./render-report.mjs";
+import { credentialStatus, getAmapKey, updateCredentials } from "./credentials.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(scriptDir, "..");
@@ -17,7 +18,6 @@ const reportPath = join(outputDir, "generated-roadtrip-plan.html");
 const reportDataPath = join(outputDir, "report-data.json");
 const port = Number(process.env.ROADTRIP_PORT ?? 4317);
 const host = "127.0.0.1";
-const amapKey = process.env.AMAP_MAPS_API_KEY || "";
 const amapBaseUrl = process.env.ROADTRIP_AMAP_BASE_URL || "https://restapi.amap.com";
 const mapCache = new Map();
 const mapImages = new Map();
@@ -81,7 +81,7 @@ async function readJsonBody(req) {
 async function amapGet(path, parameters) {
   const url = new URL(path, amapBaseUrl);
   for (const [key, value] of Object.entries(parameters)) url.searchParams.set(key, String(value));
-  url.searchParams.set("key", amapKey);
+  url.searchParams.set("key", getAmapKey());
   const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   if (!response.ok) throw new Error(`高德地图暂时不可用（${response.status}）`);
   return response;
@@ -103,7 +103,7 @@ async function locatePlace(place) {
 }
 
 async function mapPreview(places) {
-  if (!amapKey) throw new Error("未配置高德 Web 服务 Key，请先配置 AMAP_MAPS_API_KEY");
+  if (!getAmapKey()) throw new Error("未配置高德 Web 服务 Key，地图与精确道路信息暂不展示");
   if (!Array.isArray(places) || places.length > 25 || places.some(place =>
     typeof place?.name !== "string" || typeof place?.query !== "string" ||
     place.name.length > 80 || place.query.length > 160 ||
@@ -225,16 +225,22 @@ function validateResult(job, result) {
     return result;
   }
   if (job.type === "preview") {
+    if (!job.state.capabilities?.amap) {
+      result.totals = { ...result.totals, distanceKm: null, driveHours: null, chargeHours: null, pressure: "待核验", distanceSource: "未接入高德" };
+      result.days = result.days?.map(day => ({ ...day, distanceKm: null, driveHours: null, chargeHours: null }));
+      result.sourceNotes = [...(result.sourceNotes || []), "未接入高德，精确道路信息不展示"];
+    }
     const totals = result.totals;
     const expected = job.state.routeOrder;
+    const nonnegativeOrUnknown = value => value === null || Number.isFinite(value) && value >= 0;
     if (result.status !== "completed" || typeof result.summary !== "string" ||
         !Array.isArray(result.routeOrder) || !Array.isArray(expected) ||
         JSON.stringify(result.routeOrder) !== JSON.stringify(expected) ||
-        !totals || !["distanceKm", "driveHours", "chargeHours", "playHours"].every(key => Number.isFinite(totals[key]) && totals[key] >= 0) ||
+        !totals || !["distanceKm", "driveHours", "chargeHours", "playHours"].every(key => nonnegativeOrUnknown(totals[key])) ||
         typeof totals.pressure !== "string" || typeof totals.distanceSource !== "string" ||
         !Array.isArray(result.days) || !result.days.length ||
         result.days.some(day => !["date", "title", "route", "activities", "lodging"].every(key => typeof day[key] === "string") ||
-          !["distanceKm", "driveHours", "chargeHours", "playHours"].every(key => Number.isFinite(day[key]) && day[key] >= 0)) ||
+          !["distanceKm", "driveHours", "chargeHours", "playHours"].every(key => nonnegativeOrUnknown(day[key]))) ||
         !Array.isArray(result.notes) || !result.notes.every(note => typeof note === "string") ||
         !Array.isArray(result.sourceNotes) || !result.sourceNotes.every(note => typeof note === "string")) {
       throw new Error("预览数据不完整，或路线与已选地点不一致");
@@ -250,6 +256,11 @@ function validateResult(job, result) {
       throw new Error(job.type === "refine" ? "微调后的数据与路书尚未写入指定文件" : "最终路书数据与 HTML 尚未写入指定文件");
     }
     const data = JSON.parse(readFileSync(dataDestination, "utf8"));
+    if (data.sample === true) throw new Error("模拟样板不能作为正式计划提交");
+    if (data.capabilities?.amap !== job.state.capabilities?.amap ||
+        data.capabilities?.flyai !== job.state.capabilities?.flyai) {
+      throw new Error("路书的数据来源状态与当前配置不一致");
+    }
     if (readFileSync(destination, "utf8") !== renderRoadbook(data)) {
       throw new Error("路书不是由南线固定模板渲染，请使用 render-report.mjs 生成");
     }
@@ -303,6 +314,17 @@ const server = createServer(async (req, res) => {
       });
       return;
     }
+    if (req.method === "GET" && url.pathname === "/api/setup/status") {
+      sendJson(res, 200, { ok: true, ...credentialStatus() });
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/api/setup/credentials") {
+      const status = updateCredentials(await readJsonBody(req));
+      mapCache.clear();
+      mapImages.clear();
+      sendJson(res, 200, { ok: true, ...status });
+      return;
+    }
     if (req.method === "GET" && url.pathname === "/generated-plan") {
       serveFile(res, reportPath, true);
       return;
@@ -320,7 +342,13 @@ const server = createServer(async (req, res) => {
       }
       const state = await readJsonBody(req);
       if (!state?.route || !state?.answers) throw new Error("页面条件不完整");
+      const setup = credentialStatus();
+      state.capabilities = { amap: setup.amap.configured, flyai: setup.flyai.available };
       const type = url.pathname.split("/").at(-1);
+      if (type === "candidates" && state.instruction !== undefined &&
+          (typeof state.instruction !== "string" || !state.instruction.trim() || state.instruction.length > 2000)) {
+        throw new Error("请填写不超过 2000 字的候选调整要求");
+      }
       if ((type === "plan" || type === "refine") &&
           (state.review?.preview?.status !== "completed" ||
            JSON.stringify(state.review.preview.routeOrder) !== JSON.stringify(state.routeOrder) ||

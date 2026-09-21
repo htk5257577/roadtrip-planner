@@ -12,10 +12,10 @@
       "additionalProperties": false,
       "required": ["distanceKm", "driveHours", "chargeHours", "playHours", "pressure", "distanceSource"],
       "properties": {
-        "distanceKm": { "type": "number", "minimum": 0 },
-        "driveHours": { "type": "number", "minimum": 0 },
-        "chargeHours": { "type": "number", "minimum": 0 },
-        "playHours": { "type": "number", "minimum": 0 },
+        "distanceKm": { "type": ["number", "null"], "minimum": 0 },
+        "driveHours": { "type": ["number", "null"], "minimum": 0 },
+        "chargeHours": { "type": ["number", "null"], "minimum": 0 },
+        "playHours": { "type": ["number", "null"], "minimum": 0 },
         "pressure": { "type": "string" },
         "distanceSource": { "type": "string" }
       }
@@ -29,10 +29,10 @@
           "date": { "type": "string" },
           "title": { "type": "string" },
           "route": { "type": "string" },
-          "distanceKm": { "type": "number", "minimum": 0 },
-          "driveHours": { "type": "number", "minimum": 0 },
-          "chargeHours": { "type": "number", "minimum": 0 },
-          "playHours": { "type": "number", "minimum": 0 },
+          "distanceKm": { "type": ["number", "null"], "minimum": 0 },
+          "driveHours": { "type": ["number", "null"], "minimum": 0 },
+          "chargeHours": { "type": ["number", "null"], "minimum": 0 },
+          "playHours": { "type": ["number", "null"], "minimum": 0 },
           "activities": { "type": "string" },
           "lodging": { "type": "string" }
         }

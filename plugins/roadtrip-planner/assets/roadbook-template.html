@@ -1,12 +1,11 @@
 <!doctype html>
-<html lang="zh-CN" data-roadbook-template="south-line-v1">
+<html lang="zh-CN" data-roadbook-template="south-line-v2">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#173f3a">
   <title>{{DOCUMENT_TITLE}}</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  {{MAP_STYLES}}
   <style>{{SOUTH_LINE_CSS}}</style>
 </head>
 <body>
@@ -21,9 +20,10 @@
     <div class="hero-mark">{{DAY_MARK}}</div>
   </header>
   <nav class="jumpbar" aria-label="页面导航"><div class="shell">
-    <a href="#todo">出发前</a><a href="#brief">行前须知</a><a href="#pace">时间分配</a><a href="#map-section">全程路线</a><a href="#days">逐日行程</a><a href="#practical">实用资料</a>
+    <a href="#todo">出发前</a><a href="#brief">行前须知</a><a href="#pace">时间分配</a><a href="#map-section">全程路线</a><a href="#stops">停留重点</a><a href="#days">逐日行程</a><a href="#practical">实用资料</a>
   </div></nav>
   <main class="shell">
+    {{SAMPLE_NOTICE}}
     <section id="todo" class="todo-wrap card">
       <div class="todo-title"><h2>出发前倒计时</h2><small>今天能订的，别等明天</small></div>
       <div id="checklist">{{CHECKLIST}}</div>
@@ -33,7 +33,7 @@
       <div id="pretrip-grid" class="grid pre-grid">{{PRETRIP}}</div>
     </section>
     <section id="pace">
-      <div class="section-head"><div><div class="section-kicker">02 · RHYTHM</div><h2>每日时间图</h2></div><p class="section-note">上方游玩，下方驾驶；同一天上下对齐。</p></div>
+      <div class="section-head"><div><div class="section-kicker">02 · RHYTHM</div><h2>每日时间图</h2></div><p class="section-note">每天单独一行；游玩与驾驶上下对照，长度代表时长。</p></div>
       <div id="heatmap" class="heat-wrap card">{{HEATMAP}}</div>
     </section>
     <section id="map-section">
@@ -41,13 +41,17 @@
       <div id="map">{{MAP}}</div>
       <ol id="map-route-legend" class="map-route-legend" aria-label="全程路线落点">{{MAP_LEGEND}}</ol>
     </section>
+    <section id="stops">
+      <div class="section-head"><div><div class="section-kicker">04 · STOPS</div><h2>停留重点</h2></div><p class="section-note">只看每站留下来的理由；几点去哪儿放在逐日行程。</p></div>
+      <div id="stop-grid" class="stop-grid">{{STOP_OVERVIEW}}</div>
+    </section>
     <section id="days">
-      <div class="section-head"><div><div class="section-kicker">04 · DAY BY DAY</div><h2>逐日行程</h2></div><p class="section-note">先看每天的路线和时间分配，点开再看具体时段。</p></div>
+      <div class="section-head"><div><div class="section-kicker">05 · DAY BY DAY</div><h2>逐日行程</h2></div><p class="section-note">先看每天的路线和时间分配，点开再看具体时段。</p></div>
       <div class="day-controls"><span>共 {{DAY_MARK}} 天 · 默认收起</span><div><button type="button" id="expand-all-days">展开全部</button><button type="button" id="collapse-all-days">收起全部</button></div></div>
       <div id="timeline" class="timeline">{{TIMELINE}}</div>
     </section>
     <section id="practical">
-      <div class="section-head"><div><div class="section-kicker">05 · FIELD NOTES</div><h2>实用资料</h2></div><p class="section-note">具体执行时再查，不打断上面的行程阅读。</p></div>
+      <div class="section-head"><div><div class="section-kicker">06 · FIELD NOTES</div><h2>实用资料</h2></div><p class="section-note">具体执行时再查，不打断上面的行程阅读。</p></div>
       <div class="reference-stack">
         <details class="reference-panel card"><summary>住宿片区与备选 <span>{{HOTEL_COUNT}} 处</span></summary><div id="hotel-grid" class="grid hotel-grid">{{HOTELS}}</div></details>
         <details class="reference-panel card"><summary>跨城路线与转场 <span>{{LEG_COUNT}} 段</span></summary><div id="route-decision" class="route-decision">{{ROUTE_DECISION}}</div><div id="route-ledger" class="route-ledger">{{ROUTE_LEDGER}}</div><div id="transport-grid" class="grid transport-grid">{{TRANSPORT}}</div></details>
