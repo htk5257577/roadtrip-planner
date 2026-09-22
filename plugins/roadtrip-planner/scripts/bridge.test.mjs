@@ -41,7 +41,7 @@ async function json(base, path, body) {
 
 async function startServer(workspace, extraEnv = {}) {
   const child = spawn(process.execPath, [serverPath], {
-    env: { ...process.env, ROADTRIP_WORKSPACE: workspace, ROADTRIP_PORT: "0", ROADTRIP_CONFIG_DIR: join(workspace, "private-config"), ROADTRIP_FLYAI_CONFIG_PATH: join(workspace, "flyai-config.json"), AMAP_MAPS_API_KEY: "", FLYAI_API_KEY: "", ...extraEnv },
+    env: { ...process.env, ROADTRIP_WORKSPACE: workspace, ROADTRIP_PORT: "0", ROADTRIP_CONFIG_DIR: join(workspace, "private-config"), ROADTRIP_FLYAI_CONFIG_PATH: join(workspace, "flyai-config.json"), AMAP_MAPS_API_KEY: "", AMAP_JS_API_KEY: "", AMAP_SECURITY_JS_CODE: "", FLYAI_API_KEY: "", ...extraEnv },
     stdio: ["ignore", "pipe", "pipe"]
   });
   let output = "";
@@ -57,7 +57,7 @@ async function startServer(workspace, extraEnv = {}) {
   return { child, base };
 }
 
-test("selected cities and counties receive distinct positions on an AMap image", async () => {
+test("selected cities and counties receive coordinates and actual AMap road geometry", async () => {
   const mock = createServer((req, res) => {
     const url = new URL(req.url, "http://127.0.0.1");
     if (url.pathname === "/v3/geocode/geo") {
@@ -66,14 +66,13 @@ test("selected cities and counties receive distinct positions on an AMap image",
       res.end(JSON.stringify({ status: "1", geocodes: [{ adcode: isCounty ? "421281" : "330100", location: isCounty ? "113.900385,29.725122" : "120.209903,30.246566" }] }));
       return;
     }
-    if (url.pathname === "/v3/staticmap") {
-      assert.equal(url.searchParams.get("size"), "760*600");
-      // AMap static images use 512px world tiles: zoom 6 is the viewport that
-      // contains both fixture cities while matching the overlay's pixel scale.
-      assert.equal(url.searchParams.get("zoom"), "6");
+    if (url.pathname === "/v5/direction/driving") {
+      assert.equal(url.searchParams.get("show_fields"), "cost,polyline");
       assert.equal(url.searchParams.get("key"), "test-key");
-      res.writeHead(200, { "content-type": "image/png" });
-      res.end(Buffer.from("89504e470d0a1a0a", "hex"));
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(url.searchParams.get("origin")?.startsWith("113.")
+        ? { status: "1", route: { paths: [] } }
+        : { status: "1", route: { paths: [{ distance: "1200000", cost: { duration: "48000" }, steps: [{ polyline: "120.209903,30.246566;119.5,30.0;113.900385,29.725122" }] }] } }));
       return;
     }
     res.writeHead(404).end();
@@ -96,12 +95,16 @@ test("selected cities and counties receive distinct positions on an AMap image",
     assert.equal(preview.data.points.length, 2);
     assert.equal(preview.data.points[0].verified, true);
     assert.equal(preview.data.points[1].verified, true);
-    assert.notEqual(preview.data.points[0].x, preview.data.points[1].x);
-    assert.notEqual(preview.data.points[0].y, preview.data.points[1].y);
-    assert.ok(preview.data.points.every(point => point.x > 0 && point.x < 760 && point.y > 0 && point.y < 600));
-    const image = await fetch(new URL(preview.data.imageUrl, running.base));
-    assert.equal(image.status, 200);
-    assert.match(image.headers.get("content-type"), /image\/png/);
+    assert.equal(preview.data.legs[0].km, 1200);
+    assert.ok(Math.abs(preview.data.legs[0].hours - 13.3333) < 0.001);
+    assert.equal(preview.data.legs[0].source, "amap");
+    assert.equal(preview.data.legs[0].path.length, 3);
+    const unresolved = await json(running.base, "/api/map/preview", { places: [...places].reverse() });
+    assert.equal(unresolved.data.legs[0].km, null);
+    assert.equal(unresolved.data.legs[0].source, "unverified");
+    assert.notEqual(preview.data.points[0].lon, preview.data.points[1].lon);
+    assert.notEqual(preview.data.points[0].lat, preview.data.points[1].lat);
+    assert.equal(preview.data.imageUrl, undefined);
   } finally {
     child?.kill("SIGTERM");
     mock.close();
@@ -118,11 +121,13 @@ test("first-run credentials persist locally without appearing in setup responses
     const initial = await json(running.base, "/api/setup/status");
     assert.equal(initial.data.amap.configured, false);
     assert.equal(initial.data.flyai.configured, false);
-    const saved = await json(running.base, "/api/setup/credentials", { amapKey: "local-test-amap", flyaiKey: "local-test-flyai" });
+    const saved = await json(running.base, "/api/setup/credentials", { amapKey: "local-test-amap", amapJsKey: "local-test-js", amapSecurityJsCode: "local-test-security", flyaiKey: "local-test-flyai" });
     assert.equal(saved.data.amap.configured, true);
+    assert.equal(saved.data.amapJs.configured, true);
     assert.equal(saved.data.flyai.configured, true);
     assert.equal(saved.data.flyai.available, saved.data.flyai.installed);
-    assert.doesNotMatch(JSON.stringify(saved.data), /local-test-amap|local-test-flyai/);
+    assert.doesNotMatch(JSON.stringify(saved.data), /local-test-amap|local-test-js|local-test-security|local-test-flyai/);
+    assert.deepEqual((await json(running.base, "/api/map/js-config")).data, { ok: true, key: "local-test-js", securityJsCode: "local-test-security" });
     const file = join(workspace, "private-config", "credentials.json");
     assert.equal((await stat(file)).mode & 0o777, 0o600);
     child.kill("SIGTERM");
@@ -131,9 +136,11 @@ test("first-run credentials persist locally without appearing in setup responses
     child = running.child;
     const restored = await json(running.base, "/api/setup/status");
     assert.equal(restored.data.amap.configured, true);
+    assert.equal(restored.data.amapJs.configured, true);
     assert.equal(restored.data.flyai.configured, true);
-    const cleared = await json(running.base, "/api/setup/credentials", { amapKey: null, flyaiKey: null });
+    const cleared = await json(running.base, "/api/setup/credentials", { amapKey: null, amapJsKey: null, amapSecurityJsCode: null, flyaiKey: null });
     assert.equal(cleared.data.amap.configured, false);
+    assert.equal(cleared.data.amapJs.configured, false);
     assert.equal(cleared.data.flyai.configured, false);
   } finally {
     child?.kill("SIGTERM");
@@ -157,7 +164,7 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.match(locationsScript, /赤壁市/);
     assert.match(locationsScript, /东山县/);
 
-    const state = { route: { start: "杭州", end: "杭州", must: ["恩施"] }, answers: { departDate: "2026-10-01" }, routeOrder:["杭州","恩施","杭州"] };
+    const state = { route: { start: "杭州", end: "杭州", must: ["恩施"] }, answers: { departDate: "2026-10-01" }, routeOrder:["杭州","恩施","杭州"], mapPlaces:[{name:"杭州",query:"杭州"},{name:"恩施",query:"恩施"},{name:"杭州",query:"杭州"}] };
     assert.equal((await json(base, "/api/codex/candidates", state)).status, 503);
 
     const waiting = bridge(base, "wait");

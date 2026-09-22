@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, statSync } from "node:
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderRoadbook } from "./render-report.mjs";
-import { credentialStatus, getAmapKey, updateCredentials } from "./credentials.mjs";
+import { credentialStatus, getAmapJsConfig, getAmapKey, updateCredentials } from "./credentials.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(scriptDir, "..");
@@ -20,7 +20,9 @@ const port = Number(process.env.ROADTRIP_PORT ?? 4317);
 const host = "127.0.0.1";
 const amapBaseUrl = process.env.ROADTRIP_AMAP_BASE_URL || "https://restapi.amap.com";
 const mapCache = new Map();
-const mapImages = new Map();
+const pendingPlaces = new Map();
+const roadCache = new Map();
+const pendingRoad = new Map();
 const jobs = new Map();
 const pending = [];
 const waiters = new Set();
@@ -89,21 +91,78 @@ async function amapGet(path, parameters) {
 
 async function locatePlace(place) {
   const cacheKey = `${place.code || ""}|${place.query}`;
-  if (mapCache.has(cacheKey)) return mapCache.get(cacheKey);
-  const response = await amapGet("/v3/geocode/geo", { address: place.query, output: "JSON" });
-  const data = await response.json();
-  if (data.status !== "1") throw new Error(`高德定位失败：${data.info || "未知错误"}`);
-  const geocode = data.geocodes?.find(item => !place.code || item.adcode === place.code);
-  const [lon, lat] = String(geocode?.location || "").split(",").map(Number);
-  const result = Number.isFinite(lon) && Number.isFinite(lat) && lon > 70 && lat > 0
-    ? { name: place.name, lon, lat, verified: Boolean(place.code) }
-    : { name: place.name, error: place.code ? "行政区划未匹配" : "地点未定位" };
-  mapCache.set(cacheKey, result);
-  return result;
+  if (mapCache.has(cacheKey)) return { ...mapCache.get(cacheKey), name: place.name };
+  if (pendingPlaces.has(cacheKey)) return { ...await pendingPlaces.get(cacheKey), name: place.name };
+  const request = (async () => {
+    const response = await amapGet("/v3/geocode/geo", { address: place.query, output: "JSON" });
+    const data = await response.json();
+    if (data.status !== "1") throw new Error(`高德定位失败：${data.info || "未知错误"}`);
+    const geocode = data.geocodes?.find(item => !place.code || item.adcode === place.code);
+    const [lon, lat] = String(geocode?.location || "").split(",").map(Number);
+    const result = Number.isFinite(lon) && Number.isFinite(lat) && lon > 70 && lat > 0
+      ? { name: place.name, lon, lat, verified: Boolean(place.code) }
+      : { name: place.name, error: place.code ? "行政区划未匹配" : "地点未定位" };
+    mapCache.set(cacheKey, result);
+    return result;
+  })();
+  pendingPlaces.set(cacheKey, request);
+  try { return await request; }
+  finally { pendingPlaces.delete(cacheKey); }
+}
+
+async function drivingLeg(from, to) {
+  const leg = { from: from.name, to: to.name, km: null, hours: null, source: "unverified" };
+  if (![from.lon, from.lat, to.lon, to.lat].every(Number.isFinite)) return { ...leg, reason: "地点未定位" };
+  const origin = `${from.lon},${from.lat}`;
+  const destination = `${to.lon},${to.lat}`;
+  const cacheKey = `${origin}>${destination}`;
+  const cached = roadCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < 10 * 60_000) return { ...leg, ...cached.value };
+  if (pendingRoad.has(cacheKey)) return { ...leg, ...await pendingRoad.get(cacheKey) };
+  const request = (async () => {
+    try {
+      const response = await amapGet("/v5/direction/driving", { origin, destination, show_fields: "cost,polyline" });
+      const data = await response.json();
+      const path = data.route?.paths?.[0];
+      const distance = Number(path?.distance);
+      const duration = Number(path?.cost?.duration);
+      if (data.status !== "1" || !path || !Number.isFinite(distance) || distance <= 0 ||
+          !Number.isFinite(duration) || duration <= 0) throw new Error("未返回有效驾车路线");
+      const coordinates = (path.steps || []).flatMap(step => String(step.polyline || "").split(";").map(pair => pair.split(",").map(Number)))
+        .filter(pair => pair.length === 2 && Number.isFinite(pair[0]) && Number.isFinite(pair[1]));
+      const stride = Math.max(1, Math.ceil(coordinates.length / 1600));
+      const roadPath = coordinates.filter((_, index) => index % stride === 0 || index === coordinates.length - 1);
+      const value = { km: distance / 1000, hours: duration / 3600, source: "amap", checkedAt: new Date().toISOString(), path: roadPath };
+      roadCache.set(cacheKey, { value, at: Date.now() });
+      return value;
+    } catch {
+      return { reason: "高德驾车路线暂不可用" };
+    }
+  })();
+  pendingRoad.set(cacheKey, request);
+  try { return { ...leg, ...await request }; }
+  finally { pendingRoad.delete(cacheKey); }
+}
+
+async function roadVerification(places) {
+  const located = await Promise.all(places.map(async place => {
+    try { return await locatePlace(place); }
+    catch { return { name: place.name, error: "地点未定位" }; }
+  }));
+  const legs = (await Promise.all(located.slice(1).map((to, index) => drivingLeg(located[index], to)))).map(({ path, ...leg }) => leg);
+  const complete = legs.length > 0 && legs.every(leg => leg.source === "amap");
+  return {
+    source: "高德 Web Service 驾车路线 2.0",
+    checkedAt: new Date().toISOString(),
+    complete,
+    distanceKm: complete ? legs.reduce((sum, leg) => sum + leg.km, 0) : null,
+    driveHours: complete ? legs.reduce((sum, leg) => sum + leg.hours, 0) : null,
+    legs
+  };
 }
 
 async function mapPreview(places) {
-  if (!getAmapKey()) throw new Error("未配置高德 Web 服务 Key，地图与精确道路信息暂不展示");
+  if (!getAmapKey()) throw new Error("未配置高德 Web 服务 Key，地点定位与精确道路信息暂不展示");
   if (!Array.isArray(places) || places.length > 25 || places.some(place =>
     typeof place?.name !== "string" || typeof place?.query !== "string" ||
     place.name.length > 80 || place.query.length > 160 ||
@@ -114,37 +173,8 @@ async function mapPreview(places) {
     try { return await locatePlace(place); }
     catch { return { name: place.name, error: "定位服务暂时不可用" }; }
   }));
-  const points = located.filter(item => Number.isFinite(item.lon));
-  if (!points.length) return { points: located, imageUrl: "" };
-  const mercator = point => {
-    const sine = Math.sin(point.lat * Math.PI / 180);
-    return { x: (point.lon + 180) / 360, y: .5 - Math.log((1 + sine) / (1 - sine)) / (4 * Math.PI) };
-  };
-  const projected = points.map(mercator);
-  const xs = projected.map(point => point.x), ys = projected.map(point => point.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-  const centerX = (minX + maxX) / 2, centerY = (minY + maxY) / 2;
-  // AMap static maps advance in 512px world tiles per zoom level. Using the
-  // usual 256px slippy-map scale puts every overlay point too near the center.
-  const span = Math.max((maxX - minX) * 512 / 660, (maxY - minY) * 512 / 500);
-  const zoom = points.length === 1 ? 8 : Math.max(3, Math.min(14, Math.floor(Math.log2(1 / Math.max(span, 1e-9)))));
-  const centerLon = centerX * 360 - 180;
-  const centerLat = Math.atan(Math.sinh(Math.PI * (1 - 2 * centerY))) * 180 / Math.PI;
-  const scale = 512 * 2 ** zoom;
-  let pointIndex = 0;
-  const plotted = located.map(point => {
-    if (!Number.isFinite(point.lon)) return point;
-    const position = projected[pointIndex++];
-    return { ...point, x: Math.round(380 + (position.x - centerX) * scale), y: Math.round(300 + (position.y - centerY) * scale) };
-  });
-  const parameters = { size: "760*600", scale: "1", location: `${centerLon.toFixed(6)},${centerLat.toFixed(6)}`, zoom };
-  const response = await amapGet("/v3/staticmap", parameters);
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.startsWith("image/")) throw new Error("高德没有返回地图图片");
-  const imageId = randomUUID();
-  mapImages.set(imageId, Buffer.from(await response.arrayBuffer()));
-  if (mapImages.size > 80) mapImages.delete(mapImages.keys().next().value);
-  return { points: plotted, imageUrl: `/api/map/image/${imageId}` };
+  const legs = await Promise.all(located.slice(1).map((to, index) => drivingLeg(located[index], to)));
+  return { points: located, legs };
 }
 
 function runnerConnected() {
@@ -225,10 +255,13 @@ function validateResult(job, result) {
     return result;
   }
   if (job.type === "preview") {
-    if (!job.state.capabilities?.amap) {
-      result.totals = { ...result.totals, distanceKm: null, driveHours: null, chargeHours: null, pressure: "待核验", distanceSource: "未接入高德" };
+    const roads = job.state.roadVerification;
+    if (!roads?.complete) {
+      result.totals = { ...result.totals, distanceKm: null, driveHours: null, chargeHours: null, pressure: "待核验", distanceSource: job.state.capabilities?.amap ? "部分路段未核验" : "未接入高德" };
       result.days = result.days?.map(day => ({ ...day, distanceKm: null, driveHours: null, chargeHours: null }));
-      result.sourceNotes = [...(result.sourceNotes || []), "未接入高德，精确道路信息不展示"];
+      result.sourceNotes = [...(result.sourceNotes || []), "道路数据未全部核验，精确里程与驾驶时长不展示"];
+    } else {
+      result.totals = { ...result.totals, distanceKm: roads.distanceKm, driveHours: roads.driveHours, distanceSource: `${roads.source} · ${roads.checkedAt.slice(0, 10)}` };
     }
     const totals = result.totals;
     const expected = job.state.routeOrder;
@@ -297,11 +330,10 @@ const server = createServer(async (req, res) => {
       sendJson(res, 200, { ok: true, ...preview });
       return;
     }
-    if (req.method === "GET" && url.pathname.startsWith("/api/map/image/")) {
-      const image = mapImages.get(url.pathname.slice("/api/map/image/".length));
-      if (!image) { sendJson(res, 404, { ok: false, error: "地图已过期，请刷新页面" }); return; }
-      res.writeHead(200, { "content-type": "image/png", "content-length": image.length, "cache-control": "private, max-age=600" });
-      res.end(image);
+    if (req.method === "GET" && url.pathname === "/api/map/js-config") {
+      const config = getAmapJsConfig();
+      sendJson(res, config.key && config.securityJsCode ? 200 : 409,
+        config.key && config.securityJsCode ? { ok: true, ...config } : { ok: false, error: "未配置高德 Web 端 Key 和安全密钥" });
       return;
     }
     if (req.method === "GET" && url.pathname === "/api/status") {
@@ -321,7 +353,7 @@ const server = createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/setup/credentials") {
       const status = updateCredentials(await readJsonBody(req));
       mapCache.clear();
-      mapImages.clear();
+      roadCache.clear();
       sendJson(res, 200, { ok: true, ...status });
       return;
     }
@@ -345,6 +377,19 @@ const server = createServer(async (req, res) => {
       const setup = credentialStatus();
       state.capabilities = { amap: setup.amap.configured, flyai: setup.flyai.available };
       const type = url.pathname.split("/").at(-1);
+      if (type === "preview" || type === "plan" || type === "refine") {
+        const places = state.mapPlaces;
+        if (!Array.isArray(places) || !Array.isArray(state.routeOrder) ||
+            places.length !== state.routeOrder.length || places.length > 25 ||
+            places.some((place, index) => place?.name !== state.routeOrder[index] ||
+              typeof place.query !== "string" || place.query.length > 160 ||
+              place.code !== undefined && !/^\d{6}$/.test(place.code))) {
+          throw new Error("当前路线地点与已选顺序不一致");
+        }
+        state.roadVerification = setup.amap.configured
+          ? await roadVerification(places)
+          : { complete: false, distanceKm: null, driveHours: null, legs: [] };
+      }
       if (type === "candidates" && state.instruction !== undefined &&
           (typeof state.instruction !== "string" || !state.instruction.trim() || state.instruction.length > 2000)) {
         throw new Error("请填写不超过 2000 字的候选调整要求");

@@ -34,6 +34,8 @@
     .session-end:hover{background:rgba(255,255,255,.1)}
     .setup-link{border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:9px 11px;color:#fff;background:rgba(255,255,255,.08);font-size:10px;font-weight:800}
     .setup-shell{width:min(880px,calc(100% - 28px));margin:44px auto}.setup-hero{padding:35px;border-radius:28px;color:white;background:linear-gradient(135deg,#0d2d29,#236456);box-shadow:var(--shadow)}.setup-hero h1{margin:10px 0;font:700 clamp(31px,5vw,52px)/1.08 var(--serif)}.setup-hero p{max-width:650px;margin:0;color:#cfe1da;font-size:13px;line-height:1.8}.setup-body{display:grid;gap:15px;margin-top:16px}.setup-card{padding:21px 23px}.setup-card h2{margin:0 0 7px;font:700 24px var(--serif)}.setup-card p{margin:0 0 13px;color:var(--muted);font-size:11px;line-height:1.7}.setup-card input{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;font-size:13px}.setup-status{display:inline-block;margin-bottom:11px;padding:5px 9px;border-radius:99px;color:var(--red-dark);background:#fff0e9;font-size:10px;font-weight:900}.setup-status.is-ready{color:var(--pine);background:#e2eee8}.setup-warning{padding:14px 18px;border-radius:15px;color:#6a4a23;background:#fff0d0;font-size:11px;line-height:1.7}.setup-actions{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}.setup-actions button{min-width:130px}.setup-error{color:var(--red-dark);font-size:11px;font-weight:800}
+    .setup-card-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:18px}.setup-card-head h2{margin:5px 0 0}.setup-card-head .setup-status{margin:0}.setup-key-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.setup-key-group{min-width:0;padding:16px;border:1px solid var(--line);border-radius:17px;background:#faf8f1}.setup-key-group.is-paired{border-color:#c9d9d0;background:#eef5ef}.setup-key-heading{display:flex;align-items:start;gap:10px;margin-bottom:10px}.setup-key-step{flex:0 0 25px;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;color:#fff;background:var(--pine);font:900 12px Georgia,serif}.setup-key-heading h3{margin:0 0 3px;font:700 17px var(--serif)}.setup-key-heading .setup-status{margin:0 0 0 auto;white-space:nowrap}.setup-key-group p{min-height:37px;margin:0 0 13px}.setup-field{display:block;margin-top:12px;color:var(--ink);font-size:10px;font-weight:900}.setup-field input{display:block;margin-top:6px}.setup-key-group .helper{min-height:0;margin:10px 0 0;font-size:10px}.setup-guide{margin:13px 2px 0!important;min-height:0!important}.setup-guide a{color:var(--blue);font-weight:800;text-decoration:none}.setup-guide a:hover{text-decoration:underline}.setup-flyai-copy{max-width:600px}.setup-flyai-field{max-width:520px}.setup-status-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.setup-status-row .setup-status{margin:0}
+    @media(max-width:680px){.setup-shell{margin:15px auto}.setup-hero{padding:26px;border-radius:23px}.setup-hero h1{font-size:32px}.setup-card{padding:20px 17px}.setup-key-grid{grid-template-columns:1fr}.setup-key-group p{min-height:0}.setup-card-head{align-items:start}.setup-card-head .setup-status{margin-top:4px}.setup-key-heading .setup-status{white-space:normal;text-align:center}}
     .setup-dependency{margin-top:14px;padding:15px;border:1px solid rgba(230,92,61,.22);border-radius:15px;background:#fff8ec}.setup-dependency h3{margin:0 0 5px;font:700 16px var(--serif)}.setup-dependency p{margin:0 0 10px}.setup-install-row{display:flex;align-items:stretch;gap:7px}.setup-install-row code{flex:1;min-width:0;overflow-x:auto;padding:11px 12px;border-radius:9px;color:#eceddc;background:var(--pine-2);font:600 11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}.setup-install-row button,.setup-recheck{border:1px solid var(--line);border-radius:9px;padding:8px 11px;color:var(--ink);background:#fffdf8;font-size:10px;font-weight:900;white-space:nowrap}.setup-install-row button:hover,.setup-recheck:hover{border-color:var(--pine);background:#eaf3ee}.setup-dependency-foot{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:9px}.setup-dependency-foot a{color:var(--blue);font-size:10px;text-decoration:none}.setup-dependency-foot a:hover{text-decoration:underline}
     .primary,.secondary,.ghost,.danger,.status-btn{border:0;border-radius:12px;padding:10px 14px;font-weight:900}
     .primary{color:white;background:var(--red);box-shadow:0 7px 18px rgba(230,92,61,.22)}
@@ -82,7 +84,7 @@
     .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
     .metric{padding:11px;border-radius:13px;background:rgba(255,253,246,.82);border:1px solid var(--line)}
     .metric b{display:block;font:900 19px/1 Georgia,serif;color:var(--red)}.metric b.is-pending{color:var(--muted);font:900 13px/1.15 var(--sans)}.metric span{display:block;margin-top:5px;color:var(--muted);font-size:8px;line-height:1.35}
-    .map-card{overflow:hidden;background:#e8eee8}.map-canvas{position:relative;display:grid;place-items:center;min-height:350px;background:#e8eee8}.map-canvas.has-map{display:block;min-height:0}.map-canvas img{display:block;width:100%;height:auto}.map-canvas svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}.map-placeholder{max-width:270px;padding:28px;color:var(--muted);text-align:center;font-size:11px;line-height:1.7}.map-placeholder b{display:block;margin-bottom:5px;color:var(--ink);font:700 20px var(--serif)}.map-points{display:grid;gap:6px;padding:12px;background:#fffdf6;border-top:1px solid var(--line)}.map-point{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--ink)}.map-point i{flex:0 0 auto;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font:900 9px var(--sans)}.map-point.is-missing{color:var(--muted)}.map-point.is-missing i{background:#a4aaa3}.map-caption{padding:0 12px 12px;color:var(--muted);background:#fffdf6;font-size:9px;line-height:1.5}
+    .map-card{overflow:hidden;background:#e8eee8}.map-canvas{position:relative;display:grid;place-items:center;min-height:350px;background:#e8eee8}.map-canvas.has-map{display:block;min-height:350px}.map-placeholder{max-width:270px;padding:28px;color:var(--muted);text-align:center;font-size:11px;line-height:1.7}.map-placeholder b{display:block;margin-bottom:5px;color:var(--ink);font:700 20px var(--serif)}.map-points{display:grid;gap:6px;padding:12px;background:#fffdf6;border-top:1px solid var(--line)}.map-point{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--ink)}.map-point i{flex:0 0 auto;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font:900 9px var(--sans)}.map-point.is-missing{color:var(--muted)}.map-point.is-missing i{background:#a4aaa3}.map-caption{padding:0 12px 12px;color:var(--muted);background:#fffdf6;font-size:9px;line-height:1.5}
     .map-overlay{position:absolute;left:16px;right:16px;bottom:16px;display:flex;align-items:end;justify-content:space-between;gap:10px;pointer-events:none}
     .map-legend{max-width:68%;padding:10px 12px;border:1px solid rgba(255,255,255,.55);border-radius:14px;background:rgba(255,253,246,.84);backdrop-filter:blur(10px);font-size:9px;line-height:1.6;box-shadow:0 9px 24px rgba(24,59,54,.1)}
     .legend-row{display:flex;gap:9px;flex-wrap:wrap}.legend-row span{display:flex;align-items:center;gap:4px}.dot{width:8px;height:8px;border-radius:50%}.dot.locked{background:var(--red)}.dot.selected{background:var(--pine)}.dot.optional{border:2px solid var(--blue);background:white}
@@ -134,6 +136,7 @@
     @media(max-width:520px){.setup-shell{margin:12px auto}.setup-hero{padding:25px}.setup-card{padding:17px}.setup-actions button{flex:1}}
     @media print{.topbar,.stagebar,.report-actions,.toast{display:none!important}.app{padding:0}.generated{box-shadow:none}.report-grid{grid-template-columns:1fr}.day-row{break-inside:avoid}body{background:white}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+    .map-canvas.has-map{display:block;min-height:350px}.amap-map-host{width:100%;height:350px;touch-action:pan-x pan-y}.amap-pin{display:grid;place-items:center;width:26px;height:26px;border:2px solid #fffdf6;border-radius:50%;background:#e65c3d;color:#fff;font:900 11px sans-serif;box-shadow:0 2px 8px #183b3650}.map-message{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;pointer-events:none;padding:9px 11px;border-radius:9px;background:#fffdf6e8;color:var(--ink);font-size:10px}
   </style>
 </head>
 <body>
@@ -177,39 +180,6 @@
     let candidates = [];
     const FLYAI_INSTALL_COMMAND = 'npm i -g @fly-ai/flyai-cli';
 
-    // 高德 Web Service 道路距离快照，采集于 2026-09-18。
-    // 未命中的自定义组合会回退为经纬度估算，并在界面中明确标记。
-    const roadSnapshot = { provider:'高德地图 Web Service', capturedAt:'2026-09-18' };
-    const roadLegs = {
-      '杭州>泉州': { km:775.490, hours:9.456 },
-      '杭州>东山岛': { km:996.895, hours:11.140 },
-      '泉州>东山岛': { km:246.576, hours:2.855 },
-      '东山岛>潮汕': { km:122.212, hours:1.663 },
-      '东山岛>珠海': { km:535.583, hours:5.905 },
-      '东山岛>澳门': { km:560.426, hours:6.433 },
-      '潮汕>珠海': { km:428.677, hours:5.230 },
-      '潮汕>澳门': { km:453.520, hours:5.790 },
-      '珠海>澳门': { km:24.533, hours:1.280 },
-      '澳门>柳州': { km:591.863, hours:6.910 },
-      '柳州>肇兴侗寨': { km:254.582, hours:3.418 },
-      '柳州>凯里': { km:436.471, hours:5.101 },
-      '柳州>镇远': { km:432.302, hours:5.336 },
-      '柳州>梵净山': { km:560.427, hours:7.544 },
-      '柳州>恩施': { km:806.790, hours:8.930 },
-      '肇兴侗寨>凯里': { km:225.674, hours:2.936 },
-      '肇兴侗寨>镇远': { km:195.165, hours:2.737 },
-      '肇兴侗寨>梵净山': { km:323.290, hours:4.857 },
-      '肇兴侗寨>恩施': { km:637.440, hours:7.175 },
-      '凯里>镇远': { km:93.274, hours:2.084 },
-      '凯里>梵净山': { km:234.253, hours:3.669 },
-      '凯里>恩施': { km:552.769, hours:6.406 },
-      '镇远>梵净山': { km:160.322, hours:2.839 },
-      '镇远>恩施': { km:499.621, hours:5.856 },
-      '梵净山>恩施': { km:440.104, hours:5.670 },
-      '恩施>宜昌': { km:218.916, hours:3.390 },
-      '宜昌>杭州': { km:1002.684, hours:11.218 }
-    };
-
     // A tag describes a destination's experience, never a travel constraint.
     const tagGroups = {
       '风味与文化':['地方美食','历史街巷','民族文化'],
@@ -242,7 +212,7 @@
       answers: emptyAnswers(),
       candidateStatus: {},
       focusCandidate: 0,
-      setup: { loading:location.protocol!=='file:', open:false, amap:false, flyai:false, flyaiInstalled:false, amapSource:'none', flyaiSource:'none', error:'' },
+      setup: { loading:location.protocol!=='file:', open:false, amap:false, amapJs:false, flyai:false, flyaiInstalled:false, amapSource:'none', amapJsKeySource:'none', amapJsSecuritySource:'none', flyaiSource:'none', error:'' },
       ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', preview:null, previewKey:'', reportUrl:'', refineDraft:'', showRefine:false, candidateDraft:'', showCandidateRevision:false, backendReady:false, ended:false },
       webMcpRegistered: false
     };
@@ -266,7 +236,7 @@
     const locationByLabel = new Map(locations.map(place=>[place[4],place]));
     const mapPreviews = new Map();
     const pendingMapPreviews = new Set();
-    const mapPlaces = () => routeNodes().map(node => {
+    const mapPlaces = (nodes=routeNodes()) => nodes.map(node => {
       const place=locationByLabel.get(node.name);
       return { name:node.name, ...(place?{code:place[0]}:{}), query:place?[place[3],place[2],place[1]].filter(Boolean).filter((part,index,parts)=>parts.indexOf(part)===index).join(' '):node.name };
     });
@@ -286,25 +256,22 @@
     const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && Number(state.answers.maxDetour) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.ev || Number(state.answers.evHighwayRange)>=100 && Number(state.answers.evHighwayRange)<=1000);
     const chargeHoursFor = km => state.answers.ev && Number(state.answers.evHighwayRange)>0 ? km/Number(state.answers.evHighwayRange)*.45 : 0;
 
-    function roadLeg(from,to){
-      const exact=roadLegs[`${from.name}>${to.name}`];
-      if(exact) return { ...exact, source:'amap' };
-      if(!Number.isFinite(from.lon)||!Number.isFinite(from.lat)||!Number.isFinite(to.lon)||!Number.isFinite(to.lat)) return { km:null, hours:null, source:'unlocated' };
-      const km=haversine(from,to)*1.22;
-      return { km, hours:km/82, source:'estimate' };
+    function roadLeg(from,to,nodes=routeNodes()){
+      const preview=mapPreviews.get(JSON.stringify(mapPlaces(nodes)));
+      return preview?.legs?.find(leg=>leg.from===from.name&&leg.to===to.name) || { km:null, hours:null, source:'unverified' };
     }
 
     function routeRoadStats(nodes){
-      if(!state.setup.amap && state.ai.source!=='mock') return { km:null, driveHours:null, chargeHours:null, source:'unverified', legs:[] };
-      let km=0, driveHours=0, exactLegs=0, unlocated=0;
+      if(!state.setup.amap) return { km:null, driveHours:null, chargeHours:null, source:'unverified', legs:[] };
+      let km=0, driveHours=0, unverified=0;
       const legs=[];
       for(let i=1;i<nodes.length;i++){
-        const leg=roadLeg(nodes[i-1],nodes[i]);
-        if(leg.source==='unlocated') unlocated++;
-        else {km+=leg.km; driveHours+=leg.hours; if(leg.source==='amap')exactLegs++;}
+        const leg=roadLeg(nodes[i-1],nodes[i],nodes);
+        if(leg.source!=='amap'||!Number.isFinite(leg.km)||!Number.isFinite(leg.hours)) unverified++;
+        else {km+=leg.km; driveHours+=leg.hours;}
         legs.push({ from:nodes[i-1].name, to:nodes[i].name, ...leg });
       }
-      return { km:unlocated?null:km, driveHours:unlocated?null:driveHours, chargeHours:unlocated?null:chargeHoursFor(km), source:unlocated?'unlocated':exactLegs===legs.length?'amap':exactLegs?'mixed':'estimate', legs };
+      return { km:unverified||!legs.length?null:km, driveHours:unverified||!legs.length?null:driveHours, chargeHours:unverified||!legs.length?null:chargeHoursFor(km), source:unverified?'unverified':'amap', legs };
     }
 
     function candidateScore(c){
@@ -341,24 +308,16 @@
       const withCandidate=[...without,candidate];
       const base=routeRoadStats(routeNodes(without));
       const next=routeRoadStats(routeNodes(withCandidate));
-      if(base.km===null||next.km===null) return {km:null,drive:null,source:'unlocated'};
+      if(base.km===null||next.km===null) return {km:null,drive:null,source:'unverified'};
       const baseTotalHours=base.driveHours+base.chargeHours;
       const nextTotalHours=next.driveHours+next.chargeHours;
       return {
         km:Number((next.km-base.km).toFixed(1)),
         drive:Number((nextTotalHours-baseTotalHours).toFixed(1)),
-        source:base.source==='amap'&&next.source==='amap'?'amap':'mixed'
+        source:'amap'
       };
     }
-    const candidateDetour = candidate => !state.setup.amap ? {km:null,drive:null,source:'unverified'} : state.ai.source==='codex' ? {km:candidate.detour,drive:candidate.drive,source:'codex'} : candidateImpact(candidate);
-
-    function haversine(a,b){
-      if (!a || !b || !Number.isFinite(a.lat) || !Number.isFinite(b.lat)) return null;
-      const toRad = v => v * Math.PI / 180;
-      const dLat = toRad(b.lat-a.lat), dLon = toRad(b.lon-a.lon);
-      const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
-      return 6371 * 2 * Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-    }
+    const candidateDetour = candidate => !state.setup.amap ? {km:null,drive:null,source:'unverified'} : candidateImpact(candidate);
 
     function routeStats(){
       const nodes = routeNodes();
@@ -394,7 +353,7 @@
         const stay = to.name === state.route.end && i === nodes.length-1 ? 0 : (profile.stay ?? 1);
         const play = drive===null ? null : stay === 0 ? .5 : Math.max(2,Math.min(5.5,stay*5.2-Math.max(0,drive-4)*.35));
         const plan = profile.highlight || profile.reason || '抵达后安排该地最有区分度的体验。';
-        days.push({ date:formatDate(date), title:`${from.name} → ${to.name}`, subtitle:km===null?'道路距离与驾驶时间待核验':`${leg.source==='amap'?'高德道路快照':'道路估算'} ${km.toFixed(1)} km · ${drive.toFixed(1)}h${state.answers.ev?' 含补能':''}`, plan:drive > Number(state.answers.maxDrive) ? `长转场，拆成弹性休息区间；抵达后：${plan}` : plan, drive, play, stay:stay ? `${to.name} · ${stay} 天` : '返程抵达' });
+        days.push({ date:formatDate(date), title:`${from.name} → ${to.name}`, subtitle:km===null?'道路距离与驾驶时间待核验':`高德道路参考 ${km.toFixed(1)} km · ${drive.toFixed(1)}h${state.answers.ev?' 含补能估算':''}`, plan:drive > Number(state.answers.maxDrive) ? `长转场，拆成弹性休息区间；抵达后：${plan}` : plan, drive, play, stay:stay ? `${to.name} · ${stay} 天` : '返程抵达' });
         const fullDays = Math.max(0,Math.floor(stay-.6));
         for(let j=0;j<fullDays;j++){
           date = addDays(date,1);
@@ -416,9 +375,12 @@
       if(state.setup.loading) return `<main class="setup-shell"><section class="setup-hero"><span class="kicker">开始之前</span><h1>正在检查旅行数据服务…</h1><p>不会读取或展示你的密钥内容。</p></section></main>`;
       const amap=state.setup.amap,flyai=state.setup.flyai;
       const status=(ready,text)=>`<span class="setup-status ${ready?'is-ready':''}">${text}</span>`;
-      return `<main class="setup-shell"><section class="setup-hero"><span class="kicker" style="color:var(--sun)">首次使用 · 数据服务</span><h1>把需要的数据接进来。</h1><p>只在这台设备上保存一次。两项都可以跳过，但缺少来源时不会展示未经核验的精确地图、酒店与景点价格。</p></section><div class="setup-body">
-        <section class="panel setup-card"><span class="kicker">01 · 地图与道路</span><h2>高德地图</h2>${status(amap,amap?'已配置':'未配置')}<p>填高德 Web 服务 Key。未配置时仍保留路线地点顺序，但不展示地图点位、里程和驾驶压力的假精确数字。</p><input id="amapSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="高德 Web 服务 Key" placeholder="${amap?'已配置；留空保持不变':'输入高德 Web 服务 Key'}">${state.setup.amapSource==='environment'?'<p class="helper">当前由启动环境提供；网页保存的新 Key 不会覆盖环境变量。</p>':''}</section>
-        <section class="panel setup-card"><span class="kicker">02 · 酒店与景点</span><h2>飞猪 FlyAI</h2>${status(flyai,flyai?'已配置 · 可尝试查询':state.setup.flyaiSource!=='none'?'已保存 Key，但未找到 FlyAI 工具':'未配置')}<p>填 FlyAI API Key。未接入时可以继续规划，但不显示未经查询的飞猪酒店、房价和景点票价。</p><input id="flyaiSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="FlyAI API Key" placeholder="${state.setup.flyaiSource!=='none'?'已配置；留空保持不变':'输入 FlyAI API Key'}">${!state.setup.flyaiInstalled?`<div class="setup-dependency"><h3>想用飞猪实时查询，还差一步</h3><p>在本机终端安装 FlyAI 命令行工具；只做基础行程规划可以跳过。</p><div class="setup-install-row"><code>${FLYAI_INSTALL_COMMAND}</code><button type="button" data-action="flyai-copy-install" aria-label="复制 FlyAI 安装命令">复制命令</button></div><div class="setup-dependency-foot"><button class="setup-recheck" type="button" data-action="flyai-recheck">安装完成，重新检测</button><a href="https://github.com/alibaba-flyai/flyai-skill#step-2--install-the-cli" target="_blank" rel="noopener noreferrer">查看 FlyAI 安装说明 ↗</a></div></div>`:''}</section>
+      return `<main class="setup-shell"><section class="setup-hero"><span class="kicker" style="color:var(--sun)">首次使用 · 数据服务</span><h1>把需要的数据接进来。</h1><p>密钥只保存在这台设备。可以先跳过；没有可靠来源的数据，计划里不会装作已经核验。</p></section><div class="setup-body">
+        <section class="panel setup-card"><div class="setup-card-head"><div><span class="kicker">01 · 地图与道路</span><h2>高德地图</h2></div></div><div class="setup-key-grid">
+          <div class="setup-key-group"><div class="setup-key-heading"><span class="setup-key-step">1</span><div><h3>路线与里程</h3></div>${status(amap,amap?'已配置':'未配置')}</div><p>使用「Web 服务」Key，核验地点、驾车道路、里程与时长。</p><label class="setup-field" for="amapSetupKey">Web 服务 Key<input id="amapSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="高德 Web 服务 Key" placeholder="${amap?'已配置，留空保持不变':'粘贴 Web 服务 Key'}"></label>${state.setup.amapSource==='environment'?'<p class="helper">当前由启动环境提供，网页保存的新值不会覆盖它。</p>':''}</div>
+          <div class="setup-key-group is-paired"><div class="setup-key-heading"><span class="setup-key-step">2</span><div><h3>可交互地图</h3></div>${status(state.setup.amapJs,state.setup.amapJs?'已配置':'未配置')}</div><p>下面两项要取自高德控制台<strong>同一条 Web 端（JS API）Key</strong>，不能和 Web 服务 Key 混用。</p><label class="setup-field" for="amapJsSetupKey">Web 端 JS Key<input id="amapJsSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="高德 Web 端 JS Key" placeholder="${state.setup.amapJsKeySource!=='none'?'已配置，留空保持不变':'粘贴 Web 端 JS Key'}"></label><label class="setup-field" for="amapSecuritySetupCode">配套安全密钥 · securityJsCode<input id="amapSecuritySetupCode" type="password" autocomplete="off" spellcheck="false" aria-label="高德 JS 安全密钥" placeholder="${state.setup.amapJsSecuritySource!=='none'?'已配置，留空保持不变':'粘贴对应的安全密钥'}"></label></div>
+        </div><p class="setup-guide"><a href="https://lbs.amap.com/api/javascript-api-v2/prerequisites" target="_blank" rel="noopener noreferrer">在高德控制台哪里找 JS Key 和安全密钥 ↗</a></p></section>
+        <section class="panel setup-card"><div class="setup-card-head"><div><span class="kicker">02 · 酒店与景点</span><h2>飞猪 FlyAI</h2></div>${status(flyai,flyai?'已配置':state.setup.flyaiSource!=='none'?'缺少工具':'未配置')}</div><p class="setup-flyai-copy">用于查询酒店与景点。未接入时仍可规划，但不会显示未经查询的实时房价和票价。</p><label class="setup-field setup-flyai-field" for="flyaiSetupKey">FlyAI API Key<input id="flyaiSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="FlyAI API Key" placeholder="${state.setup.flyaiSource!=='none'?'已配置，留空保持不变':'粘贴 FlyAI API Key'}"></label>${!state.setup.flyaiInstalled?`<div class="setup-dependency"><h3>想用飞猪实时查询，还差一步</h3><p>在本机终端安装 FlyAI 命令行工具；只做基础行程规划可以跳过。</p><div class="setup-install-row"><code>${FLYAI_INSTALL_COMMAND}</code><button type="button" data-action="flyai-copy-install" aria-label="复制 FlyAI 安装命令">复制命令</button></div><div class="setup-dependency-foot"><button class="setup-recheck" type="button" data-action="flyai-recheck">安装完成，重新检测</button><a href="https://github.com/alibaba-flyai/flyai-skill#step-2--install-the-cli" target="_blank" rel="noopener noreferrer">查看 FlyAI 安装说明 ↗</a></div></div>`:''}</section>
         <div class="setup-warning">跳过也能继续：路线和游玩建议会标明“待核验”；不会用猜测填充高德精确道路数据或飞猪实时酒店、景点信息。之后可从右上角“服务设置”补填。</div>
         ${state.setup.error?`<p class="setup-error" role="alert">${esc(state.setup.error)}</p>`:''}
         <div class="setup-actions"><button class="ghost" type="button" data-action="setup-skip">暂时跳过</button><button class="primary" type="button" data-action="setup-save">保存并继续 →</button></div>
@@ -486,7 +448,7 @@
       const stats = routeStats();
       if(stats.km===null) return `<div class="metrics"><div class="metric"><b>${state.route.must.length}</b><span>已锁定必去点</span></div><div class="metric"><b>${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天</b><span>可用旅行时间</span></div><div class="metric"><b class="is-pending">待核验</b><span>路线里程</span></div><div class="metric"><b class="is-pending">待核验</b><span>驾驶压力</span></div></div>`;
       const scope = selectedCandidates().length ? '当前路线' : '仅必去点基线';
-      const sourceLabel=stats.source==='amap'?'高德道路快照':'含估算路段';
+      const sourceLabel='高德实时路网参考';
       return `<div class="metrics"><div class="metric"><b>${stats.km.toLocaleString('zh-CN',{maximumFractionDigits:1})}</b><span>${scope} · ${sourceLabel} km</span></div><div class="metric"><b>${stats.drive}h</b><span>驾驶＋${state.answers.ev?'补能':'休息'}估算</span></div><div class="metric"><b>${stats.availableDays}天</b><span>已确认可用时间</span></div><div class="metric"><b>${stats.pressure}</b><span>${scope} · 驾驶压力</span></div></div>`;
     }
 
@@ -497,23 +459,61 @@
 
     function mapView(){
       const places=mapPlaces();
-      if(!state.setup.amap){
+      if(!state.setup.amapJs){
         const rows=places.map((place,index)=>`<div class="map-point is-missing"><i>${index+1}</i><span>${esc(place.name)}</span></div>`).join('');
-        return `<div class="panel map-card"><div class="map-canvas"><div class="map-placeholder"><b>地图暂不展示</b>尚未配置高德 Web 服务 Key；这里只保留已选地点顺序，不标注未经定位的点位。</div></div>${places.length?`<div class="map-points">${rows}</div>`:''}</div>`;
+        return `<div class="panel map-card"><div class="map-canvas"><div class="map-placeholder"><b>地图暂不展示</b>配置高德 Web 端 JS Key 和安全密钥后，可拖拽、缩放查看地图。</div></div>${places.length?`<div class="map-points">${rows}</div>`:''}</div>`;
       }
       const preview=mapPreviews.get(JSON.stringify(places));
       const pointRows=(preview?.points||places).map((point,index)=>`<div class="map-point ${point.error?'is-missing':''}"><i>${point.error?'?':index+1}</i><span>${esc(point.name)}${point.error?` · ${esc(point.error)}`:point.verified===false?' · 地名匹配，待核验':''}</span></div>`).join('');
-      const points=(preview?.points||[]).filter(point=>Number.isFinite(point.x)&&Number.isFinite(point.y));
-      const path=points.map(point=>`${point.x},${point.y}`).join(' ');
-      const markers=points.map(point=>`<g transform="translate(${point.x} ${point.y})"><circle r="16" fill="#e65c3d" stroke="#fffdf6" stroke-width="4"/><text text-anchor="middle" y="4" fill="#fff" font-size="12" font-weight="900">${(preview.points.indexOf(point)+1)}</text></g>`).join('');
-      const overlay=`<svg viewBox="0 0 760 600" aria-hidden="true">${points.length>1?`<polyline points="${path}" fill="none" stroke="#fffdf6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><polyline points="${path}" fill="none" stroke="#e65c3d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`:''}${markers}</svg>`;
-      const canvas=preview?.imageUrl?`<img src="${esc(preview.imageUrl)}" alt="高德地图：${esc(places.map(place=>place.name).join(' → '))}" loading="eager">${overlay}`:`<div class="map-placeholder"><b>${places.length?'地图正在定位':'路线从这里开始'}</b>${preview?.error?esc(preview.error):places.length?'正在从高德加载已选地点和真实底图…':'选定出发地、终点或必去点后，这里会显示地图。'}</div>`;
-      return `<div class="panel map-card"><div class="map-canvas ${preview?.imageUrl?'has-map':''}">${canvas}</div>${places.length?`<div class="map-points">${pointRows}</div><div class="map-caption">高德底图 · 县市点表示行政地名位置，不是景区入口；红线仅表示途经顺序，不是实际驾车道路。</div>`:''}</div>`;
+      const message=amapLoadError||(!state.setup.amap?'未配置 Web 服务 Key：地图可浏览，但不显示未经定位的点位与道路。':preview?.error||(!preview&&places.length?'正在核验地点与道路…':''));
+      return `<div class="panel map-card"><div class="map-canvas has-map"><div class="amap-map-host" id="amapInteractive" aria-label="可拖拽缩放的高德地图"></div>${message?`<div class="map-message">${esc(message)}</div>`:''}</div>${places.length?`<div class="map-points">${pointRows}</div><div class="map-caption">可拖拽、缩放；如显示红线，即为高德返回的驾车道路。点位表示行政地名位置，并非景区入口。</div>`:''}</div>`;
     }
 
-    async function refreshMapPreview(){
+    let amapSdkPromise,amapMap=null,amapOverlays=[],amapRouteKey='',amapRenderedPreview=null,amapLoadError='';
+    async function loadAmapSdk(){
+      if(window.AMap) return window.AMap;
+      if(amapSdkPromise) return amapSdkPromise;
+      amapSdkPromise=(async()=>{
+        const response=await fetch('/api/map/js-config',{cache:'no-store'});
+        const config=await response.json();
+        if(!response.ok||!config.ok) throw new Error(config.error||'交互地图配置不可用');
+        window._AMapSecurityConfig={securityJsCode:config.securityJsCode};
+        return new Promise((resolve,reject)=>{
+          const callback='roadtripAmapReady';
+          const timer=setTimeout(()=>{delete window[callback];reject(new Error('高德地图加载超时'));},15000);
+          window[callback]=()=>{clearTimeout(timer);delete window[callback];resolve(window.AMap);};
+          const script=document.createElement('script');
+          script.src=`https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(config.key)}&callback=${callback}`;
+          script.onerror=()=>{clearTimeout(timer);delete window[callback];reject(new Error('高德地图脚本加载失败'));};
+          document.head.appendChild(script);
+        });
+      })().catch(error=>{amapSdkPromise=null;throw error;});
+      return amapSdkPromise;
+    }
+    async function syncAmapMap(){
+      if(!state.setup.amapJs||state.setup.open||state.stage===5&&state.ai.reportUrl||location.protocol==='file:') return;
+      try{
+        const AMap=await loadAmapSdk();
+        const host=document.getElementById('amapInteractive');
+        if(!host) return;
+        if(!amapMap){amapMap=new AMap.Map(host,{center:[104.5,35.5],zoom:5,viewMode:'2D',resizeEnable:true});amapRouteKey='';}
+        const places=mapPlaces(),key=JSON.stringify(places),preview=mapPreviews.get(key);
+        if(key===amapRouteKey&&preview===amapRenderedPreview) {amapMap.resize?.();return;}
+        if(amapOverlays.length) amapMap.remove(amapOverlays);
+        amapOverlays=[];
+        if(preview){
+          (preview.legs||[]).forEach(leg=>{if(leg.source==='amap'&&Array.isArray(leg.path)&&leg.path.length>1) amapOverlays.push(new AMap.Polyline({path:leg.path,strokeColor:'#e65c3d',strokeWeight:5,strokeOpacity:.9,showDir:false}));});
+          (preview.points||[]).forEach((point,index)=>{if(Number.isFinite(point.lon)&&Number.isFinite(point.lat)) amapOverlays.push(new AMap.Marker({position:[point.lon,point.lat],content:`<div class="amap-pin">${index+1}</div>`,title:point.name,offset:new AMap.Pixel(-13,-13)}));});
+          if(amapOverlays.length){amapMap.add(amapOverlays);amapMap.setFitView(amapOverlays,false,[30,30,30,30],12);}
+        }
+        amapRouteKey=key;
+        amapRenderedPreview=preview;
+        amapMap.resize?.();
+      }catch(error){amapLoadError=error.message;const message=document.querySelector('.map-message');if(message)message.textContent=amapLoadError;}
+    }
+
+    async function requestMapPreview(places){
       if(location.protocol==='file:'||!state.setup.amap||state.setup.open) return;
-      const places=mapPlaces();
       if(!places.length) return;
       const key=JSON.stringify(places);
       if(mapPreviews.has(key)||pendingMapPreviews.has(key)) return;
@@ -526,18 +526,24 @@
       }catch(error){mapPreviews.set(key,{error:error.message,points:places.map(place=>({name:place.name,error:'待定位'}))});}
       finally{
         pendingMapPreviews.delete(key);
-        if(JSON.stringify(mapPlaces())===key){
-          const card=app.querySelector('.map-card');
-          if(card) card.outerHTML=mapView();
-        }
+        if(!state.setup.open) render();
       }
+    }
+
+    function refreshMapPreview(){
+      requestMapPreview(mapPlaces());
+      if(state.stage===3) candidates.forEach(candidate=>{
+        const without=selectedCandidates().filter(item=>item.id!==candidate.id);
+        requestMapPreview(mapPlaces(routeNodes(without)));
+        requestMapPreview(mapPlaces(routeNodes([...without,candidate])));
+      });
     }
 
     function candidateCard(c, focus=false){
       const status=statusOf(c.id), score=candidateScore(c);
       const impact=candidateDetour(c);
       const sign=value=>value>0?'+':'';
-      const sourceLabel=impact.source==='codex'?'Codex 核验增量':impact.source==='amap'?'高德道路增量':impact.source==='unverified'?'未接入高德，暂不展示':impact.source==='unlocated'?'地点待定位':'粗略估算';
+      const sourceLabel=impact.source==='amap'?'高德道路增量':impact.source==='unverified'?'路段待核验':'地点待核验';
       return `<article class="candidate ${focus?'focus-card':''}" data-status="${status}">
         <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${score}<small>/100</small></div></div>
         <p class="candidate-reason"><b>为什么出现：</b>${esc(c.reason)}</p>
@@ -564,7 +570,7 @@
         cell(selectionVisible?selected:'—',selectionVisible?'已加入沿途点':'候选尚未生成',!selectionVisible),
         cell(selectionVisible?excluded:'—',selectionVisible?'已排除沿途点':'候选尚未评审',!selectionVisible),
         cell(datesReady()?`${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天`:'—',datesReady()?'可用旅行时间':'时间尚未填完整',!datesReady()),
-        cell(located?(preview?preview.totals.distanceKm:stats.km).toLocaleString('zh-CN',{maximumFractionDigits:1}):'待核验',located?(preview?`${esc(preview.totals.distanceSource)} · km`:stats.source==='amap'?'高德道路快照 · km':'粗略估算 · km'):'路线里程',!located),
+        cell(located?(preview?preview.totals.distanceKm:stats.km).toLocaleString('zh-CN',{maximumFractionDigits:1}):'待核验',located?(preview?`${esc(preview.totals.distanceSource)} · km`:'高德实时路网参考 · km'):'路线里程',!located),
         cell(located&&(preview?Number.isFinite(preview.totals.driveHours)&&Number.isFinite(preview.totals.chargeHours):stats.drive!==null)?`${preview?(preview.totals.driveHours+preview.totals.chargeHours).toFixed(1):stats.drive}h`:'待核验',located?`驾驶＋${state.answers.ev?'补能':'休息'}估算`:'驾驶时长',!located),
         cell(ready?preview?Number.isFinite(preview.totals.playHours)?`${preview.totals.playHours}h`:'待核验':`${stats.play}h`:'—',ready?preview?'预览安排的游玩':'目的地建议体验':'游玩时间待安排',!ready||preview&&!Number.isFinite(preview.totals.playHours)),
         cell(located?(preview?preview.totals.pressure:stats.pressure):'待核验',located?'当前驾驶压力':'驾驶压力',!located)
@@ -578,7 +584,7 @@
         state.answers.pet?'带宠物':null,
         state.stage>=2&&state.answers.ev===null?'车辆类型待选':null,
         state.stage>=2&&state.answers.pet===null?'宠物同行待选':null,
-        located?(preview?`Codex 预览 · ${preview.totals.distanceSource}`:stats.source==='amap'?`${roadSnapshot.provider} · ${roadSnapshot.capturedAt}`:'路段为粗略估算，需 Codex 核验'):null
+        located?(preview?`Codex 预览 · ${preview.totals.distanceSource}`:'高德实时查询 · 不含未来节假日拥堵'):null
       ].filter(Boolean).map(item=>`<span>${esc(item)}</span>`).join('');
       return `<section class="panel global-state"><div class="global-state-head"><div><span class="kicker" style="color:#f3bd4d">全局状态</span><h3>${stageName}</h3><p>${preview?'优先展示 Codex 预览中核对过的数值':'只展示当前已经能够确定或计算的结果'}</p></div><span class="phase-chip">STEP ${state.stage} / 5</span></div><div class="global-state-grid">${cells}</div><div class="global-state-foot">${foot}</div></section>`;
     }
@@ -625,21 +631,29 @@
 
     function render(){
       invalidateStaleReview();
+      const existingMap=app.querySelector?.('.amap-map-host');
+      existingMap?.remove();
       app.innerHTML = header() + (state.setup.loading||state.setup.open?setupPage():guideVariant());
-      if(!state.setup.loading&&!state.setup.open) refreshMapPreview();
+      const newMap=app.querySelector?.('.amap-map-host');
+      if(existingMap&&newMap) newMap.replaceWith(existingMap);
+      else if(amapMap&&!newMap){amapMap.destroy();amapMap=null;amapOverlays=[];amapRouteKey='';amapRenderedPreview=null;}
+      if(!state.setup.loading&&!state.setup.open){refreshMapPreview();if(newMap) syncAmapMap();}
     }
 
     function applySetupStatus(data,firstLoad=false){
       const previous=state.setup.amap;
       state.setup.loading=false;
       state.setup.amap=Boolean(data.amap?.configured);
+      state.setup.amapJs=Boolean(data.amapJs?.configured);
+      state.setup.amapJsKeySource=data.amapJs?.keySource||'none';
+      state.setup.amapJsSecuritySource=data.amapJs?.securitySource||'none';
       state.setup.flyai=Boolean(data.flyai?.available);
       state.setup.flyaiInstalled=Boolean(data.flyai?.installed);
       state.setup.amapSource=data.amap?.source||'none';
       state.setup.flyaiSource=data.flyai?.source||'none';
       state.setup.error='';
       if(previous!==state.setup.amap) mapPreviews.clear();
-      if(firstLoad) state.setup.open=!state.setup.amap||!state.setup.flyai;
+      if(firstLoad) state.setup.open=!state.setup.amap||!state.setup.amapJs||!state.setup.flyai;
       render();
     }
 
@@ -662,6 +676,8 @@
 
     async function recheckFlyaiTool(){
       const amapDraft=document.getElementById('amapSetupKey')?.value||'';
+      const amapJsDraft=document.getElementById('amapJsSetupKey')?.value||'';
+      const amapSecurityDraft=document.getElementById('amapSecuritySetupCode')?.value||'';
       const flyaiDraft=document.getElementById('flyaiSetupKey')?.value||'';
       try{
         const response=await fetch('/api/setup/status',{cache:'no-store'});
@@ -669,8 +685,12 @@
         if(!response.ok||!data.ok) throw new Error(data.error||'重新检测失败');
         applySetupStatus(data);
         const amapInput=document.getElementById('amapSetupKey');
+        const amapJsInput=document.getElementById('amapJsSetupKey');
+        const amapSecurityInput=document.getElementById('amapSecuritySetupCode');
         const flyaiInput=document.getElementById('flyaiSetupKey');
         if(amapInput) amapInput.value=amapDraft;
+        if(amapJsInput) amapJsInput.value=amapJsDraft;
+        if(amapSecurityInput) amapSecurityInput.value=amapSecurityDraft;
         if(flyaiInput) flyaiInput.value=flyaiDraft;
         toast(state.setup.flyai ? 'FlyAI 工具与 Key 均已就绪。' : state.setup.flyaiInstalled ? '已检测到 FlyAI 工具；填入 Key 后点击“保存并继续”。' : '仍未检测到 FlyAI 工具。请确认安装完成后重启本地服务，再重新检测。');
       }catch(error){state.setup.error=`重新检测失败：${error.message}`;render();}
@@ -678,12 +698,15 @@
 
     async function saveSetup(){
       const amapKey=document.getElementById('amapSetupKey')?.value.trim()||'';
+      const amapJsKey=document.getElementById('amapJsSetupKey')?.value.trim()||'';
+      const amapSecurityJsCode=document.getElementById('amapSecuritySetupCode')?.value.trim()||'';
       const flyaiKey=document.getElementById('flyaiSetupKey')?.value.trim()||'';
       try{
-        const response=await fetch('/api/setup/credentials',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({amapKey,flyaiKey})});
+        const response=await fetch('/api/setup/credentials',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({amapKey,amapJsKey,amapSecurityJsCode,flyaiKey})});
         const data=await response.json();
         if(!response.ok||!data.ok) throw new Error(data.error||'保存失败');
         state.setup.open=false;
+        mapPreviews.clear();
         applySetupStatus(data);
         toast('配置已保存在这台设备；未填写的服务会保持待配置。');
       }catch(error){state.setup.error=`保存失败：${error.message}`;render();}
@@ -698,6 +721,7 @@
         answers: JSON.parse(JSON.stringify(state.answers)),
         candidates: candidates.map(candidate=>({ ...candidate, status:statusOf(candidate.id) })),
         routeOrder: routeNodes().map(node=>node.name),
+        mapPlaces: mapPlaces(),
         capabilities: { amap:state.setup.amap, flyai:state.setup.flyai },
         clientEstimate: planningReady()?routeStats():null,
         review: { preview:previewCurrent()?state.ai.preview:null }

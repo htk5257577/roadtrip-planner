@@ -71,14 +71,14 @@ test("first launch offers skippable key setup and hides unverified road data", a
   const toast = { textContent: "", classList: { add() {}, remove() {} } };
   const calls = [];
   const context = vm.createContext({
-    document: { getElementById: id => id === "app" ? app : id === "toast" ? toast : id === "amapSetupKey" ? { value: "amap-secret" } : id === "flyaiSetupKey" ? { value: "flyai-secret" } : null, addEventListener() {} },
+    document: { getElementById: id => id === "app" ? app : id === "toast" ? toast : id === "amapSetupKey" ? { value: "amap-secret" } : id === "amapJsSetupKey" ? { value: "amap-js-secret" } : id === "amapSecuritySetupCode" ? { value: "amap-security-secret" } : id === "flyaiSetupKey" ? { value: "flyai-secret" } : null, addEventListener() {} },
     window: { ROADTRIP_LOCATIONS: [] },
     location: { protocol: "http:", href: "http://127.0.0.1:4317/" },
     URL, structuredClone, setTimeout: () => 1, clearTimeout() {},
     fetch: async (path, options) => {
       calls.push({ path, body: options?.body ? JSON.parse(options.body) : null });
       if (path === "/api/setup/status") return { ok: true, json: async () => ({ ok: true, amap: { configured: false, source: "none" }, flyai: { configured: false, installed: true, available: false, source: "none" } }) };
-      if (path === "/api/setup/credentials") return { ok: true, json: async () => ({ ok: true, amap: { configured: true, source: "saved" }, flyai: { configured: true, installed: true, available: true, source: "saved" } }) };
+      if (path === "/api/setup/credentials") return { ok: true, json: async () => ({ ok: true, amap: { configured: true, source: "saved" }, amapJs: { configured: true, keySource: "saved", securitySource: "saved" }, flyai: { configured: true, installed: true, available: true, source: "saved" } }) };
       if (path === "/api/map/preview") return { ok: true, json: async () => ({ ok: true, points: [], imageUrl: "" }) };
       throw new Error(`unexpected ${path}`);
     }
@@ -88,16 +88,48 @@ test("first launch offers skippable key setup and hides unverified road data", a
   assert.match(app.innerHTML, /正在检查旅行数据服务/);
   await vm.runInContext("loadSetupStatus()", context);
   assert.match(app.innerHTML, /高德地图/);
+  assert.match(app.innerHTML, /同一条 Web 端（JS API）Key/);
+  assert.match(app.innerHTML, /for="amapJsSetupKey"/);
+  assert.match(app.innerHTML, /for="amapSecuritySetupCode"/);
   assert.match(app.innerHTML, /飞猪 FlyAI/);
   assert.match(app.innerHTML, /data-action="setup-skip"/);
   vm.runInContext("state.setup.open=false;render()", context);
   assert.match(app.innerHTML, /地图暂不展示/);
   assert.doesNotMatch(app.innerHTML, /高德道路快照 · km/);
   await vm.runInContext("saveSetup()", context);
-  assert.deepEqual(calls.find(call => call.path === "/api/setup/credentials").body, { amapKey: "amap-secret", flyaiKey: "flyai-secret" });
+  assert.deepEqual(calls.find(call => call.path === "/api/setup/credentials").body, { amapKey: "amap-secret", amapJsKey: "amap-js-secret", amapSecurityJsCode: "amap-security-secret", flyaiKey: "flyai-secret" });
   assert.equal(vm.runInContext("state.setup.open", context), false);
   assert.equal(vm.runInContext("state.setup.amap", context), true);
-  assert.doesNotMatch(app.innerHTML, /amap-secret|flyai-secret/);
+  assert.doesNotMatch(app.innerHTML, /amap-secret|amap-js-secret|amap-security-secret|flyai-secret/);
+});
+
+test("interactive map draws verified road paths and keeps the viewport on unchanged data", async () => {
+  const script = page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)?.[1];
+  const host = {};
+  let fitCount = 0, added = [];
+  class MapView {
+    add(items) { added = items; }
+    remove() {}
+    setFitView() { fitCount += 1; }
+    resize() {}
+  }
+  class Polyline { constructor(options) { this.options = options; } }
+  class Marker { constructor(options) { this.options = options; } }
+  class Pixel { constructor() {} }
+  const context = vm.createContext({
+    document: { getElementById: id => id === "amapInteractive" ? host : null, addEventListener() {} },
+    window: { ROADTRIP_LOCATIONS: [], AMap: { Map: MapView, Polyline, Marker, Pixel } },
+    location: { protocol: "http:", href: "http://127.0.0.1:4317/" },
+    URL, structuredClone, setTimeout: () => 1, clearTimeout() {}
+  });
+  vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/, ""), context);
+  vm.runInContext(`state.setup.amapJs=true;state.setup.amap=true;state.route={start:'杭州',end:'赤壁',must:[]};mapPreviews.set(JSON.stringify(mapPlaces()),{points:[{name:'杭州',lon:120,lat:30},{name:'赤壁',lon:113,lat:29}],legs:[{source:'amap',path:[[120,30],[118,30],[113,29]]}]})`, context);
+  await vm.runInContext("syncAmapMap()", context);
+  assert.equal(added.length, 3);
+  assert.equal(added[0].options.path.length, 3);
+  assert.equal(fitCount, 1);
+  await vm.runInContext("syncAmapMap()", context);
+  assert.equal(fitCount, 1);
 });
 
 test("missing FlyAI CLI gives a copyable install step and can be rechecked without losing typed keys", async () => {

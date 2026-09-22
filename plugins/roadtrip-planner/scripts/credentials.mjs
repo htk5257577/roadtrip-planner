@@ -23,6 +23,14 @@ export function getAmapKey() {
   return nonempty(process.env.AMAP_MAPS_API_KEY) || nonempty(readJson(configPath).amapKey);
 }
 
+export function getAmapJsConfig() {
+  const stored = readJson(configPath);
+  return {
+    key: nonempty(process.env.AMAP_JS_API_KEY) || nonempty(stored.amapJsKey),
+    securityJsCode: nonempty(process.env.AMAP_SECURITY_JS_CODE) || nonempty(stored.amapSecurityJsCode)
+  };
+}
+
 export function getFlyaiKey() {
   return nonempty(process.env.FLYAI_API_KEY) || nonempty(readJson(configPath).flyaiKey) || nonempty(readJson(flyaiConfigPath).FLYAI_API_KEY);
 }
@@ -35,10 +43,14 @@ export function flyaiInstalled() {
 export function credentialStatus() {
   const stored = readJson(configPath);
   const amapSource = nonempty(process.env.AMAP_MAPS_API_KEY) ? "environment" : nonempty(stored.amapKey) ? "saved" : "none";
+  const jsConfig = getAmapJsConfig();
+  const amapJsSource = nonempty(process.env.AMAP_JS_API_KEY) ? "environment" : nonempty(stored.amapJsKey) ? "saved" : "none";
+  const amapSecuritySource = nonempty(process.env.AMAP_SECURITY_JS_CODE) ? "environment" : nonempty(stored.amapSecurityJsCode) ? "saved" : "none";
   const flyaiSource = nonempty(process.env.FLYAI_API_KEY) ? "environment" : nonempty(stored.flyaiKey) ? "saved" : nonempty(readJson(flyaiConfigPath).FLYAI_API_KEY) ? "flyai-cli" : "none";
   const installed = flyaiInstalled();
   return {
     amap: { configured: amapSource !== "none", source: amapSource },
+    amapJs: { configured: Boolean(jsConfig.key && jsConfig.securityJsCode), keySource: amapJsSource, securitySource: amapSecuritySource },
     flyai: { configured: flyaiSource !== "none", source: flyaiSource, installed, available: flyaiSource !== "none" && installed }
   };
 }
@@ -53,10 +65,12 @@ function validateInput(value, label) {
 export function updateCredentials(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("配置格式不正确");
   validateInput(input.amapKey, "高德 Key");
+  validateInput(input.amapJsKey, "高德 JS Key");
+  validateInput(input.amapSecurityJsCode, "高德 JS 安全密钥");
   validateInput(input.flyaiKey, "飞猪 Key");
   const current = readJson(configPath);
   const next = { ...current };
-  for (const [field, value] of [["amapKey", input.amapKey], ["flyaiKey", input.flyaiKey]]) {
+  for (const [field, value] of [["amapKey", input.amapKey], ["amapJsKey", input.amapJsKey], ["amapSecurityJsCode", input.amapSecurityJsCode], ["flyaiKey", input.flyaiKey]]) {
     if (value === null) delete next[field];
     else if (typeof value === "string" && value.trim()) next[field] = value.trim();
   }
