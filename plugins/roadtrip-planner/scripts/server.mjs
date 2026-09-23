@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import { createServer } from "node:http";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
+import { networkInterfaces } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderRoadbook } from "./render-report.mjs";
@@ -21,6 +22,23 @@ const reportPath = join(outputDir, "generated-roadtrip-plan.html");
 const reportDataPath = join(outputDir, "report-data.json");
 const port = Number(process.env.ROADTRIP_PORT ?? 4317);
 const host = "127.0.0.1";
+const lanEnabled = process.env.ROADTRIP_LAN === "1";
+const privateIPv4 = address => {
+  const parts = address.split(".").map(Number);
+  return isIP(address) === 4 && (parts[0] === 10 || parts[0] === 192 && parts[1] === 168 ||
+    parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31);
+};
+const localLanAddresses = Object.entries(networkInterfaces()).flatMap(([name, addresses]) =>
+  (addresses || []).filter(item => item.family === "IPv4" && !item.internal && privateIPv4(item.address))
+    .map(item => ({ name, address: item.address })));
+const configuredLanIp = process.env.ROADTRIP_LAN_IP;
+if (lanEnabled && configuredLanIp && !localLanAddresses.some(item => item.address === configuredLanIp)) {
+  throw new Error("ROADTRIP_LAN_IP 必须是本机的局域网 IPv4 地址");
+}
+const preferredLanAddress = localLanAddresses.find(item => /^(en\d*|eth\d*|wlan\d*)$/.test(item.name)) || localLanAddresses[0];
+const lanIp = lanEnabled ? configuredLanIp || preferredLanAddress?.address : null;
+if (lanEnabled && !lanIp) throw new Error("未找到局域网 IPv4 地址，请设置 ROADTRIP_LAN_IP");
+const lanAccessCode = lanEnabled ? randomBytes(18).toString("base64url") : null;
 const amapBaseUrl = process.env.ROADTRIP_AMAP_BASE_URL || "https://restapi.amap.com";
 const mapCache = new Map();
 const pendingPlaces = new Map();
@@ -45,7 +63,8 @@ mkdirSync(outputDir, { recursive: true });
 function sendJson(res, status, value) {
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
-    "cache-control": "no-store"
+    "cache-control": "no-store",
+    "referrer-policy": "no-referrer"
   });
   res.end(JSON.stringify(value));
 }
@@ -70,7 +89,8 @@ function serveFile(res, pathname, noStore = false) {
     res.writeHead(200, {
       "content-type": contentType(pathname),
       "content-length": stat.size,
-      "cache-control": noStore ? "no-store" : "public, max-age=60"
+      "cache-control": noStore ? "no-store" : "public, max-age=60",
+      "referrer-policy": "no-referrer"
     });
     res.end(readFileSync(pathname));
   } catch {
@@ -491,12 +511,40 @@ async function validateResult(job, result) {
   throw new Error("无法完成该任务");
 }
 
-const server = createServer(async (req, res) => {
+const handleRequest = async (req, res) => {
   const address = server.address();
   const actualPort = typeof address === "object" ? address.port : port;
   const url = new URL(req.url || "/", `http://${host}:${actualPort}`);
-  if (req.headers.origin && req.headers.origin !== `http://${host}:${actualPort}`) {
-    sendJson(res, 403, { ok: false, error: "只接受本地页面的请求" });
+  const localRequest = req.socket.localAddress === host;
+  const expectedHost = `${req.socket.localAddress}:${actualPort}`;
+  if (req.headers.host !== expectedHost) {
+    sendJson(res, 403, { ok: false, error: "访问地址与服务监听地址不一致" });
+    return;
+  }
+  if (req.headers.origin && req.headers.origin !== `http://${expectedHost}`) {
+    sendJson(res, 403, { ok: false, error: "只接受当前规划页面的请求" });
+    return;
+  }
+  if (!localRequest) {
+    const expected = Buffer.from(`Basic ${Buffer.from(`roadtrip:${lanAccessCode}`).toString("base64")}`);
+    const supplied = Buffer.from(req.headers.authorization || "");
+    if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+      res.writeHead(401, {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "no-store",
+        "referrer-policy": "no-referrer",
+        "www-authenticate": 'Basic realm="Roadtrip Planner", charset="UTF-8"'
+      });
+      res.end("请输入启动时显示的局域网访问码。");
+      return;
+    }
+  }
+  if (!localRequest && url.pathname.startsWith("/api/bridge/") && url.pathname !== "/api/bridge/stop") {
+    sendJson(res, 403, { ok: false, error: "Codex 桥接操作只能在运行服务的电脑上执行" });
+    return;
+  }
+  if (!localRequest && req.method === "POST" && url.pathname === "/api/setup/credentials") {
+    sendJson(res, 403, { ok: false, error: "请在运行 Codex 的电脑上配置服务密钥" });
     return;
   }
 
@@ -527,8 +575,10 @@ const server = createServer(async (req, res) => {
         mode: "current-codex-thread",
         bridgeProtocol: 2,
         runnerConnected: runnerConnected(),
-        workspaceRoot,
-        reportReady: existsSync(reportPath)
+        ...(localRequest ? { workspaceRoot } : {}),
+        reportReady: existsSync(reportPath),
+        lanEnabled,
+        ...(lanEnabled ? { lanUrl: `http://${lanIp}:${actualPort}` } : {})
       });
       return;
     }
@@ -601,7 +651,10 @@ const server = createServer(async (req, res) => {
     }
     if (req.method === "POST" && url.pathname === "/api/bridge/connect") {
       requireRunner(req, true);
-      sendJson(res, 200, { ok: true, workspaceRoot, url: `http://${host}:${server.address().port}` });
+      sendJson(res, 200, {
+        ok: true, workspaceRoot, url: `http://${host}:${actualPort}`,
+        ...(lanEnabled ? { lanUrl: `http://${lanIp}:${actualPort}`, lanAccessCode } : {})
+      });
       return;
     }
     if (req.method === "POST" && url.pathname === "/api/bridge/disconnect") {
@@ -672,14 +725,26 @@ const server = createServer(async (req, res) => {
     const status = error.status || (error.message === "已有任务正在等待或执行，请先完成它。" ? 409 : 400);
     sendJson(res, status, { ok: false, error: error.message });
   }
-});
+};
+
+const server = createServer(handleRequest);
+const lanServer = lanEnabled ? createServer(handleRequest) : null;
 
 server.listen(port, host, () => {
   const address = server.address();
-  console.log(`Roadtrip Planner: http://${host}:${address.port}`);
-  console.log("Mode: current Codex conversation; waiting for the runner to connect");
-  console.log(`Workspace: ${workspaceRoot}`);
+  const announce = () => {
+    console.log(`Roadtrip Planner: http://${host}:${address.port}`);
+    if (lanEnabled) console.log(`LAN page: http://${lanIp}:${address.port}`);
+    console.log("Mode: current Codex conversation; waiting for the runner to connect");
+    console.log(`Workspace: ${workspaceRoot}`);
+  };
+  if (lanServer) lanServer.listen(address.port, lanIp, announce);
+  else announce();
 });
 
-process.on("SIGINT", () => server.close(() => process.exit(0)));
-process.on("SIGTERM", () => server.close(() => process.exit(0)));
+const closeServers = () => {
+  lanServer?.close();
+  server.close(() => process.exit(0));
+};
+process.on("SIGINT", closeServers);
+process.on("SIGTERM", closeServers);

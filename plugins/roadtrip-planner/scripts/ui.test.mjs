@@ -103,6 +103,22 @@ test("first launch offers skippable key setup and hides unverified road data", a
   assert.doesNotMatch(app.innerHTML, /amap-secret|amap-js-secret|amap-security-secret|flyai-secret/);
 });
 
+test("LAN setup page keeps provider key entry on the host computer", () => {
+  const script = page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)?.[1];
+  const app = { innerHTML: "", querySelector: () => null };
+  const context = vm.createContext({
+    document: { getElementById: id => id === "app" ? app : null, addEventListener() {} },
+    window: { ROADTRIP_LOCATIONS: [] },
+    location: { protocol: "http:", href: "http://192.168.2.63:4317/" },
+    URL, structuredClone, setTimeout: () => 1, clearTimeout() {}
+  });
+  vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/, ""), context);
+  vm.runInContext("state.setup.loading=false;state.setup.open=true;render()", context);
+  assert.match(app.innerHTML, /在电脑上配置服务密钥/);
+  assert.match(app.innerHTML, /data-action="setup-skip"/);
+  assert.doesNotMatch(app.innerHTML, /amapSetupKey|flyaiSetupKey|data-action="setup-save"/);
+});
+
 test("interactive map draws verified road paths and keeps the viewport on unchanged data", async () => {
   const script = page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)?.[1];
   const host = {};

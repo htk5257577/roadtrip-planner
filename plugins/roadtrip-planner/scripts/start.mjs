@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const sessionId = process.env.CODEX_THREAD_ID || process.env.ROADTRIP_SESSION_ID;
 const port = Number(process.env.ROADTRIP_PORT || 4317);
+const lanRequested = process.env.ROADTRIP_LAN === "1";
 const base = `http://127.0.0.1:${port}`;
 
 async function status() {
@@ -33,6 +34,9 @@ try {
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("无效的规划端口。");
   let existing = await status();
   const reused = Boolean(existing);
+  if (lanRequested && existing && !existing.lanEnabled) {
+    throw new Error("已有服务未开启局域网访问；请先结束现有服务，再以 ROADTRIP_LAN=1 启动。");
+  }
   let serverPid;
   if (!existing) {
     const child = spawn(process.execPath, [fileURLToPath(new URL("./server.mjs", import.meta.url))], {
@@ -50,6 +54,7 @@ try {
     }
     if (!existing) throw new Error("本地规划服务启动失败；不会另开端口。");
   }
+  if (lanRequested && !existing.lanEnabled) throw new Error("局域网服务启动失败，请检查 ROADTRIP_LAN_IP。");
   // The server makes the ownership decision atomically, including simultaneous launches.
   const response = await fetch(`${base}/api/bridge/connect`, {
     method: "POST", headers: { "content-type": "application/json", "x-roadtrip-session": sessionId },

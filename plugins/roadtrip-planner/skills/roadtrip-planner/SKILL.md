@@ -23,6 +23,8 @@ Turn locked destinations into a reviewable route and a concise roadbook. Never s
 6. The idle connection expires after 45 seconds without a bridge request; queued/running work preserves ownership until completed or failed. The same conversation may reconnect. When explicitly stopping without a page `stop` job, finish/fail owned work, end the pending wait, then run `bridge-client.mjs disconnect`. A page `stop` releases ownership when delivered.
 7. Keep the server alive while the user views the result. The report is `roadtrip-planner-output/generated-roadtrip-plan.html` under the service's workspace.
 
+When the user requests LAN access, start with `ROADTRIP_LAN=1 node <plugin-root>/scripts/start.mjs`. Return the reported `lanUrl` and `lanAccessCode` to the user; the browser login is username `roadtrip` and password equal to the access code. Continue all bridge commands through `127.0.0.1`. An existing local-only service cannot switch modes in place; do not create another service or take over an active conversation. If multiple private IPv4 interfaces exist, `ROADTRIP_LAN_IP` selects the desired local address. Provider keys can only be changed from the host computer. LAN access is plain HTTP for trusted networks; never forward the port to the public internet.
+
 The first-run page may locally save a 高德 Web Service Key, a separate 高德 Web JS Key plus matching `securityJsCode`, and a FlyAI Key. Secrets stay in local per-user configuration and never enter prompts, reports, commands, or plugin files. FlyAI CLI installation is optional and must never happen without the user choosing it.
 
 ## Handle jobs

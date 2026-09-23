@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import { mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { networkInterfaces, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -49,6 +49,10 @@ test("startup creates one service, reuses it after inactivity, and protects unfi
     assert.equal(first.url, base);
     assert.ok(Number.isInteger(serverPid));
     assert.equal(JSON.parse((await launch("owner-a")).stdout).reused, true);
+    await assert.rejects(execFileAsync(process.execPath, [join(scriptDir, "start.mjs")], {
+      cwd: workspace,
+      env: { ...process.env, CODEX_THREAD_ID: "owner-a", ROADTRIP_PORT: String(port), ROADTRIP_LAN: "1" }
+    }), /已有服务未开启局域网访问/);
     await assert.rejects(launch("owner-b"), /其他 Codex 会话/);
 
     await new Promise(resolve => setTimeout(resolve, 1100));
@@ -152,6 +156,65 @@ test("startup refuses a legacy service without spawning a replacement", async ()
     assert.equal(legacy.listening, true);
   } finally {
     await new Promise(resolve => legacy.close(resolve));
+  }
+});
+
+test("LAN page requires an access code and keeps Codex bridge and key changes local", async t => {
+  const lanIp = Object.values(networkInterfaces()).flat().find(item =>
+    item?.family === "IPv4" && !item.internal && /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(item.address))?.address;
+  if (!lanIp) return t.skip("No private IPv4 interface is available");
+  const workspace = await mkdtemp(join(tmpdir(), "roadtrip-lan-test-"));
+  const port = await unusedPort();
+  let serverPid;
+  try {
+    const { stdout } = await execFileAsync(process.execPath, [join(scriptDir, "start.mjs")], {
+      cwd: workspace,
+      env: {
+        ...process.env, CODEX_THREAD_ID: "lan-test", ROADTRIP_PORT: String(port),
+        ROADTRIP_LAN: "1", ROADTRIP_LAN_IP: lanIp,
+        ROADTRIP_CONFIG_DIR: join(workspace, "private-config"),
+        AMAP_MAPS_API_KEY: "", AMAP_JS_API_KEY: "", AMAP_SECURITY_JS_CODE: "", FLYAI_API_KEY: ""
+      }
+    });
+    const { url: base, lanUrl, lanAccessCode, reused, serverPid: pid } = JSON.parse(stdout);
+    serverPid = pid;
+    assert.equal(reused, false);
+    assert.ok(Number.isInteger(serverPid));
+    assert.equal(lanUrl, base.replace("127.0.0.1", lanIp));
+    assert.match(lanAccessCode, /^[A-Za-z0-9_-]{24}$/);
+    const auth = `Basic ${Buffer.from(`roadtrip:${lanAccessCode}`).toString("base64")}`;
+    assert.equal((await fetch(lanUrl)).status, 401);
+    assert.equal((await fetch(lanUrl, { headers: { authorization: "Basic wrong" } })).status, 401);
+    const page = await fetch(lanUrl, { headers: { authorization: auth } });
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /路书工坊 · Codex 自驾规划器/);
+    assert.equal(page.headers.get("referrer-policy"), "no-referrer");
+    const status = await (await fetch(new URL("/api/status", lanUrl), {
+      headers: { authorization: auth }
+    })).json();
+    assert.equal(status.lanEnabled, true);
+    assert.equal(status.lanAccessCode, undefined);
+    assert.equal(status.workspaceRoot, undefined);
+    assert.equal((await fetch(new URL("/api/status", lanUrl), {
+      headers: { authorization: auth, origin: base }
+    })).status, 403);
+    assert.equal((await fetch(new URL("/api/bridge/next", lanUrl), {
+      headers: { authorization: auth, "x-roadtrip-session": "lan-test" }
+    })).status, 403);
+    assert.equal((await fetch(new URL("/api/setup/credentials", lanUrl), {
+      method: "POST", headers: { authorization: auth, "content-type": "application/json", origin: lanUrl }, body: "{}"
+    })).status, 403);
+    const spoofedHostStatus = await new Promise((resolve, reject) => {
+      const request = httpRequest(new URL("/api/status", lanUrl), {
+        headers: { authorization: auth, host: new URL(base).host }
+      }, response => { response.resume(); resolve(response.statusCode); });
+      request.on("error", reject);
+      request.end();
+    });
+    assert.equal(spoofedHostStatus, 403);
+  } finally {
+    if (serverPid) process.kill(serverPid, "SIGTERM");
+    await rm(workspace, { recursive: true, force: true });
   }
 });
 
