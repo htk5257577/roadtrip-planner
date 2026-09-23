@@ -76,6 +76,12 @@ Pet access varies by gate, vehicle, ferry, beach section, trail, hotel, and seas
 
 EV timing includes charge time, queue buffer, cold/heat impact, altitude impact, and the need to arrive with reserve. Treat scenic rural stretches more conservatively than urban expressways.
 
+## Public guide evidence
+
+The planner uses public web pages only for traveler guides and first-hand trip reports. It does not depend on, request, or operate a logged-in browser session. Skip login-walled or app-only results and follow [public-travel-sources.md](public-travel-sources.md) when building the final report.
+
+Keep three evidence roles separate: traveler posts describe lived experience; official pages establish changing rules; FlyAI, when configured, supplies travel products and live booking information. One role must not silently stand in for another.
+
 ## Product acceptance checks
 
 - A user can identify locked must-go points at a glance.

@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const pluginRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const template = readFileSync(join(pluginRoot, "assets/roadbook-template.html"), "utf8");
 const css = readFileSync(join(pluginRoot, "assets/south-line.css"), "utf8");
+const reportSchema = JSON.parse(readFileSync(join(pluginRoot, "scripts/schemas/report-data.schema.json"), "utf8"));
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 const text = value => esc(value).replace(/\n/g, "<br>");
 const cleanHeroLabel = value => String(value ?? "").replace(/\s*[〔【（(]\s*(?:必去|已选|已选定|已加入)\s*[〕】）)]/g, "").trim();
@@ -16,20 +17,44 @@ const safeUrl = value => /^(https?:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i
 const safeExternalUrl = value => /^https?:\/\//i.test(String(value ?? "")) ? String(value) : "";
 const link = value => value?.url && safeUrl(value.url) ? `<a class="action-link" href="${esc(value.url)}" target="_blank" rel="noopener">${esc(value.label || "查看资料")} ↗</a>` : "";
 
+function validateSchema(value, schema, root = reportSchema, path = "report") {
+  if (schema.$ref) return validateSchema(value, schema.$ref.split("/").slice(1).reduce((node, key) => node[key], root), root, path);
+  const types = array(schema.type);
+  const matches = type => type === "null" ? value === null : type === "array" ? Array.isArray(value) : type === "object" ? value && typeof value === "object" && !Array.isArray(value) : type === "number" ? typeof value === "number" && Number.isFinite(value) : type === "integer" ? Number.isInteger(value) : typeof value === type;
+  if (types.length && !types.some(matches)) throw new Error(`${path} 类型不符合最终路书 schema`);
+  if (schema.const !== undefined && value !== schema.const) throw new Error(`${path} 必须为 ${schema.const}`);
+  if (schema.enum && !schema.enum.includes(value)) throw new Error(`${path} 不在允许值内`);
+  if (typeof value === "string") {
+    if (schema.minLength && value.length < schema.minLength) throw new Error(`${path} 不能为空`);
+    if (schema.pattern && !(new RegExp(schema.pattern).test(value))) throw new Error(`${path} 格式不正确`);
+    if (schema.format === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error(`${path} 不是有效日期`);
+    if (schema.format === "date-time" && !Number.isFinite(Date.parse(value))) throw new Error(`${path} 不是有效时间`);
+  }
+  if (Array.isArray(value)) {
+    if (schema.minItems && value.length < schema.minItems) throw new Error(`${path} 条目不足`);
+    if (schema.maxItems && value.length > schema.maxItems) throw new Error(`${path} 条目过多`);
+    if (schema.items) value.forEach((item, index) => validateSchema(item, schema.items, root, `${path}[${index}]`));
+  } else if (value && typeof value === "object") {
+    for (const key of schema.required || []) if (!(key in value)) throw new Error(`${path} 缺少 ${key}`);
+    for (const [key, child] of Object.entries(schema.properties || {})) if (key in value) validateSchema(value[key], child, root, `${path}.${key}`);
+  }
+}
+
 function referenceBlock(items, sample, title, compact = false, showEmpty = false) {
   const references = array(items).filter(item => item && typeof item === "object" && (item.title || item.label));
   if (!references.length && !showEmpty) return "";
   const cards = references.map(item => {
     const title = esc(item.title || item.label);
-    const meta = [item.type, item.platform, item.publishedAt].filter(Boolean).map(esc).join(" · ");
+    const meta = [item.type, item.platform, item.publishedAt, item.checkedAt ? `公开核验 ${String(item.checkedAt).slice(0,10)}` : ""].filter(Boolean).map(esc).join(" · ");
     const body = `<span class="reference-meta">${meta || (sample ? "模拟参考" : "旅行参考")}</span><strong>${title}${!sample && safeExternalUrl(item.url) ? " ↗" : ""}</strong>${item.note ? `<span class="reference-note">${text(item.note)}</span>` : ""}`;
     return !sample && safeExternalUrl(item.url) ? `<a class="reference-item" href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">${body}</a>` : sample ? `<div class="reference-item is-sample">${body}</div>` : "";
   }).filter(Boolean).join("");
   if (!cards && !showEmpty) return "";
-  return `<div class="reference-block${compact ? " reference-block--compact" : ""}"><div class="reference-heading"><b>${esc(title)}</b><span>${sample ? "内容示例 · 不可跳转" : "个人体验仅供参考，准入与价格以官方为准"}</span></div>${cards ? `<div class="reference-items">${cards}</div>` : '<p class="reference-empty">暂未找到可核验的直达攻略或帖子。</p>'}</div>`;
+  return `<div class="reference-block${compact ? " reference-block--compact" : ""}"><div class="reference-heading"><b>${esc(title)}</b><span>${sample ? "内容示例 · 不可跳转" : "公开网页体验仅供参考，准入与价格以官方为准"}</span></div>${cards ? `<div class="reference-items">${cards}</div>` : '<p class="reference-empty">暂未找到无需登录且可核验的直达攻略或帖子。</p>'}</div>`;
 }
 
 function checkData(trip) {
+  validateSchema(trip, reportSchema);
   if (!trip || typeof trip !== "object" || Array.isArray(trip)) throw new Error("路书数据必须是 JSON 对象");
   for (const field of ["title", "startDate", "meta", "preTrip", "routeDecision"]) {
     if (!trip[field]) throw new Error(`路书数据缺少 ${field}`);
@@ -40,7 +65,9 @@ function checkData(trip) {
   if (trip.dayBalance.length !== trip.days.length) throw new Error("热力图天数必须与逐日时间轴一致");
   if (!trip.days.every(day => Array.isArray(day.slots) && day.slots.length && day.drive && day.dog)) throw new Error("每天必须有时间块、路线和同行信息");
   if (!trip.stopSummaries.every(stop => typeof stop.city === "string" && stop.city.trim() && typeof stop.stay === "string" && typeof stop.note === "string" && Array.isArray(stop.focus) && stop.focus.length)) throw new Error("停留重点缺少城市、时长或体验内容");
-  if (!trip.mapStops.every(point => typeof point.name === "string" && (!(trip.sample === true || trip.capabilities?.amap) || typeof point.lat === "number" && typeof point.lng === "number" && Number.isFinite(point.lat) && Number.isFinite(point.lng)))) throw new Error("地图落点缺少坐标");
+  if (!trip.stopSummaries.every(stop => Array.isArray(stop.tags) && stop.tags.length >= 2 && Array.isArray(stop.guides))) throw new Error("停留重点缺少规范标签或攻略数组");
+  if (!trip.days.every(day => day.slots.every(slot => Array.isArray(slot.references)))) throw new Error("每个时间块都必须明确提供攻略引用数组");
+  if (!trip.mapStops.every(point => typeof point.name === "string" && (!(trip.sample === true || trip.verifiedRoad?.complete) || typeof point.lat === "number" && typeof point.lng === "number" && Number.isFinite(point.lat) && Number.isFinite(point.lng)))) throw new Error("地图落点缺少坐标");
 }
 
 function mapMarkup(points) {
@@ -54,20 +81,20 @@ function mapMarkup(points) {
   return `<div class="fallback-map"><div class="fallback-map__head"><b>路线示意图</b><span>离线可看；联网后尝试加载道路底图</span></div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="全程路线落点示意图"><polyline points="${path}" fill="none" stroke="#ca3e2d" stroke-width="5" stroke-linejoin="round" stroke-dasharray="8 9" opacity=".78"/>${markers}</svg></div>`;
 }
 
-function mapScript(points, enabled) {
-  const data = JSON.stringify(enabled ? points.map(point => ({ name: String(point.name), lat: finite(point.lat), lng: finite(point.lng) })) : []).replace(/</g, "\\u003c");
-  return `${enabled?'<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer><\/script>':''}<script>
-  window.addEventListener('load',function(){
-    if(!${enabled}||!window.L)return;
-    var points=${data}, host=document.getElementById('map');
-    try { var map=L.map(host,{scrollWheelZoom:false}), markers=[];
-      var safe=function(value){return String(value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]})};
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri · Sources: Esri, HERE, Garmin, FAO, NOAA, USGS',maxZoom:18}).addTo(map);
-      points.forEach(function(p,i){var marker=L.marker([p.lat,p.lng]).addTo(map).bindPopup((i+1)+'. '+safe(p.name));markers.push(marker);});
-      var coords=points.map(function(p){return[p.lat,p.lng]});
-      if(coords.length>1)L.polyline(coords,{color:'#ca3e2d',dashArray:'7 9',weight:4}).addTo(map);
-      map.fitBounds(coords,{padding:[34,34]});
-    } catch(error) { host.innerHTML=${JSON.stringify(mapMarkup(points)).replace(/</g, "\\u003c")}; }
+function mapScript(points, enabled, verifiedRoad) {
+  const data = JSON.stringify({ points: enabled ? points.map(point => ({ name:String(point.name), lat:finite(point.lat), lng:finite(point.lng) })) : [], paths: enabled ? array(verifiedRoad?.legs).map(leg => array(leg.path)) : [] }).replace(/</g, "\\u003c");
+  return `<script>
+  window.addEventListener('load',async function(){
+    if(!${enabled}||location.protocol==='file:')return;
+    var route=${data},host=document.getElementById('map'),fallback=host.innerHTML;
+    try { var response=await fetch('/api/map/js-config',{cache:'no-store'}),config=await response.json();if(!response.ok||!config.ok)throw new Error(config.error||'未配置地图');
+      window._AMapSecurityConfig={['security'+'JsCode']:config['security'+'JsCode']};
+      await new Promise(function(resolve,reject){var script=document.createElement('script');script.src='https://webapi.amap.com/maps?v=2.0&key='+encodeURIComponent(config.key);script.onload=resolve;script.onerror=reject;document.head.appendChild(script)});
+      var map=new AMap.Map(host,{zoom:5,viewMode:'2D'}),bounds=[];
+      route.points.forEach(function(p,i){var pos=[p.lng,p.lat];bounds.push(pos);new AMap.Marker({map:map,position:pos,label:{content:(i+1)+'. '+p.name,direction:'top'}})});
+      route.paths.forEach(function(path){if(path.length){path.forEach(function(p){bounds.push(p)});new AMap.Polyline({map:map,path:path,strokeColor:'#ca3e2d',strokeWeight:5,strokeOpacity:.82})}});
+      if(bounds.length)map.setFitView(null,false,[44,44,44,44]);
+    } catch(error) { host.innerHTML=fallback; }
   });
   var setDay=function(day,expanded){day.classList.toggle('is-collapsed',!expanded);var button=day.querySelector('.toggle-day');button.textContent=expanded?'收起当天安排':'查看当天安排';button.setAttribute('aria-expanded',String(expanded));};
   document.getElementById('timeline').addEventListener('click',function(event){var button=event.target.closest('.toggle-day');if(button){var day=button.closest('.day');setDay(day,day.classList.contains('is-collapsed'));}});
@@ -82,7 +109,7 @@ function mapScript(points, enabled) {
 export function renderRoadbook(trip) {
   checkData(trip);
   const sample=trip.sample===true;
-  const amap=sample||trip.capabilities?.amap===true, flyai=sample||trip.capabilities?.flyai===true;
+  const amap=sample||trip.capabilities?.amap===true&&trip.verifiedRoad?.complete===true, amapJs=sample||trip.capabilities?.amapJs===true, flyai=sample||trip.capabilities?.flyai===true;
   const hero = trip.hero || {}, meta = trip.meta || {}, pre = trip.preTrip || {};
   const distanceMatch = String(meta.distance || "").match(/([\d,.]+)\s*km/i);
   const distanceValue = distanceMatch ? `≈${Math.round(Number(distanceMatch[1].replace(/,/g, ""))).toLocaleString("zh-CN")}` : "待核验";
@@ -115,7 +142,7 @@ export function renderRoadbook(trip) {
   const heatmap = `<div class="pace-chart-intro"><span>每天独占一行，上下对照游玩与驾驶</span><b>统一刻度 0–${maxHours}h</b></div><div class="pace-legend"><span class="pace-legend-play">游玩合计 ${totals.play}h</span><span class="pace-legend-drive">驾驶合计 ${totals.drive}h</span></div><div class="pace-day-list">${paceRows}</div><p class="pace-chart-note">每一行都是一天，两条线共用同一刻度；点击任意日期可跳到当天安排。</p>`;
   const ledger = trip.routeLegs.map(leg => `<div class="leg"><div class="leg-date">${esc(leg.date)}</div><div class="leg-route"><b>${esc(leg.route)}</b><span>${amap?[leg.distance, leg.duration, leg.buffer, leg.toll].filter(Boolean).map(esc).join(" · "):"道路里程与耗时待核验"}</span></div></div>`).join("");
   const transport = array(trip.transport).map(item => `<article class="transport-card card"><span class="status-chip">${esc(item.status || "需核验")}</span><h3>${esc(item.title)}</h3><p>${text(item.detail)}</p></article>`).join("") || `<article class="transport-card card"><span class="status-chip">转场</span><h3>按路线账本执行</h3><p>${text(meta.transportNote || "道路、补能和特殊交通以临行核验为准。")}</p></article>`;
-  const hotels = trip.hotelAreas.map(area => `<article class="hotel-area card"><h3>${esc(area.area)}</h3><p>${text(area.reason)}</p><div class="hotel-options">${flyai?array(area.options).map(option => `<div class="hotel-option"><div class="hotel-option-head"><strong>${esc(option.tier)}</strong><span>${esc(option.priceRange)}</span></div><h4>${esc(option.name)}</h4><p>${text(option.note)}</p>${link(option.actionLink)}</div>`).join(""):'<p class="source-pending">未接入飞猪；具体酒店、房价与预订入口暂不展示。</p>'}</div></article>`).join("");
+  const hotels = trip.hotelAreas.map(area => { const options=array(area.options); const content=!flyai||area.queryStatus==='not-configured'?'<p class="source-pending">未接入飞猪；具体酒店、房价与预订入口暂不展示。</p>':area.queryStatus==='unavailable'||!options.length?'<p class="source-pending">飞猪本次查询未返回可核验住宿结果；仅保留住宿区域建议。</p>':options.map(option => `<div class="hotel-option"><div class="hotel-option-head"><strong>${esc(option.tier)}</strong><span>${esc(option.priceRange)}</span></div><h4>${esc(option.name)}</h4><p>${text(option.note)}</p><small>飞猪查询 · ${esc(String(option.queriedAt).slice(0,10))}</small>${link(option.actionLink)}</div>`).join(""); return `<article class="hotel-area card"><h3>${esc(area.area)}</h3><p>${text(area.reason)}</p><div class="hotel-options">${content}</div></article>`; }).join("");
   const mapLegend = trip.mapStops.map((point, index) => {
     const dayIndex = index === trip.mapStops.length - 1 ? trip.days.length - 1 : trip.days.findIndex(day => day.theme.includes(point.name) || day.drive.route.includes(point.name) || day.slots.some(slot => slot.name.includes(point.name)));
     const city = esc(point.name);
@@ -129,14 +156,14 @@ export function renderRoadbook(trip) {
   }).join("");
   const timeline = trip.days.map((day, index) => {
     const flow = `<div class="day-flow"><span class="day-flow-label">当天顺序</span>${day.slots.map((slot, i) => `${i ? '<span class="day-flow-arrow">→</span>' : ''}<span class="day-flow-step"><b>${esc(slot.time)}</b>${esc(slot.name)}</span>`).join("")}</div>`;
-    const slots = day.slots.map(slot => { const photo = safeUrl(trip.photoLibrary?.[slot.name] || slot.photo); return `<article class="slot"><div class="slot-when"><span class="period">${esc(slot.period)}</span><strong>${esc(slot.time)}</strong></div><div class="slot-track" aria-hidden="true"></div><div class="slot-card${photo?"":" no-photo"}">${photo ? `<div class="slot-photo" data-name="${esc(slot.name)}"><img src="${esc(photo)}" alt="${esc(slot.name)}" loading="lazy" onerror="this.closest('.slot-card').classList.add('no-photo');this.parentElement.remove()"></div>` : ""}<div class="slot-content"><span class="slot-location">此刻所在 / 安排</span><h4>${esc(slot.name)}</h4><p class="slot-review">${text(slot.review)}</p><div class="slot-tags">${[slot.rating, slot.openingHours, flyai?slot.ticketPrice:null, slot.seasonal].filter(Boolean).map(value => `<span class="slot-tag">${esc(value)}</span>`).join("")}</div>${slot.transport ? `<p class="slot-review" style="margin-top:8px"><b>接下来怎么走：</b>${[slot.transport.mode, amap?slot.transport.duration:null, slot.transport.fare].filter(Boolean).map(esc).join(" · ")}</p>` : ""}${flyai?link(slot.actionLink):""}${referenceBlock(slot.references, sample, "去过的人怎么说", true, Array.isArray(slot.references))}</div></div></article>`; }).join("");
+    const slots = day.slots.map(slot => { const photo = safeUrl(slot.photo), productVerified=flyai&&slot.productQueryStatus==='verified', productNote=slot.productQueryStatus==='unavailable'?'<p class="source-pending">飞猪本次未返回可核验的景点产品；票价与预订入口不展示。</p>':slot.productQueryStatus==='not-configured'?'<p class="source-pending">未接入飞猪；景点票价与预订入口暂不展示。</p>':''; return `<article class="slot"><div class="slot-when"><span class="period">${esc(slot.period)}</span><strong>${esc(slot.time)}</strong></div><div class="slot-track" aria-hidden="true"></div><div class="slot-card${photo?"":" no-photo"}">${photo ? `<div class="slot-photo" data-name="${esc(slot.name)}"><img src="${esc(photo)}" alt="${esc(slot.name)}" loading="lazy" onerror="this.closest('.slot-card').classList.add('no-photo');this.parentElement.remove()"><small>图片：<a href="${esc(slot.photoSourceUrl)}" target="_blank" rel="noopener noreferrer">${esc(slot.photoCredit)}</a></small></div>` : ""}<div class="slot-content"><span class="slot-location">此刻所在 / 安排</span><h4>${esc(slot.name)}</h4><p class="slot-review">${text(slot.review)}</p><div class="slot-tags">${[slot.rating, slot.openingHours, productVerified?slot.ticketPrice:null, slot.seasonal].filter(Boolean).map(value => `<span class="slot-tag">${esc(value)}</span>`).join("")}</div>${slot.transport ? `<p class="slot-review" style="margin-top:8px"><b>接下来怎么走：</b>${[slot.transport.mode, amap?slot.transport.duration:null, slot.transport.fare].filter(Boolean).map(esc).join(" · ")}</p>` : ""}${productVerified?link(slot.actionLink):""}${productNote}${referenceBlock(slot.references, sample, "去过的人怎么说", true, true)}</div></div></article>`; }).join("");
     const dining = array(day.dining).map(meal => `<div class="meal"><strong>${esc(meal.meal)} · ${esc(meal.place)}</strong><small>${esc(meal.hours)}</small><div class="dishes">${array(meal.dishes).map(dish => `<span class="dish">${esc(dish.name)} · ${esc(dish.price)}</span>`).join("")}</div></div>`).join("");
     const balance = trip.dayBalance[index];
     const night = array(day.tips).find(tip => String(tip).startsWith("夜宿："))?.split("。")[0] || "";
     return `<article id="day-${index + 1}" class="day card is-collapsed"><div class="day-head"><div class="day-no">${String(index + 1).padStart(2, "0")}</div><div class="day-title"><small>${esc(day.date)} · ${esc(day.weekday)}</small><h3>${esc(day.theme)}</h3></div><button type="button" class="toggle-day" aria-expanded="false" aria-controls="day-${index + 1}-details">查看当天安排</button></div><div class="day-summary"><span class="day-summary-route">${esc(day.drive.route)}</span><span class="day-summary-play">游玩 ${finite(balance.play).toFixed(1)}h</span><span class="day-summary-drive">驾驶 ${finite(balance.drive).toFixed(1)}h（计划）</span><span class="day-summary-buffer">机动 ${finite(balance.buffer).toFixed(1)}h</span>${night ? `<span class="day-summary-night">${esc(night)}</span>` : ""}</div><div id="day-${index + 1}-details" class="day-details"><div class="day-meta"><div class="meta-chip"><b>里程</b><br>${amap?esc(day.drive.distance):"待核验"}</div><div class="meta-chip"><b>交通与补能</b><br>${amap?esc(day.drive.duration):"道路耗时待核验"}</div><div class="meta-chip dog-chip"><b>🐾 ${esc(day.dog.status)}</b><br>${esc(day.dog.note)}</div></div>${flow}${array(day.tips).map(tip => String(tip).startsWith("夜宿：") ? String(tip).split("。").slice(1).join("。").trim() : tip).filter(Boolean).map(tip => `<p class="day-tips">${text(tip)}</p>`).join("")}<div class="day-body"><div class="slots">${slots}</div>${array(day.alternatives).map(item => `<div class="alternative"><b>${esc(item.label)}</b> · ${text(item.summary)}</div>`).join("")}${dining ? `<div class="day-extras-head"><b>当天吃什么</b><span>就近穿插，不额外占一段行程</span></div><div class="dining">${dining}</div>` : ""}</div></div></article>`;
   }).join("");
   const slots = {
-    DOCUMENT_TITLE: esc(cleanHeroLabel(trip.title)), MAP_STYLES: amap?'<link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">':'', SOUTH_LINE_CSS: css, HERO_STYLE: safeUrl(hero.imageUrl) ? `style="background-image:linear-gradient(180deg,rgba(5,31,30,.18),rgba(6,29,27,.95)),url('${esc(hero.imageUrl)}')"` : "",
+    DOCUMENT_TITLE: esc(cleanHeroLabel(trip.title)), MAP_STYLES: amapJs?'<link rel="preconnect" href="https://webapi.amap.com">':'', SOUTH_LINE_CSS: css, HERO_STYLE: safeUrl(hero.imageUrl) ? `style="background-image:linear-gradient(180deg,rgba(5,31,30,.18),rgba(6,29,27,.95)),url('${esc(hero.imageUrl)}')"` : "",
     EYEBROW: esc(hero.eyebrow || "ROAD BOOK"), BADGE: esc(hero.badge || meta.party || "自驾路书"), HERO_TITLE: text(cleanHeroLabel(hero.title || trip.title)), HERO_LEDE: text(hero.lede || meta.pace), ROUTE: text(cleanHeroLabel(hero.route || trip.mapStops.map(point => point.name).join(" → "))),
     HERO_STATS: stats.map(stat => `<div class="stat"><b>${esc(stat.value)}</b><span>${esc(stat.label)}</span></div>`).join(""), DAY_MARK: esc(trip.days.length),
     SAMPLE_NOTICE: sample ? '<div class="sample-notice" role="note"><b>模拟样板</b><span>下方地点、时长、照片、住宿和价格均为版式示例，未调用 Codex、地图或预订服务；请勿据此出行。</span></div>' : "",
@@ -146,7 +173,7 @@ export function renderRoadbook(trip) {
     DISCLAIMER: text(trip.disclaimer || "行程、开放时间、价格、宠物政策和充电状态均可能变化；预订及出行前请再次核验。"), MAP: amap?mapMarkup(trip.mapStops):'<div class="map-offline"><b>未接入高德，地图落点暂不展示</b><p>下方仍保留途经城市顺序。</p></div>', MAP_LEGEND: mapLegend, STOP_OVERVIEW: stopOverview, TIMELINE: timeline,
     TIPS: trip.tips.map((tip, index) => `<article class="tip card"><b>${String(index + 1).padStart(2, "0")}</b>${text(tip)}</article>`).join(""),
     SOURCES: trip.sourceLinks.filter(source => safeUrl(source.url)).map(source => `<a href="${esc(source.url)}" target="_blank" rel="noopener">${esc(source.label)} ↗</a>`).join(""),
-    FOOTER: text(hero.footer || `这不是打卡清单，是一份可以删减的路书。\n${meta.dateRange || ""}`), MAP_SCRIPT: mapScript(trip.mapStops,amap)
+    FOOTER: text(hero.footer || `这不是打卡清单，是一份可以删减的路书。\n${meta.dateRange || ""}`), MAP_SCRIPT: mapScript(trip.mapStops,amap&&amapJs,trip.verifiedRoad)
   };
   const rendered = template.replace(/{{([A-Z_]+)}}/g, (_, name) => {
     if (!(name in slots)) throw new Error(`模板占位符 ${name} 未填充`);

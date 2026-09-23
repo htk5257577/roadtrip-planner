@@ -2,7 +2,10 @@
 
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, renameSync, statSync } from "node:fs";
+import { lookup } from "node:dns/promises";
+import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { request as httpsRequest } from "node:https";
+import { isIP } from "node:net";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderRoadbook } from "./render-report.mjs";
@@ -149,7 +152,7 @@ async function roadVerification(places) {
     try { return await locatePlace(place); }
     catch { return { name: place.name, error: "地点未定位" }; }
   }));
-  const legs = (await Promise.all(located.slice(1).map((to, index) => drivingLeg(located[index], to)))).map(({ path, ...leg }) => leg);
+  const legs = await Promise.all(located.slice(1).map((to, index) => drivingLeg(located[index], to)));
   const complete = legs.length > 0 && legs.every(leg => leg.source === "amap");
   return {
     source: "高德 Web Service 驾车路线 2.0",
@@ -157,8 +160,147 @@ async function roadVerification(places) {
     complete,
     distanceKm: complete ? legs.reduce((sum, leg) => sum + leg.km, 0) : null,
     driveHours: complete ? legs.reduce((sum, leg) => sum + leg.hours, 0) : null,
+    points: located,
     legs
   };
+}
+
+const canonicalTags = new Set(["地方美食", "历史街巷", "民族文化", "沙滩", "海岛", "海岸线", "山岳", "峡谷", "湖泊", "河流", "草原", "沙漠", "风景公路"]);
+const isPublicReference = reference => reference && typeof reference === "object" &&
+  ["firstHand", "official"].includes(reference.evidenceRole) && reference.publicAccess === true &&
+  /^https:\/\//i.test(reference.url || "") && !/\/login(?:[/?#]|$)|signin|passport/i.test(reference.url) &&
+  Number.isFinite(Date.parse(reference.checkedAt));
+
+function verifyRoadbookEvidence(data) {
+  const references = [
+    ...(data.stopSummaries || []).flatMap(stop => stop.guides || []),
+    ...(data.days || []).flatMap(day => (day.slots || []).flatMap(slot => slot.references || []))
+  ];
+  if (references.some(reference => !isPublicReference(reference))) throw new Error("攻略引用必须是无需登录的公开直达页，并标注证据角色与核验时间");
+  const photos = (data.days || []).flatMap(day => day.slots || []).filter(slot => slot.photo);
+  if (photos.some(slot => !/^https:\/\//i.test(slot.photo) || !slot.photoCredit || !/^https:\/\//i.test(slot.photoSourceUrl || ""))) throw new Error("每张景点图片必须提供 HTTPS 图片、署名和来源链接");
+  if (new Set(photos.map(slot => slot.photo)).size !== photos.length) throw new Error("不同景点不能重复使用同一张图片");
+  if ((data.stopSummaries || []).some(stop => !Array.isArray(stop.tags) || stop.tags.length < 2 || stop.tags.some(tag => !canonicalTags.has(tag)))) throw new Error("每个停留城市必须提供至少两个规范目的地标签");
+  for (const area of data.hotelAreas || []) {
+    if (!["verified", "unavailable", "not-configured"].includes(area.queryStatus)) throw new Error("住宿区缺少飞猪查询状态");
+    if (area.queryStatus === "verified" && (!Number.isFinite(Date.parse(area.queriedAt)) || !(area.options || []).length)) throw new Error("飞猪住宿结果缺少查询时间或选项");
+    for (const option of area.options || []) if (option.sourceProvider !== "flyai" || !Number.isFinite(Date.parse(option.queriedAt)) || !option.actionLink?.url) throw new Error("住宿选项缺少飞猪来源与查询时间");
+  }
+  for (const slot of (data.days || []).flatMap(day => day.slots || [])) {
+    if (typeof slot.productRelevant !== "boolean" || (slot.productQueryStatus === "not-applicable") !== !slot.productRelevant) throw new Error("景点时间块的飞猪产品适用状态不一致");
+    if (!["verified", "unavailable", "not-configured", "not-applicable"].includes(slot.productQueryStatus)) throw new Error("景点时间块缺少飞猪查询状态");
+    if (slot.productQueryStatus === "verified" && (slot.productSource?.provider !== "flyai" || !Number.isFinite(Date.parse(slot.productSource.queriedAt)))) throw new Error("景点产品缺少飞猪来源与查询时间");
+    if (slot.productQueryStatus !== "verified" && (slot.ticketPrice || slot.actionLink)) throw new Error("未核验的景点产品不能展示票价或预订入口");
+    if ((slot.openingHours || slot.petPolicyVerified) && !(slot.references || []).some(reference => reference.evidenceRole === "official")) throw new Error("开放时间或宠物准入等变化信息必须有官方公开来源");
+  }
+}
+
+function verifyRoadbookRoad(data, expectedRoad) {
+  if (!expectedRoad?.complete) return;
+  if (JSON.stringify(data.verifiedRoad) !== JSON.stringify(expectedRoad)) throw new Error("最终路书没有原样使用本次高德核验道路数据");
+  const points = expectedRoad.points || [];
+  if (!Array.isArray(data.mapStops) || data.mapStops.length !== points.length || data.mapStops.some((stop, index) =>
+    stop.name !== points[index].name || Math.abs(stop.lng - points[index].lon) > 1e-6 || Math.abs(stop.lat - points[index].lat) > 1e-6)) {
+    throw new Error("最终路书地图落点与本次高德核验点位不一致");
+  }
+  const reportLegs = data.routeLegs || [];
+  if (reportLegs.length !== expectedRoad.legs.length || reportLegs.some((leg, index) => {
+    const expected = expectedRoad.legs[index];
+    return leg.from !== expected.from || leg.to !== expected.to || leg.source !== "amap" || Math.abs(leg.distanceKm - expected.km) > .05 || Math.abs(leg.driveHours - expected.hours) > .01;
+  })) throw new Error("最终路书逐段道路账本与高德核验结果不一致");
+  const dailyRoadKm = (data.days || []).reduce((sum, day) => sum + Number(day.drive?.distanceKm || 0), 0);
+  const dailyRoadHours = (data.days || []).reduce((sum, day) => sum + Number(day.drive?.roadHours || 0), 0);
+  if (Math.abs(dailyRoadKm - expectedRoad.distanceKm) > 1 || Math.abs(dailyRoadHours - expectedRoad.driveHours) > .2) throw new Error("最终路书每天的道路数据与高德核验总量不一致");
+  for (const day of data.days || []) {
+    const legs = reportLegs.filter(leg => leg.date === day.date);
+    const km = legs.reduce((sum, leg) => sum + leg.distanceKm, 0);
+    const hours = legs.reduce((sum, leg) => sum + leg.driveHours, 0);
+    if (Math.abs(Number(day.drive.distanceKm || 0) - km) > 1 || Math.abs(Number(day.drive.roadHours || 0) - hours) > .2) throw new Error(`${day.date} 的道路数据没有对应到当天高德路段`);
+  }
+  const plannedDrive = (data.dayBalance || []).reduce((sum, day) => sum + Number(day.drive || 0), 0);
+  if (plannedDrive + .2 < expectedRoad.driveHours || plannedDrive > expectedRoad.driveHours + Math.max(4, expectedRoad.driveHours * .2)) throw new Error("最终路书逐日驾驶时长与高德核验总时长不一致");
+}
+
+async function filterPublicReferences(references) {
+  const available = [];
+  for (let offset = 0; offset < references.length; offset += 4) {
+    const batch = references.slice(offset, offset + 4);
+    available.push(...await Promise.all(batch.map(async reference => {
+    try {
+      let current = new URL(reference.url);
+      let response;
+      for (let redirects = 0; redirects <= 3; redirects++) {
+        if (current.protocol !== "https:" || current.port && current.port !== "443") throw new Error("仅允许标准 HTTPS 公网页面");
+        const addresses = await lookup(current.hostname, { all: true, verbatim: true });
+        if (!addresses.length || addresses.some(({ address }) => isPrivateAddress(address))) throw new Error("拒绝访问本机或私有网络");
+        response = await requestPinnedPage(current, addresses[0]);
+        if (![301,302,303,307,308].includes(response.status)) break;
+        const location = response.headers.location;
+        if (!location || redirects === 3) throw new Error("重定向过多");
+        current = new URL(location, current);
+      }
+      if (!response?.ok || /\/login(?:[/?#]|$)|signin|passport/i.test(current.pathname)) throw new Error("登录墙或无法访问");
+      const type = response.headers["content-type"] || "";
+      if (/text\/html/i.test(type)) {
+        if (/登录后(?:查看|继续)|请先登录|扫码登录|sign in to continue/i.test(response.body)) throw new Error("页面要求登录");
+      }
+      return true;
+    } catch {
+      return false;
+    }
+    })));
+  }
+  return references.filter((_, index) => available[index]);
+}
+
+function requestPinnedPage(url, address) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let deadline;
+    const settle = (handler, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      handler(value);
+    };
+    const request = httpsRequest(url, {
+      method: "GET",
+      headers: { "user-agent": "RoadtripPlanner/0.1 public-source-check", accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.1" },
+      lookup: (_hostname, _options, callback) => callback(null, address.address, address.family)
+    }, response => {
+      const declared = Number(response.headers["content-length"]);
+      if (Number.isFinite(declared) && declared > 1_000_000) {
+        response.resume();
+        settle(reject, new Error("页面过大"));
+        return;
+      }
+      const chunks = [];
+      let size = 0;
+      response.on("data", chunk => {
+        const remaining = 120_000 - size;
+        if (remaining > 0) chunks.push(chunk.subarray(0, remaining));
+        size += chunk.length;
+        if (size > 120_000) {
+          response.destroy();
+          settle(resolve, { status: response.statusCode, ok: response.statusCode >= 200 && response.statusCode < 300, headers: response.headers, body: Buffer.concat(chunks).toString("utf8") });
+        }
+      });
+      response.on("end", () => settle(resolve, { status: response.statusCode, ok: response.statusCode >= 200 && response.statusCode < 300, headers: response.headers, body: Buffer.concat(chunks).toString("utf8") }));
+      response.on("error", error => settle(reject, error));
+    });
+    deadline = setTimeout(() => request.destroy(new Error("公开页面核验超时")), 8_000);
+    request.on("error", error => settle(reject, error));
+    request.end();
+  });
+}
+
+function isPrivateAddress(address) {
+  const normalized = address.toLowerCase().replace(/^::ffff:/, "");
+  if (isIP(normalized) === 4) {
+    const [a,b] = normalized.split(".").map(Number);
+    return a === 0 || a === 10 || a === 127 || a >= 224 || a === 169 && b === 254 || a === 172 && b >= 16 && b <= 31 || a === 192 && (b === 0 || b === 168) || a === 100 && b >= 64 && b <= 127 || a === 198 && (b === 18 || b === 19 || b === 51) || a === 203 && b === 0;
+  }
+  return normalized === "::" || normalized === "::1" || /^f[cd]/.test(normalized) || /^fe[89ab]/.test(normalized) || /^ff/.test(normalized) || /^2001:db8/.test(normalized);
 }
 
 async function mapPreview(places) {
@@ -237,7 +379,7 @@ function enqueue(type, state = null) {
   return job;
 }
 
-function validateResult(job, result) {
+async function validateResult(job, result) {
   if (!result || typeof result !== "object" || Array.isArray(result)) {
     throw new Error("任务结果必须是 JSON 对象");
   }
@@ -246,12 +388,16 @@ function validateResult(job, result) {
       throw new Error("候选结果必须包含 3—8 个地点");
     }
     for (const candidate of result.candidates) {
-      if (!["id", "name", "segment", "after", "pet", "ev", "reason", "highlight"].every(key => typeof candidate[key] === "string") ||
-          !["order", "detour", "drive", "stay", "lon", "lat"].every(key => Number.isFinite(candidate[key])) ||
-          !Array.isArray(candidate.tags)) {
+      if (!["id", "name", "segment", "after", "pet", "ev", "reason", "highlight", "overlap"].every(key => typeof candidate[key] === "string") ||
+          !["order", "stay"].every(key => Number.isFinite(candidate[key])) ||
+          !["detour", "drive", "lon", "lat"].every(key => candidate[key] === null || Number.isFinite(candidate[key])) ||
+          !Array.isArray(candidate.tags) || candidate.tags.length < 2 || candidate.tags.some(tag => !canonicalTags.has(tag)) ||
+          !["推荐", "可选", "谨慎"].includes(candidate.verdict) || !["高", "中", "低"].includes(candidate.confidence) ||
+          !Array.isArray(candidate.references) || candidate.references.length > 3 || candidate.references.some(reference => !isPublicReference(reference))) {
         throw new Error("候选地点缺少页面所需字段");
       }
     }
+    for (const candidate of result.candidates) candidate.references = await filterPublicReferences(candidate.references);
     return result;
   }
   if (job.type === "preview") {
@@ -278,6 +424,11 @@ function validateResult(job, result) {
         !Array.isArray(result.sourceNotes) || !result.sourceNotes.every(note => typeof note === "string")) {
       throw new Error("预览数据不完整，或路线与已选地点不一致");
     }
+    if (roads?.complete) {
+      const dayDistance = result.days.reduce((sum, day) => sum + day.distanceKm, 0);
+      const dayDriving = result.days.reduce((sum, day) => sum + day.driveHours, 0);
+      if (Math.abs(dayDistance - roads.distanceKm) > 1 || Math.abs(dayDriving - roads.driveHours) > .2) throw new Error("逐日里程或驾驶时长与高德全程核验结果不一致");
+    }
     return result;
   }
   if (job.type === "plan" || job.type === "refine") {
@@ -290,13 +441,19 @@ function validateResult(job, result) {
     }
     const data = JSON.parse(readFileSync(dataDestination, "utf8"));
     if (data.sample === true) throw new Error("模拟样板不能作为正式计划提交");
-    if (data.capabilities?.amap !== job.state.capabilities?.amap ||
+    if (data.capabilities?.amap !== job.state.capabilities?.amap || data.capabilities?.amapJs !== job.state.capabilities?.amapJs ||
         data.capabilities?.flyai !== job.state.capabilities?.flyai) {
       throw new Error("路书的数据来源状态与当前配置不一致");
     }
     if (readFileSync(destination, "utf8") !== renderRoadbook(data)) {
       throw new Error("路书不是由南线固定模板渲染，请使用 render-report.mjs 生成");
     }
+    verifyRoadbookRoad(data, job.state.roadVerification);
+    for (const stop of data.stopSummaries || []) stop.guides = await filterPublicReferences(stop.guides || []);
+    for (const day of data.days || []) for (const slot of day.slots || []) slot.references = await filterPublicReferences(slot.references || []);
+    verifyRoadbookEvidence(data);
+    writeFileSync(dataDestination, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+    writeFileSync(destination, renderRoadbook(data), "utf8");
     if (job.type === "refine") {
       renameSync(destination, reportPath);
       renameSync(dataDestination, reportDataPath);
@@ -375,9 +532,12 @@ const server = createServer(async (req, res) => {
       const state = await readJsonBody(req);
       if (!state?.route || !state?.answers) throw new Error("页面条件不完整");
       const setup = credentialStatus();
-      state.capabilities = { amap: setup.amap.configured, flyai: setup.flyai.available };
+      state.capabilities = { amap: setup.amap.configured, amapJs: setup.amapJs.configured, flyai: setup.flyai.available };
       const type = url.pathname.split("/").at(-1);
       if (type === "preview" || type === "plan" || type === "refine") {
+        if (!Array.isArray(state.candidates) || state.candidates.some(candidate => !["selected", "excluded"].includes(candidate.status))) {
+          throw new Error("请先对每个沿途候选明确选择加入或排除");
+        }
         const places = state.mapPlaces;
         if (!Array.isArray(places) || !Array.isArray(state.routeOrder) ||
             places.length !== state.routeOrder.length || places.length > 25 ||
@@ -388,7 +548,7 @@ const server = createServer(async (req, res) => {
         }
         state.roadVerification = setup.amap.configured
           ? await roadVerification(places)
-          : { complete: false, distanceKm: null, driveHours: null, legs: [] };
+          : { complete: false, distanceKm: null, driveHours: null, points: [], legs: [] };
       }
       if (type === "candidates" && state.instruction !== undefined &&
           (typeof state.instruction !== "string" || !state.instruction.trim() || state.instruction.length > 2000)) {
@@ -396,8 +556,7 @@ const server = createServer(async (req, res) => {
       }
       if ((type === "plan" || type === "refine") &&
           (state.review?.preview?.status !== "completed" ||
-           JSON.stringify(state.review.preview.routeOrder) !== JSON.stringify(state.routeOrder) ||
-           state.review.mock === true)) throw new Error("请先让 Codex 生成并确认当前路线的预览");
+           JSON.stringify(state.review.preview.routeOrder) !== JSON.stringify(state.routeOrder))) throw new Error("请先让 Codex 生成并确认当前路线的预览");
       if (type === "refine" && (!existsSync(reportPath) || !existsSync(reportDataPath) ||
           typeof state.instruction !== "string" || !state.instruction.trim() || state.instruction.length > 2000)) {
         throw new Error("请先生成完整报告，并填写不超过 2000 字的微调要求");
@@ -450,7 +609,7 @@ const server = createServer(async (req, res) => {
       if (match[2] === "progress") {
         job.message = String(body.message || "Codex 正在处理…").slice(0, 240);
       } else if (match[2] === "complete") {
-        job.result = validateResult(job, body.result);
+        job.result = await validateResult(job, body.result);
         job.status = "completed";
         job.message = ({ plan:"完整路书已生成。", preview:"路线预览已生成。", refine:"路书微调已完成。", candidates:"沿途候选已生成。" })[job.type];
       } else {

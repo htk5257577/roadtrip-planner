@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Roadtrip planner final report data",
+  "type": "object",
+  "required": ["title", "startDate", "capabilities", "meta", "hero", "preTrip", "reminders", "routeDecision", "dayBalance", "routeLegs", "hotelAreas", "mapStops", "stopSummaries", "days", "tips", "sourceLinks", "dataSources", "disclaimer"],
+  "properties": {
+    "sample": { "type": "boolean" },
+    "title": { "type": "string", "minLength": 1 },
+    "startDate": { "type": "string", "format": "date" },
+    "capabilities": {
+      "type": "object",
+      "required": ["amap", "amapJs", "flyai"],
+      "properties": { "amap": { "type": "boolean" }, "amapJs": { "type": "boolean" }, "flyai": { "type": "boolean" } }
+    },
+    "verifiedRoad": { "type": "object", "description": "Copy state.roadVerification exactly when complete." },
+    "meta": { "type": "object" }, "hero": { "type": "object" }, "preTrip": { "type": "object" },
+    "reminders": { "type": "array", "minItems": 1 }, "routeDecision": { "type": "object" },
+    "dayBalance": { "type": "array", "minItems": 1 },
+    "routeLegs": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["date", "route"], "properties": { "from": { "type": "string" }, "to": { "type": "string" }, "distanceKm": { "type": "number" }, "driveHours": { "type": "number" }, "source": { "enum": ["amap", "unverified"] } } } },
+    "hotelAreas": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["area", "reason", "queryStatus", "options"],
+        "properties": {
+          "queryStatus": { "enum": ["verified", "unavailable", "not-configured"] },
+          "queriedAt": { "type": "string", "format": "date-time" },
+          "options": { "type": "array", "items": { "type": "object", "required": ["sourceProvider", "queriedAt", "actionLink"] } }
+        }
+      }
+    },
+    "mapStops": { "type": "array", "minItems": 2 },
+    "stopSummaries": {
+      "type": "array", "minItems": 1,
+      "items": { "type": "object", "required": ["city", "stay", "playHours", "focus", "note", "pet", "tags", "guides"], "properties": { "guides": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/publicReference" } } } }
+    },
+    "days": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["date", "weekday", "theme", "drive", "dog", "slots"],
+        "properties": {
+          "drive": { "type": "object", "required": ["route", "distance", "duration"], "properties": { "distanceKm": { "type": "number" }, "roadHours": { "type": "number" } } },
+          "slots": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object", "required": ["period", "time", "name", "review", "references", "productRelevant", "productQueryStatus"],
+              "properties": {
+                "photo": { "type": "string", "pattern": "^https://" }, "photoCredit": { "type": "string" }, "photoSourceUrl": { "type": "string", "pattern": "^https://" },
+                "productRelevant": { "type": "boolean" },
+                "productQueryStatus": { "enum": ["verified", "unavailable", "not-configured", "not-applicable"] },
+                "productSource": { "type": "object", "required": ["provider", "queriedAt"], "properties": { "provider": { "const": "flyai" }, "queriedAt": { "type": "string", "format": "date-time" } } },
+                "references": { "type": "array", "maxItems": 2, "items": { "$ref": "#/$defs/publicReference" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "tips": { "type": "array", "minItems": 1 }, "sourceLinks": { "type": "array", "minItems": 1 },
+    "dataSources": { "type": "array", "minItems": 1 }, "disclaimer": { "type": "string" }
+  },
+  "$defs": {
+    "publicReference": {
+      "type": "object",
+      "required": ["type", "platform", "title", "note", "url", "evidenceRole", "publicAccess", "checkedAt"],
+      "properties": {
+        "url": { "type": "string", "pattern": "^https://" }, "evidenceRole": { "enum": ["firstHand", "official"] },
+        "publicAccess": { "const": true }, "checkedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

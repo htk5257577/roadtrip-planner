@@ -18,7 +18,8 @@
         "additionalProperties": false,
         "required": [
           "id", "name", "segment", "after", "order", "detour", "drive",
-          "stay", "tags", "pet", "ev", "reason", "lon", "lat", "highlight"
+          "stay", "tags", "pet", "ev", "reason", "lon", "lat", "highlight",
+          "verdict", "confidence", "overlap", "references"
         ],
         "properties": {
           "id": { "type": "string" },
@@ -26,8 +27,8 @@
           "segment": { "type": "string" },
           "after": { "type": "string" },
           "order": { "type": "integer", "minimum": 1 },
-          "detour": { "type": "number", "description": "Incremental road km versus the current route without this candidate." },
-          "drive": { "type": "number", "description": "Incremental hours of driving plus EV charging versus the current route without this candidate; exclude stay/visit time." },
+          "detour": { "type": ["number", "null"], "minimum": 0, "description": "Incremental road km. Use null when no verified road result is available; never invent it." },
+          "drive": { "type": ["number", "null"], "minimum": 0, "description": "Incremental driving plus EV charging hours. Use null when unverified; never invent it." },
           "stay": { "type": "number", "minimum": 0.25 },
           "tags": {
             "type": "array",
@@ -40,9 +41,27 @@
           "pet": { "type": "string" },
           "ev": { "type": "string" },
           "reason": { "type": "string" },
-          "lon": { "type": "number" },
-          "lat": { "type": "number" },
-          "highlight": { "type": "string" }
+          "lon": { "type": ["number", "null"] },
+          "lat": { "type": ["number", "null"] },
+          "highlight": { "type": "string" },
+          "verdict": { "type": "string", "enum": ["推荐", "可选", "谨慎"] },
+          "confidence": { "type": "string", "enum": ["高", "中", "低"] },
+          "overlap": { "type": "string", "description": "Explain overlap or complementarity with locked stops." },
+          "references": {
+            "type": "array", "maxItems": 3,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["type", "platform", "title", "note", "url", "evidenceRole", "publicAccess", "checkedAt"],
+              "properties": {
+                "type": { "type": "string" }, "platform": { "type": "string" },
+                "title": { "type": "string" }, "note": { "type": "string" },
+                "url": { "type": "string", "pattern": "^https://" },
+                "evidenceRole": { "type": "string", "enum": ["firstHand", "official"] },
+                "publicAccess": { "const": true }, "checkedAt": { "type": "string", "format": "date-time" },
+                "publishedAt": { "type": "string" }
+              }
+            }
+          }
         }
       }
     }

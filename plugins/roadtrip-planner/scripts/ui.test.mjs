@@ -8,8 +8,8 @@ import vm from "node:vm";
 const pluginRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const page = readFileSync(join(pluginRoot, "skills/roadtrip-planner/assets/roadtrip-planner-demo.html"), "utf8");
 const testRoute = { start: "杭州", end: "赤壁", must: ["东山县", "柳州", "恩施"] };
-const testAnswers = { departDate: "2026-09-24", returnDate: "2026-10-05", departTime: "19:00", maxDrive: "6", maxDetour: "2", pace: "balanced", pet: true, ev: true, evHighwayRange: "350", lowEffort: false, lowCrowd: false };
-const testCandidates = [{ id: "candidate-quanzhou", name: "泉州", segment: "杭州 → 东山", after: "杭州", order: 1, detour: 35, drive: 1.1, stay: 1, tags: ["地方美食", "历史街巷"], pet: "待核验", ev: "待核验", reason: "测试候选", lon: 118.675, lat: 24.874, highlight: "古城" }];
+const testAnswers = { departDate: "2026-09-24", returnDate: "2026-10-05", departTime: "19:00", travelers: "2", maxDrive: "6", maxDetour: "2", pace: "balanced", pet: true, petWeightKg: "2", petAgeYears: "1.5", petNotes: "", ev: true, evHighwayRange: "350", exclusions: "", fixedBookings: "", borderDocs: "", lowEffort: false, lowCrowd: false };
+const testCandidates = [{ id: "candidate-quanzhou", name: "泉州", segment: "杭州 → 东山", after: "杭州", order: 1, detour: 35, drive: 1.1, stay: 1, tags: ["地方美食", "历史街巷"], pet: "待核验", ev: "待核验", reason: "测试候选", lon: 118.675, lat: 24.874, highlight: "古城", verdict: "推荐", confidence: "中", overlap: "补充人文体验", references: [] }];
 function seedTestState(context) {
   vm.runInContext(`state.route=${JSON.stringify(testRoute)};state.answers=${JSON.stringify(testAnswers)};applyCodexCandidates(${JSON.stringify({ summary: "候选", candidates: testCandidates })},'codex');state.ai.backendReady=true;render()`, context);
 }
@@ -170,6 +170,23 @@ test("destination tag heading is not itself an experience tag", () => {
   assert.match(page, /<span class="tag-label">适合体验<\/span>/);
 });
 
+test("required framework includes travelers, detailed pet facts, exclusions and fixed constraints", () => {
+  assert.match(page, /data-answer="travelers"/);
+  assert.match(page, /data-answer="petWeightKg"/);
+  assert.match(page, /data-answer="petAgeYears"/);
+  assert.match(page, /data-answer="exclusions"/);
+  assert.match(page, /data-answer="fixedBookings"/);
+  assert.match(page, /data-answer="borderDocs"/);
+  assert.doesNotMatch(page, /可短时寄养/);
+});
+
+test("candidate UI uses explainable verdicts and persists only planning state", () => {
+  assert.doesNotMatch(page, /<small>\/100<\/small>/);
+  assert.match(page, /candidateReviewComplete/);
+  assert.match(page, /sessionStorage\.setItem\(STORAGE_KEY/);
+  assert.doesNotMatch(page, /sessionStorage\.setItem\([^\n]*(?:amapSetupKey|flyaiSetupKey|securityJsCode)/);
+});
+
 test("step three asks for explicit instructions before regenerating candidates", async () => {
   const script = page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)?.[1];
   assert.ok(script);
@@ -235,6 +252,7 @@ test("Codex preview, full report, and text refinement are three separate page jo
   vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/, ""), context);
   vm.runInContext("state.setup.loading=false", context);
   seedTestState(context);
+  vm.runInContext("state.candidateStatus['candidate-quanzhou']='selected'", context);
   await vm.runInContext("requestCodexPreview()", context);
   assert.equal(calls[0].url, "/api/codex/preview");
   assert.equal(vm.runInContext("state.stage", context), 4);

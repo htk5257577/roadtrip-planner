@@ -36,13 +36,16 @@ test("fixed report keeps overview, stop summaries, and one collapsible daily spi
   assert.doesNotMatch(cityList, /游玩|停留|同行提醒|地图 ↗|<strong>|<div>/);
   assert.match(html, /data-roadbook-template="south-line-v2"/);
   assert.doesNotMatch(html, /{{[A-Z_]+}}|securityJsCode|0106n12000rrctq3jAA64/);
+  assert.doesNotMatch(html, /Leaflet|leaflet|ArcGIS|Esri/);
+  assert.match(html, /webapi\.amap\.com\/maps\?v=2\.0/);
+  assert.match(html, /图片：/);
 });
 
 test("report data must provide complete daily content", () => {
   assert.throws(() => renderRoadbook({ ...example, dayBalance: [] }), /dayBalance/);
-  assert.throws(() => renderRoadbook({ ...example, days: [{ ...example.days[0], slots: [] }] }), /每天必须有时间块/);
+  assert.throws(() => renderRoadbook({ ...example, days: [{ ...example.days[0], slots: [] }] }), /slots 条目不足|每天必须有时间块/);
   assert.throws(() => renderRoadbook({ ...example, stopSummaries: undefined }), /stopSummaries/);
-  assert.throws(() => renderRoadbook({ ...example, stopSummaries: [{ city: "乙城", focus: [] }] }), /停留重点/);
+  assert.throws(() => renderRoadbook({ ...example, stopSummaries: [{ city: "乙城", focus: [] }] }), /缺少 stay|停留重点/);
 });
 
 test("final report title and hero route show places without planning-status labels", () => {
@@ -55,7 +58,7 @@ test("final report title and hero route show places without planning-status labe
 
 test("missing providers suppress precise map, hotel and ticket claims", () => {
   const trip = structuredClone(example);
-  trip.capabilities = { amap: false, flyai: false };
+  trip.capabilities = { amap: false, amapJs: false, flyai: false };
   trip.hotelAreas[0].options[0].priceRange = "¥999 / 晚";
   trip.days[0].slots[1].ticketPrice = "门票 ¥888";
   trip.days[0].slots[1].actionLink = { label: "立即预订", url: "https://example.com/book" };
@@ -63,6 +66,7 @@ test("missing providers suppress precise map, hotel and ticket claims", () => {
   const html = renderRoadbook(trip);
   assert.match(html, /未接入高德，地图落点暂不展示/);
   assert.match(html, /未接入飞猪；具体酒店、房价与预订入口暂不展示/);
+  assert.match(html, /未接入飞猪；景点票价与预订入口暂不展示/);
   assert.doesNotMatch(html, /¥999|¥888|立即预订|leaflet@1\.9\.4/);
   assert.doesNotMatch(html, /<h4>城区住宿<\/h4>/);
   assert.match(html, /道路耗时待核验/);
@@ -71,16 +75,37 @@ test("missing providers suppress precise map, hotel and ticket claims", () => {
 
 test("city guides and spot posts stay beside their place and only link to safe sources", () => {
   const trip = structuredClone(example);
-  trip.capabilities = { amap: false, flyai: false };
-  trip.stopSummaries[0].guides.push({ type: "游记", platform: "旅行社区", title: "不安全链接", url: "javascript:alert(1)" });
-  trip.days[0].slots[1].references.push({ type: "体验帖", title: "仅有标题", note: "未核到直达链接" });
+  trip.capabilities = { amap: false, amapJs: false, flyai: false };
   const html = renderRoadbook(trip);
   assert.match(html, /去之前看看/);
   assert.match(html, /去过的人怎么说/);
   assert.match(html, /乙城慢游参考/);
-  assert.match(html, /乙城街区实走记录/);
-  assert.match(html, /个人体验仅供参考，准入与价格以官方为准/);
-  assert.doesNotMatch(html, /javascript:alert|不安全链接|仅有标题/);
+  assert.match(html, /乙城街区信息/);
+  assert.match(html, /公开网页体验仅供参考，准入与价格以官方为准/);
   assert.ok(html.indexOf("乙城慢游参考") < html.indexOf('id="day-1"'));
-  assert.ok(html.indexOf("乙城街区实走记录") > html.indexOf('id="day-1"'));
+  assert.ok(html.indexOf("乙城街区信息") > html.indexOf('id="day-1"'));
+  const unsafe = structuredClone(trip);
+  unsafe.stopSummaries[0].guides.push({ type: "游记", platform: "旅行社区", title: "不安全链接", note: "无", url: "javascript:alert(1)", evidenceRole: "firstHand", publicAccess: true, checkedAt: "2026-09-23T08:00:00.000Z" });
+  assert.throws(() => renderRoadbook(unsafe), /格式不正确/);
+});
+
+test("empty guide sections explain the public no-login boundary", () => {
+  const trip = structuredClone(example);
+  trip.sample = false;
+  trip.stopSummaries[0].guides = [];
+  trip.days[0].slots[1].references = [];
+  const html = renderRoadbook(trip);
+  assert.match(html, /暂未找到无需登录且可核验的直达攻略或帖子/);
+});
+
+test("report rejects missing city tags and slot reference arrays", () => {
+  const missingTags = structuredClone(example);
+  delete missingTags.stopSummaries[0].tags;
+  assert.throws(() => renderRoadbook(missingTags), /缺少 tags|规范标签/);
+  const missingReferences = structuredClone(example);
+  delete missingReferences.days[0].slots[0].references;
+  assert.throws(() => renderRoadbook(missingReferences), /缺少 references|攻略引用数组/);
+  const missingProductRelevance = structuredClone(example);
+  delete missingProductRelevance.days[0].slots[1].productRelevant;
+  assert.throws(() => renderRoadbook(missingProductRelevance), /缺少 productRelevant/);
 });

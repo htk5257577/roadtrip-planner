@@ -103,7 +103,7 @@
     .candidate-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:10px}.status-btn{padding:8px 6px;color:var(--muted);background:var(--paper);font-size:9px}.status-btn.is-active[data-status-choice="selected"]{color:white;background:var(--pine)}.status-btn.is-active[data-status-choice="excluded"]{color:white;background:#7a706c}
     .ai-note{padding:12px;border-radius:14px;background:#fff0d2;border:1px solid rgba(243,189,77,.4);font-size:9px;line-height:1.65}.ai-note b{color:var(--red-dark)}
     .ai-run-state{display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;padding:7px 18px;color:#cfe1da;background:#17483f;border-bottom:1px solid rgba(255,255,255,.08);font-size:10px;font-weight:800;text-align:center}
-    .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}.ai-run-state[data-status="ended"]{color:#d7eee6;background:#33524b}.ai-run-state[data-status="mock"]{color:#423211;background:#f3bd4d}
+    .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}.ai-run-state[data-status="ended"]{color:#d7eee6;background:#33524b}
     .ai-pulse{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;animation:pulse 1.4s infinite}.ai-run-state:not([data-status="loading"]) .ai-pulse{animation:none}
     .ai-report-frame{display:block;width:100%;height:calc(100vh - 190px);min-height:760px;border:0;background:white}.ai-result-summary{padding:16px 20px;color:var(--ink);background:#fff0d2;border-bottom:1px solid var(--line);font-size:11px;line-height:1.65}.ai-result-summary b{color:var(--red-dark)}
     .completed-report{width:100%;margin:0;background:white}.completed-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:940px;margin:auto;padding:12px 14px}.completed-toolbar p{margin:0;color:var(--muted);font-size:11px}.completed-toolbar .report-actions{flex-wrap:wrap;justify-content:flex-end;margin:0}.completed-report .refine-panel{width:min(940px,calc(100% - 28px));margin:0 auto 14px}.completed-report .ai-result-summary{padding-inline:max(14px,calc((100% - 940px)/2))}
@@ -202,7 +202,7 @@
     const preferenceCycles = ['off','prefer','must','avoid'];
     const preferenceLabels = { off:'未选', prefer:'偏好', must:'必有', avoid:'避开' };
     const emptyRoute = () => ({ start:'', end:'', must:[] });
-    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', maxDrive:'', maxDetour:'', pace:'', pet:null, ev:null, evHighwayRange:'', lowEffort:false, lowCrowd:false });
+    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', travelers:'', maxDrive:'', maxDetour:'', pace:'', pet:null, petWeightKg:'', petAgeYears:'', petNotes:'', ev:null, evHighwayRange:'', exclusions:'', fixedBookings:'', borderDocs:'', lowEffort:false, lowCrowd:false });
     const emptyPrefs = () => Object.fromEntries(preferenceKeys.map(key=>[key,'off']));
 
     const state = {
@@ -220,6 +220,19 @@
     const app = document.getElementById('app');
     const toastEl = document.getElementById('toast');
     let toastTimer;
+    const STORAGE_KEY='roadtrip-planner-state-v1';
+    function restorePlanningState(){
+      if(typeof sessionStorage==='undefined')return;
+      try { const saved=JSON.parse(sessionStorage.getItem(STORAGE_KEY)||'null'); if(!saved)return;
+        if(saved.route)state.route=saved.route;if(saved.prefs)state.prefs={...emptyPrefs(),...saved.prefs};if(saved.answers)state.answers={...emptyAnswers(),...saved.answers};
+        if(saved.candidateStatus)state.candidateStatus=saved.candidateStatus;if(Array.isArray(saved.candidates))candidates=saved.candidates;
+        if(Number.isInteger(saved.stage))state.stage=Math.min(5,Math.max(1,saved.stage));if(saved.preview)state.ai.preview=saved.preview;if(saved.previewKey)state.ai.previewKey=saved.previewKey;if(saved.reportUrl)state.ai.reportUrl=saved.reportUrl;
+      } catch { sessionStorage.removeItem(STORAGE_KEY); }
+    }
+    function persistPlanningState(){
+      if(typeof sessionStorage==='undefined')return;
+      try { sessionStorage.setItem(STORAGE_KEY,JSON.stringify({route:state.route,prefs:state.prefs,answers:state.answers,candidateStatus:state.candidateStatus,candidates,stage:state.stage,preview:state.ai.preview,previewKey:state.ai.previewKey,reportUrl:state.ai.reportUrl})); } catch {}
+    }
 
     const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
     const statusOf = id => state.candidateStatus[id] || 'none';
@@ -253,7 +266,8 @@
       return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
     };
     const frameworkReady = () => Boolean(state.route.start && state.route.end && state.route.must.length && state.answers.departTime && datesReady());
-    const planningReady = () => frameworkReady() && Number(state.answers.maxDrive) > 0 && Number(state.answers.maxDetour) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.ev || Number(state.answers.evHighwayRange)>=100 && Number(state.answers.evHighwayRange)<=1000);
+    const planningReady = () => frameworkReady() && Number(state.answers.travelers) > 0 && Number(state.answers.maxDrive) > 0 && Number(state.answers.maxDetour) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.pet || Number(state.answers.petWeightKg)>0 && Number(state.answers.petAgeYears)>0) && (!state.answers.ev || Number(state.answers.evHighwayRange)>=100 && Number(state.answers.evHighwayRange)<=1000);
+    const candidateReviewComplete = () => candidates.length > 0 && candidates.every(candidate=>['selected','excluded'].includes(statusOf(candidate.id)));
     const chargeHoursFor = km => state.answers.ev && Number(state.answers.evHighwayRange)>0 ? km/Number(state.answers.evHighwayRange)*.45 : 0;
 
     function roadLeg(from,to,nodes=routeNodes()){
@@ -274,21 +288,8 @@
       return { km:unverified||!legs.length?null:km, driveHours:unverified||!legs.length?null:driveHours, chargeHours:unverified||!legs.length?null:chargeHoursFor(km), source:unverified?'unverified':'amap', legs };
     }
 
-    function candidateScore(c){
-      let score = 63;
-      c.tags.forEach(tag => {
-        const mode = state.prefs[tag];
-        if (mode === 'must') score += 9;
-        if (mode === 'prefer') score += 5;
-        if (mode === 'avoid') score -= 15;
-      });
-      if (state.answers.pet && /友好|户外|基地/.test(c.pet)) score += 4;
-      if (state.answers.pet && /不适合|禁入/.test(c.pet)) score -= 7;
-      if (state.answers.ev && /预留|县道|山脚/.test(c.ev)) score -= 3;
-      const impact=candidateDetour(c);
-      if(Number.isFinite(impact.drive) && Number(state.answers.maxDetour)>0 && impact.drive>Number(state.answers.maxDetour)) score-=18;
-      return Math.max(38, Math.min(97, score));
-    }
+    const candidateRank = candidate => ({'推荐':0,'可选':1,'谨慎':2}[candidate.verdict] ?? 3);
+    const candidateScore = candidate => -candidateRank(candidate);
 
     function routeNodes(selectedOverride){
       const anchors = [state.route.start, ...state.route.must, state.route.end].filter(Boolean).map((name, index) => ({ name, kind:'hard', index, ...(coordFor(name) || {}) }));
@@ -433,12 +434,17 @@
     function questions(){
       const toggle=(key,label)=>`<button type="button" class="toggle ${state.answers[key]===true?'is-on':state.answers[key]===false?'is-off':''}" data-toggle="${key}"><span>${label}<small>${state.answers[key]===null?'未选':state.answers[key]?'是':'否'}</small></span><i></i></button>`;
       return `<div class="question-grid">
+        <label class="question"><span>同行人数</span><input type="number" min="1" max="9" value="${esc(state.answers.travelers)}" data-answer="travelers" placeholder="例如 2"></label>
         <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select></label>
         <label class="question"><span>可接受的额外绕路</span><select data-answer="maxDetour"><option value="" ${state.answers.maxDetour===''?'selected':''}>请选择</option><option value="1" ${state.answers.maxDetour==='1'?'selected':''}>最多 1 小时</option><option value="2" ${state.answers.maxDetour==='2'?'selected':''}>最多 2 小时</option><option value="4" ${state.answers.maxDetour==='4'?'selected':''}>最多 4 小时</option><option value="999" ${state.answers.maxDetour==='999'?'selected':''}>不设上限</option></select><small>对比不去该候选点的路线，计算增加的驾驶与补能时间。</small></label>
         <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select></label>
         <div class="question">${toggle('pet','带宠物')}${toggle('ev','纯电车')}<p class="helper">点击选择：未选 → 是 → 否。</p></div>
         <div class="question"><span>可选的游玩限制</span><div class="pref-grid"><button type="button" class="pref" data-filter="lowEffort" data-state="${state.answers.lowEffort?'prefer':'off'}" data-state-label="${state.answers.lowEffort?'已选':'未选'}">少爬山少步行</button><button type="button" class="pref" data-filter="lowCrowd" data-state="${state.answers.lowCrowd?'prefer':'off'}" data-state-label="${state.answers.lowCrowd?'已选':'未选'}">尽量避开拥挤</button></div><small>这是行程限制，不是城市标签。</small></div>
         ${state.answers.ev?`<label class="question"><span>实际高速续航</span><input type="number" min="100" max="1000" step="10" inputmode="numeric" placeholder="例如 350" value="${esc(state.answers.evHighwayRange)}" data-answer="evHighwayRange"><small>填你日常高速能稳定跑到的公里数，不是车辆标称续航；只用于补能粗估。</small></label>`:''}
+        ${state.answers.pet?`<label class="question"><span>宠物体重（kg）</span><input type="number" min="0.1" max="100" step="0.1" value="${esc(state.answers.petWeightKg)}" data-answer="petWeightKg"></label><label class="question"><span>宠物年龄（岁）</span><input type="number" min="0.1" max="30" step="0.1" value="${esc(state.answers.petAgeYears)}" data-answer="petAgeYears"></label><label class="question"><span>宠物补充说明</span><textarea maxlength="500" data-answer="petNotes" placeholder="品种、出行习惯、明确不能接受的安排">${esc(state.answers.petNotes)}</textarea></label>`:''}
+        <label class="question"><span>明确不去 / 不要的体验</span><textarea maxlength="800" data-answer="exclusions" placeholder="例如：不去主题乐园，不安排连续爬山">${esc(state.answers.exclusions)}</textarea></label>
+        <label class="question"><span>已订住宿、门票或固定活动</span><textarea maxlength="800" data-answer="fixedBookings" placeholder="没有可留空；有则写日期、地点和时间">${esc(state.answers.fixedBookings)}</textarea></label>
+        <label class="question"><span>跨境证件或通行限制</span><textarea maxlength="800" data-answer="borderDocs" placeholder="例如：不出境；已具备港澳签注">${esc(state.answers.borderDocs)}</textarea></label>
       </div>`;
     }
 
@@ -540,16 +546,18 @@
     }
 
     function candidateCard(c, focus=false){
-      const status=statusOf(c.id), score=candidateScore(c);
+      const status=statusOf(c.id);
       const impact=candidateDetour(c);
+      const sources=Array.isArray(c.references)&&c.references.length?`<div class="candidate-sources"><span class="tag-label">判断依据</span>${c.references.map(reference=>/^https:\/\//i.test(reference.url||'')?`<a class="tag" href="${esc(reference.url)}" target="_blank" rel="noopener noreferrer">${esc(reference.platform||reference.title)} ↗</a>`:'').join('')}</div>`:'';
       const sign=value=>value>0?'+':'';
       const sourceLabel=impact.source==='amap'?'高德道路增量':impact.source==='unverified'?'路段待核验':'地点待核验';
       return `<article class="candidate ${focus?'focus-card':''}" data-status="${status}">
-        <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${score}<small>/100</small></div></div>
+        <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${esc(c.verdict||'可选')}<small>${esc(c.confidence||'中')}置信</small></div></div>
         <p class="candidate-reason"><b>为什么出现：</b>${esc(c.reason)}</p>
+        <p class="candidate-reason"><b>与现有路线：</b>${esc(c.overlap||'由 Codex 结合当前路线判断')}</p>
         <div class="candidate-facts"><div class="fact"><b>${impact.km===null?'待核验':`${sign(impact.km)}${impact.km} km`}</b>${sourceLabel}</div><div class="fact"><b>${impact.drive===null?'待核验':`${sign(impact.drive)}${impact.drive} h`}</b>额外驾驶${state.answers.ev?'＋补能':''}</div><div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
         ${impact.drive!==null && Number(state.answers.maxDetour)<999 && impact.drive>Number(state.answers.maxDetour)?`<p class="candidate-warning">比你设定的绕路上限多 ${+(impact.drive-Number(state.answers.maxDetour)).toFixed(1)} 小时</p>`:''}
-        <div class="tags"><span class="tag-label">适合体验</span>${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div><div class="tags"><span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>
+        <div class="tags"><span class="tag-label">适合体验</span>${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div><div class="tags"><span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>${sources}
         <div class="candidate-actions"><button type="button" class="status-btn ${status==='selected'?'is-active':''}" data-candidate="${c.id}" data-status-choice="selected">加入路线</button><button type="button" class="status-btn ${status==='excluded'?'is-active':''}" data-candidate="${c.id}" data-status-choice="excluded">排除</button></div>
       </article>`;
     }
@@ -631,6 +639,7 @@
 
     function render(){
       invalidateStaleReview();
+      persistPlanningState();
       const existingMap=app.querySelector?.('.amap-map-host');
       existingMap?.remove();
       app.innerHTML = header() + (state.setup.loading||state.setup.open?setupPage():guideVariant());
@@ -722,7 +731,7 @@
         candidates: candidates.map(candidate=>({ ...candidate, status:statusOf(candidate.id) })),
         routeOrder: routeNodes().map(node=>node.name),
         mapPlaces: mapPlaces(),
-        capabilities: { amap:state.setup.amap, flyai:state.setup.flyai },
+        capabilities: { amap:state.setup.amap, amapJs:state.setup.amapJs, flyai:state.setup.flyai },
         clientEstimate: planningReady()?routeStats():null,
         review: { preview:previewCurrent()?state.ai.preview:null }
       };
@@ -746,7 +755,7 @@
         const ready=data.mode==='current-codex-thread'&&Boolean(data.runnerConnected);
         const changed=state.ai.backendReady!==ready||state.ai.status==='checking';
         state.ai.backendReady=ready;
-        if(!state.ai.ended&&state.ai.status!=='loading'&&state.ai.source!=='mock'&&changed){
+        if(!state.ai.ended&&state.ai.status!=='loading'&&changed){
           state.ai.status=ready?'idle':'error';
           state.ai.message=ready?'当前 Codex 会话正在等待操作；点击生成后，请在 Codex 对话中查看规划过程。':'当前 Codex 会话尚未进入等待状态，请回到 Codex 对话。';
         }
@@ -777,8 +786,8 @@
         ...candidate,
         id:String(candidate.id||`candidate-${index+1}`).toLowerCase().replace(/[^a-z0-9-]+/g,'-'),
         order:Number(candidate.order)||index+1,
-        detour:Number(candidate.detour)||0,
-        drive:Number(candidate.drive)||0,
+        detour:Number.isFinite(candidate.detour)?Number(candidate.detour):null,
+        drive:Number.isFinite(candidate.drive)?Number(candidate.drive):null,
         stay:Number(candidate.stay)||1,
         tags:Array.isArray(candidate.tags)?[...new Set(candidate.tags.filter(tag=>preferenceKeys.includes(tag)))]:[]
       }));
@@ -786,7 +795,7 @@
       candidates.forEach(candidate=>{
         state.candidateStatus[candidate.id]='none';
         cityCatalog[candidate.name]={
-          lon:Number(candidate.lon),lat:Number(candidate.lat),stay:candidate.stay,
+          lon:Number.isFinite(candidate.lon)?Number(candidate.lon):null,lat:Number.isFinite(candidate.lat)?Number(candidate.lat):null,stay:candidate.stay,
           highlight:candidate.highlight||candidate.reason,tags:candidate.tags
         };
       });
@@ -843,6 +852,7 @@
         state.stage=2;render();toast('先填写完整的必要信息。');return;
       }
       if(!candidates.length){state.stage=3;render();toast('先生成并审阅沿途候选。');return;}
+      if(!candidateReviewComplete()){state.stage=3;render();toast('每个候选都要明确选择加入或排除。');return;}
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       const submittedKey=reviewKey();
       setAiState('loading','Codex 正在重新核对所选路线、时间、补能和游玩安排；过程可在对话中查看。');
@@ -1058,6 +1068,7 @@
 
     document.addEventListener('input',event=>{
       if(event.target.matches('[data-place-field]')) showPlaceResults(event.target);
+      if(event.target.matches('textarea[data-answer]')) state.answers[event.target.dataset.answer]=event.target.value;
       if(event.target.id==='refineText') state.ai.refineDraft=event.target.value;
       if(event.target.id==='candidateInstruction') state.ai.candidateDraft=event.target.value;
     });
@@ -1090,6 +1101,7 @@
       if(event.key==='Escape'){list.hidden=true;input.setAttribute('aria-expanded','false');}
     });
 
+    restorePlanningState();
     render();
     checkCodexStatus();
     loadSetupStatus();

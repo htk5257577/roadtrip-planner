@@ -183,13 +183,16 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const candidate = {
       id: "sample", name: "样例", segment: "杭州 → 恩施", after: "杭州", order: 1,
       detour: 12, drive: 0.3, stay: 1, tags: ["地方美食", "历史街巷"], pet: "需核验", ev: "有补能",
-      reason: "供测试", lon: 110, lat: 30, highlight: "样例体验"
+      reason: "供测试", lon: 110, lat: 30, highlight: "样例体验", verdict: "可选", confidence: "中", overlap: "补充体验",
+      references: [{ type:"攻略", platform:"测试来源", title:"不可公开访问", note:"应被自动剔除", url:"https://127.0.0.1/private", evidenceRole:"firstHand", publicAccess:true, checkedAt:"2026-09-23T08:00:00.000Z" }]
     };
     const candidates = { summary: "测试候选", sourceNotes: [], candidates: [1, 2, 3].map((number) => ({ ...candidate, id: `sample-${number}` })) };
     const candidateResultPath = join(workspace, "candidates.json");
     await writeFile(candidateResultPath, JSON.stringify(candidates));
     assert.equal((await bridge(base, "complete", candidateJob.id, candidateResultPath)).status, "completed");
-    assert.equal((await json(base, `/api/jobs/${candidateJob.id}`)).data.job.status, "completed");
+    const completedCandidateJob=(await json(base, `/api/jobs/${candidateJob.id}`)).data.job;
+    assert.equal(completedCandidateJob.status, "completed");
+    assert.deepEqual(completedCandidateJob.result.candidates[0].references, []);
     assert.equal((await json(base, "/api/codex/candidates", { ...state, instruction: "   " })).status, 400);
     const waitingRevision = bridge(base, "wait");
     await waitForRunner(base);
@@ -207,20 +210,21 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     };
     const previewResultPath=join(workspace,"preview.json");
     await writeFile(previewResultPath,JSON.stringify(previewFixture));
+    const decidedState={...state,candidates:candidates.candidates.map(candidate=>({...candidate,status:"selected"}))};
     const waitingPreview = bridge(base,"wait");
     await waitForRunner(base);
     assert.equal((await json(base,"/api/codex/plan",state)).status,400);
-    const previewSubmitted = await json(base,"/api/codex/preview",state);
+    const previewSubmitted = await json(base,"/api/codex/preview",decidedState);
     assert.equal(previewSubmitted.status,202);
     const previewJob = await waitingPreview;
     assert.equal(previewJob.type,"preview");
-    assert.deepEqual(previewJob.state.capabilities,{amap:false,flyai:false});
+    assert.deepEqual(previewJob.state.capabilities,{amap:false,amapJs:false,flyai:false});
     assert.equal((await json(base,`/api/bridge/jobs/${previewJob.id}/complete`,{result:{...previewFixture,routeOrder:["杭州","杭州"]}})).status,400);
     assert.equal((await bridge(base,"complete",previewJob.id,previewResultPath)).status,"completed");
     const sanitizedPreview=(await json(base,`/api/jobs/${previewJob.id}`)).data.job.result;
     assert.equal(sanitizedPreview.totals.distanceKm,null);
     assert.equal(sanitizedPreview.days[0].driveHours,null);
-    const reviewedState={...state,review:{preview:sanitizedPreview,mock:false}};
+    const reviewedState={...decidedState,review:{preview:sanitizedPreview,mock:false}};
 
     const waitingPlan = bridge(base, "wait");
     await waitForRunner(base);
@@ -229,6 +233,8 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     assert.equal(planJob.id, planSubmitted.data.job.id);
     const reportData = JSON.parse(await readFile(exampleDataPath, "utf8"));
     reportData.capabilities=planJob.state.capabilities;
+    reportData.stopSummaries.forEach(stop=>{stop.guides=[];});
+    reportData.days.forEach(day=>day.slots.forEach(slot=>{slot.references=[];delete slot.openingHours;slot.productQueryStatus=slot.productRelevant?"not-configured":"not-applicable";}));
     const result = { status: "completed", title: "测试路书", summary: "已完成", route: "杭州 → 恩施 → 杭州", reportPath: planJob.reportPath, dataPath: planJob.dataPath };
     assert.equal((await json(base, `/api/bridge/jobs/${planJob.id}/complete`, { result })).status, 400);
     await writeFile(planJob.dataPath, JSON.stringify(reportData));
