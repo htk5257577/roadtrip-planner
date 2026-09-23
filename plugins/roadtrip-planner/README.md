@@ -22,7 +22,7 @@ When the FlyAI CLI is missing, the setup page shows the optional `npm i -g @fly-
 From the workspace where the roadbook should be written:
 
 ```text
-node <this-folder>/scripts/server.mjs
+node <this-folder>/scripts/start.mjs
 ```
 
 Open `http://127.0.0.1:4317` in the Codex browser. In the same Codex turn, keep running `node <this-folder>/scripts/bridge-client.mjs wait` and handle the jobs it returns. The final file is written to:
@@ -32,3 +32,7 @@ roadtrip-planner-output/generated-roadtrip-plan.html
 ```
 
 Keep this whole folder intact when sharing or installing the plugin. A page request is handled only while the launching Codex conversation remains active; use the page's “结束会话” control when finished. See `skills/roadtrip-planner/INSTALL.md` for details.
+
+### Service ownership
+
+Startup reuses the existing service and preserves its workspace and report. It creates a service only when the configured port is unused; it never searches for another port. `CODEX_THREAD_ID` identifies the conversation on every bridge command (or explicitly set `ROADTRIP_SESSION_ID` to the current conversation's stable ID). A different connected conversation is rejected with HTTP 409. Same-conversation reconnects are allowed. Page stop or an idle `bridge-client.mjs disconnect` releases ownership. An idle connection expires after 45 seconds without bridge activity; queued/running work retains ownership until its owner finishes or fails it. Old services without ownership support must be ended in their original conversation before restarting with this version.

@@ -29,7 +29,16 @@ const pendingRoad = new Map();
 const jobs = new Map();
 const pending = [];
 const waiters = new Set();
-let runnerSeenAt = 0;
+const initialSessionId = process.env.ROADTRIP_INITIAL_SESSION_ID;
+if (initialSessionId && (!initialSessionId.trim() || initialSessionId.length > 200)) {
+  throw new Error("无效的初始 Codex 会话标识");
+}
+const configuredRunnerIdleMs = Number(process.env.ROADTRIP_RUNNER_IDLE_MS);
+const runnerIdleMs = Number.isFinite(configuredRunnerIdleMs) && configuredRunnerIdleMs > 0
+  ? Math.max(100, configuredRunnerIdleMs)
+  : 45_000;
+let runnerSessionId = initialSessionId || null;
+let runnerSeenAt = runnerSessionId ? Date.now() : 0;
 
 mkdirSync(outputDir, { recursive: true });
 
@@ -320,7 +329,22 @@ async function mapPreview(places) {
 }
 
 function runnerConnected() {
-  return Date.now() - runnerSeenAt < 45_000;
+  return Boolean(runnerSessionId) && (Date.now() - runnerSeenAt < runnerIdleMs ||
+    [...jobs.values()].some(job => job.status === "queued" || job.status === "running"));
+}
+
+function requireRunner(req, claim = false) {
+  const sessionId = req.headers["x-roadtrip-session"];
+  if (typeof sessionId !== "string" || !sessionId.trim() || sessionId.length > 200) {
+    throw Object.assign(new Error("缺少 Codex 会话标识，请使用启动脚本连接。"), { status: 401 });
+  }
+  if (runnerSessionId !== sessionId) {
+    if (!claim || runnerConnected()) {
+      throw Object.assign(new Error("Roadtrip Planner 已由其他 Codex 会话连接，请回到原会话；本会话不能接管。"), { status: 409 });
+    }
+    runnerSessionId = sessionId;
+  }
+  runnerSeenAt = Date.now();
 }
 
 function publicJob(job) {
@@ -345,6 +369,10 @@ function nextJob() {
     : "当前 Codex 会话已接手；请在 Codex 对话中查看过程。";
   job.updatedAt = new Date().toISOString();
   console.log(`[${job.updatedAt}] ${job.type} ${job.id} ${job.status}`);
+  if (job.type === "stop") {
+    runnerSessionId = null;
+    runnerSeenAt = 0;
+  }
   return {
     id: job.id,
     type: job.type,
@@ -497,6 +525,7 @@ const server = createServer(async (req, res) => {
       sendJson(res, 200, {
         ok: true,
         mode: "current-codex-thread",
+        bridgeProtocol: 2,
         runnerConnected: runnerConnected(),
         workspaceRoot,
         reportReady: existsSync(reportPath)
@@ -570,8 +599,23 @@ const server = createServer(async (req, res) => {
       sendJson(res, 202, { ok: true, job: publicJob(job) });
       return;
     }
+    if (req.method === "POST" && url.pathname === "/api/bridge/connect") {
+      requireRunner(req, true);
+      sendJson(res, 200, { ok: true, workspaceRoot, url: `http://${host}:${server.address().port}` });
+      return;
+    }
+    if (req.method === "POST" && url.pathname === "/api/bridge/disconnect") {
+      requireRunner(req);
+      if ([...jobs.values()].some(job => job.status === "queued" || job.status === "running") || waiters.size) {
+        throw Object.assign(new Error("请先结束当前等待并完成任务，再断开连接。"), { status: 409 });
+      }
+      runnerSessionId = null;
+      runnerSeenAt = 0;
+      sendJson(res, 200, { ok: true });
+      return;
+    }
     if (req.method === "GET" && url.pathname === "/api/bridge/next") {
-      runnerSeenAt = Date.now();
+      requireRunner(req, true);
       const ready = nextJob();
       if (ready) {
         sendJson(res, 200, { ok: true, job: ready });
@@ -599,6 +643,7 @@ const server = createServer(async (req, res) => {
     }
     const match = url.pathname.match(/^\/api\/bridge\/jobs\/([0-9a-f-]+)\/(progress|complete|fail)$/);
     if (req.method === "POST" && match) {
+      requireRunner(req);
       const job = jobs.get(match[1]);
       if (!job || job.status !== "running") {
         sendJson(res, 409, { ok: false, error: "任务不存在或已结束" });
@@ -624,7 +669,7 @@ const server = createServer(async (req, res) => {
     }
     sendJson(res, 404, { ok: false, error: "Not found" });
   } catch (error) {
-    const status = error.message === "已有任务正在等待或执行，请先完成它。" ? 409 : 400;
+    const status = error.status || (error.message === "已有任务正在等待或执行，请先完成它。" ? 409 : 400);
     sendJson(res, status, { ok: false, error: error.message });
   }
 });

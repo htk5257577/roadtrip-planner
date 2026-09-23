@@ -9,16 +9,19 @@ Turn locked destinations into a reviewable route and a concise roadbook. Never s
 
 ## Modes
 
-- **Interactive:** start `../../scripts/server.mjs` in the user's workspace, open `http://127.0.0.1:4317`, and keep this Codex turn polling `../../scripts/bridge-client.mjs wait`. The current conversation handles every page job; never launch a second model process.
+- **Interactive:** run `../../scripts/start.mjs` in the user's workspace, open `http://127.0.0.1:4317`, and keep this Codex turn polling `../../scripts/bridge-client.mjs wait`. The current conversation handles every page job; never launch a second model process.
 - **Direct:** read [references/planning-contract.md](references/planning-contract.md), conduct the same decisions in chat, then use the fixed renderer.
 - **Revision:** preserve confirmed anchors and facts; change only what the user requests and never narrate discarded planning history.
 
 ## Start and wait
 
-1. Run `node <plugin-root>/scripts/server.mjs` from the workspace where output should be written.
-2. Open `http://127.0.0.1:4317`; do not use `file://` for the interactive flow.
-3. Run `node <plugin-root>/scripts/bridge-client.mjs wait` in this same turn. Poll the same yielded session until it exits. On `null`, wait again. Do not send a final answer until a `stop` job or an explicit user request to stop.
-4. Keep the server alive while the user views the result. The report is `roadtrip-planner-output/generated-roadtrip-plan.html`.
+1. Run `node <plugin-root>/scripts/start.mjs` from the user's workspace. It reuses the existing service on port 4317 and atomically connects this conversation, or starts it when absent. Never bypass this with `server.mjs`, change ports to bypass an occupied service, or kill an existing service.
+2. All start/bridge commands must use the same `CODEX_THREAD_ID`. If unavailable, explicitly set `ROADTRIP_SESSION_ID` to the current conversation's stable ID; never invent a fresh ID per command or copy another conversation's ID.
+3. If another conversation owns the service, stop immediately and explain that the user must return to that conversation. Do not open a second planner, poll its jobs, or disconnect its owner. An old service without ownership support must be ended from its original conversation before restarting; never silently upgrade it in place.
+4. On success, open the returned `url`. Reuse the returned `workspaceRoot` and job output paths: a reused service retains its original workspace and page state.
+5. Run `node <plugin-root>/scripts/bridge-client.mjs wait` in this same turn. Poll the same yielded session until it exits. On `null`, wait again. Do not send a final answer until a `stop` job or an explicit user request to stop. A 409 conflict is terminal; do not retry with another session ID or port.
+6. The idle connection expires after 45 seconds without a bridge request; queued/running work preserves ownership until completed or failed. The same conversation may reconnect. When explicitly stopping without a page `stop` job, finish/fail owned work, end the pending wait, then run `bridge-client.mjs disconnect`. A page `stop` releases ownership when delivered.
+7. Keep the server alive while the user views the result. The report is `roadtrip-planner-output/generated-roadtrip-plan.html` under the service's workspace.
 
 The first-run page may locally save a 高德 Web Service Key, a separate 高德 Web JS Key plus matching `securityJsCode`, and a FlyAI Key. Secrets stay in local per-user configuration and never enter prompts, reports, commands, or plugin files. FlyAI CLI installation is optional and must never happen without the user choosing it.
 

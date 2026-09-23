@@ -10,7 +10,7 @@
 2. 在新市场中找到 **Roadtrip Planner**，选择安装。
 3. 开始一个新的本地 Codex 任务，说：“使用 roadtrip-planner，在当前工作目录启动引导式自驾规划器，并打开页面。”
 
-Codex 会在本机启动 `127.0.0.1:4317` 页面，并在同一轮对话中等待页面操作。不要在网页提交任务前结束这轮对话；完成后可在网页点击“结束会话”。生成的独立 HTML 位于当前工作目录的 `roadtrip-planner-output/generated-roadtrip-plan.html`。
+Codex 会优先复用本机 `127.0.0.1:4317` 的已有服务，仅在服务不存在时启动。同一时间只允许一个 Codex 会话连接；其他会话启动会被拒绝，不会自动换端口。原会话结束后可由新会话连接。Codex 在同一轮对话中等待页面操作。不要在网页提交任务前结束这轮对话；完成后可在网页点击“结束会话”。生成的独立 HTML 位于服务原工作目录的 `roadtrip-planner-output/generated-roadtrip-plan.html`。
 
 ## 运行条件
 
@@ -30,6 +30,7 @@ Codex 会在本机启动 `127.0.0.1:4317` 页面，并在同一轮对话中等�
 - `.agents/plugins/marketplace.json`：Codex 市场清单；
 - `plugins/roadtrip-planner/.codex-plugin/plugin.json`：插件清单；
 - `plugins/roadtrip-planner/skills/roadtrip-planner/`：规划流程；
+- `plugins/roadtrip-planner/scripts/start.mjs`：复用服务并申请当前会话的独占连接；
 - `plugins/roadtrip-planner/scripts/server.mjs`：仅监听本机的网页服务；
 - `plugins/roadtrip-planner/scripts/bridge-client.mjs`：当前 Codex 会话领取任务和回传结果的本地桥接工具；
 - `plugins/roadtrip-planner/assets/roadbook-template.html` 与 `assets/south-line.css`：不含个人行程或密钥的固定南线版式。

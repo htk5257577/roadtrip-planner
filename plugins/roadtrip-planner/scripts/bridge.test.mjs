@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,9 +15,149 @@ const bridgePath = join(scriptDir, "bridge-client.mjs");
 const exampleDataPath = join(scriptDir, "fixtures/report-data.json");
 const execFileAsync = promisify(execFile);
 
+async function unusedPort() {
+  const listener = createServer();
+  await new Promise(resolve => listener.listen(0, "127.0.0.1", resolve));
+  const port = listener.address().port;
+  await new Promise(resolve => listener.close(resolve));
+  return port;
+}
+
+test("startup creates one service, reuses it after inactivity, and protects unfinished work", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "roadtrip-start-test-"));
+  const resolvedWorkspace = await realpath(workspace);
+  const port = await unusedPort();
+  const base = `http://127.0.0.1:${port}`;
+  const launch = session => execFileAsync(process.execPath, [join(scriptDir, "start.mjs")], {
+    cwd: workspace,
+    env: { ...process.env, CODEX_THREAD_ID: session, ROADTRIP_PORT: String(port), ROADTRIP_RUNNER_IDLE_MS: "1000" }
+  });
+  const call = async (session, path, body) => {
+    const response = await fetch(new URL(path, base), {
+      method: body === undefined ? "GET" : "POST",
+      headers: { "x-roadtrip-session": session, ...(body === undefined ? {} : { "content-type": "application/json" }) },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    return { status: response.status, data: await response.json() };
+  };
+  let serverPid;
+  try {
+    const first = JSON.parse((await launch("owner-a")).stdout);
+    serverPid = first.serverPid;
+    assert.equal(first.reused, false);
+    assert.equal(first.workspaceRoot, resolvedWorkspace);
+    assert.equal(first.url, base);
+    assert.ok(Number.isInteger(serverPid));
+    assert.equal(JSON.parse((await launch("owner-a")).stdout).reused, true);
+    await assert.rejects(launch("owner-b"), /其他 Codex 会话/);
+
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    const reused = JSON.parse((await launch("owner-b")).stdout);
+    assert.equal(reused.reused, true);
+    assert.equal(reused.workspaceRoot, resolvedWorkspace);
+    assert.equal(reused.serverPid, undefined);
+
+    const submitted = await call("owner-b", "/api/codex/candidates", { route: {}, answers: {} });
+    assert.equal(submitted.status, 202);
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    await assert.rejects(launch("owner-c"), /其他 Codex 会话/);
+    const running = await call("owner-b", "/api/bridge/next?timeout=1000");
+    assert.equal(running.data.job.id, submitted.data.job.id);
+    assert.equal((await call("owner-b", `/api/bridge/jobs/${running.data.job.id}/fail`, { error: "test done" })).status, 200);
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(JSON.parse((await launch("owner-c")).stdout).reused, true);
+  } finally {
+    if (serverPid) process.kill(serverPid, "SIGTERM");
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test("startup reuses one service and rejects a different conversation", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "roadtrip-owner-test-"));
+  const { child, base } = await startServer(workspace);
+  const call = async (session, path, body) => {
+    const response = await fetch(new URL(path, base), {
+      method: body === undefined ? "GET" : "POST",
+      headers: { "x-roadtrip-session": session, "content-type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    return { status: response.status, data: await response.json() };
+  };
+  const launch = session => execFileAsync(process.execPath, [join(scriptDir, "start.mjs")], {
+    cwd: tmpdir(), env: { ...process.env, CODEX_THREAD_ID: session, ROADTRIP_PORT: new URL(base).port }
+  });
+  try {
+    const first = JSON.parse((await launch("owner-a")).stdout);
+    assert.equal(first.reused, true);
+    assert.equal(first.workspaceRoot, workspace);
+    assert.equal(first.url, base);
+    assert.equal(JSON.parse((await launch("owner-a")).stdout).ok, true);
+    await assert.rejects(launch("owner-b"), /其他 Codex 会话/);
+    assert.equal((await call("owner-b", "/api/bridge/next?timeout=1000")).status, 409);
+    assert.equal((await call("owner-b", "/api/bridge/disconnect", {})).status, 409);
+    assert.equal((await fetch(`${base}/api/bridge/next`)).status, 401);
+
+    const waiting = call("owner-a", "/api/bridge/next?timeout=1000");
+    const submitted = await json(base, "/api/codex/candidates", { route: {}, answers: {} });
+    const job = (await waiting).data.job;
+    assert.equal(job.id, submitted.data.job.id);
+    assert.equal((await call("owner-b", `/api/bridge/jobs/${job.id}/fail`, { error: "intruder" })).status, 409);
+    assert.equal((await call("owner-a", "/api/bridge/disconnect", {})).status, 409);
+    assert.equal((await call("owner-a", `/api/bridge/jobs/${job.id}/fail`, { error: "test done" })).status, 200);
+    assert.equal((await call("owner-a", "/api/bridge/disconnect", {})).status, 200);
+
+    const claims = await Promise.all([call("owner-b", "/api/bridge/connect", {}), call("owner-c", "/api/bridge/connect", {})]);
+    assert.deepEqual(claims.map(result => result.status).sort(), [200, 409]);
+    const winner = claims[0].status === 200 ? "owner-b" : "owner-c";
+    await json(base, "/api/bridge/stop", {});
+    assert.equal((await call(winner, "/api/bridge/next")).data.job.type, "stop");
+    assert.equal((await json(base, "/api/status")).data.runnerConnected, false);
+    assert.equal(JSON.parse((await launch("owner-a")).stdout).reused, true);
+  } finally {
+    child.kill("SIGTERM");
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test("a freshly started service reserves its owner before other conversations can connect", async () => {
+  const workspace = await mkdtemp(join(tmpdir(), "roadtrip-reservation-test-"));
+  const { child, base } = await startServer(workspace, { ROADTRIP_INITIAL_SESSION_ID: "owner-a" });
+  try {
+    const connect = async session => {
+      const response = await fetch(new URL("/api/bridge/connect", base), {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-roadtrip-session": session },
+        body: "{}"
+      });
+      return response.status;
+    };
+    assert.equal(await connect("owner-b"), 409);
+    assert.equal(await connect("owner-a"), 200);
+  } finally {
+    child.kill("SIGTERM");
+    await rm(workspace, { recursive: true, force: true });
+  }
+});
+
+test("startup refuses a legacy service without spawning a replacement", async () => {
+  const legacy = createServer((req, res) => {
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({ ok: true, mode: "current-codex-thread", runnerConnected: false }));
+  });
+  await new Promise(resolve => legacy.listen(0, "127.0.0.1", resolve));
+  try {
+    await assert.rejects(execFileAsync(process.execPath, [join(scriptDir, "start.mjs")], {
+      env: { ...process.env, CODEX_THREAD_ID: "new-owner", ROADTRIP_PORT: String(legacy.address().port) }
+    }), /旧版 Roadtrip Planner/);
+    assert.equal(legacy.listening, true);
+  } finally {
+    await new Promise(resolve => legacy.close(resolve));
+  }
+});
+
 async function bridge(base, ...args) {
   const { stdout } = await execFileAsync(process.execPath, [bridgePath, ...args], {
-    env: { ...process.env, ROADTRIP_BASE_URL: base }
+    env: { ...process.env, ROADTRIP_BASE_URL: base, CODEX_THREAD_ID: "test-session" }
   });
   return JSON.parse(stdout);
 }
@@ -33,7 +173,7 @@ async function waitForRunner(base) {
 async function json(base, path, body) {
   const response = await fetch(new URL(path, base), {
     method: body === undefined ? "GET" : "POST",
-    headers: body === undefined ? undefined : { "content-type": "application/json" },
+    headers: { "x-roadtrip-session": "test-session", ...(body === undefined ? {} : { "content-type": "application/json" }) },
     body: body === undefined ? undefined : JSON.stringify(body)
   });
   return { status: response.status, data: await response.json() };
