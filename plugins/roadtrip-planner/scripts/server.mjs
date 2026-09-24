@@ -10,6 +10,7 @@ import { networkInterfaces } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderRoadbook } from "./render-report.mjs";
+import { enforceCandidateEvidence } from "./candidate-evidence.mjs";
 import { credentialStatus, getAmapJsConfig, getAmapKey, updateCredentials } from "./credentials.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -194,18 +195,37 @@ async function roadVerification(places) {
   };
 }
 
-const canonicalTags = new Set(["地方美食", "历史街巷", "民族文化", "沙滩", "海岛", "海岸线", "山岳", "峡谷", "湖泊", "河流", "草原", "沙漠", "风景公路"]);
+const canonicalTags = new Set(["地方美食", "历史街巷", "民族文化", "沙滩", "海岛", "海岸线", "山岳", "峡谷", "湖泊", "河流", "草原", "沙漠", "风景公路", "主题公园", "动物园", "海洋馆", "温泉", "博物馆", "古迹建筑", "乡村田园"]);
 const isPublicReference = reference => reference && typeof reference === "object" &&
   ["firstHand", "official"].includes(reference.evidenceRole) && reference.publicAccess === true &&
   /^https:\/\//i.test(reference.url || "") && !/\/login(?:[/?#]|$)|signin|passport/i.test(reference.url) &&
   Number.isFinite(Date.parse(reference.checkedAt));
 
-function verifyRoadbookEvidence(data) {
+const isXhsPostUrl = value => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && (!url.port || url.port === "443") &&
+      (url.hostname === "xiaohongshu.com" || url.hostname.endsWith(".xiaohongshu.com")) &&
+      /^\/(?:explore|discovery\/item)\/[a-z0-9]+\/?$/i.test(url.pathname);
+  } catch { return false; }
+};
+const isXhsPostReference = reference => reference?.evidenceRole === "firstHand" &&
+  reference.platform === "小红书" && isXhsPostUrl(reference.url) &&
+  Number.isFinite(Date.parse(reference.checkedAt)) &&
+  (reference.publicAccess === true && isPublicReference(reference) ||
+    reference.publicAccess === false && reference.access === "signedInBrowser");
+
+function verifyRoadbookEvidence(data, allowSignedInXhs = false) {
   const references = [
     ...(data.stopSummaries || []).flatMap(stop => stop.guides || []),
     ...(data.days || []).flatMap(day => (day.slots || []).flatMap(slot => slot.references || []))
   ];
-  if (references.some(reference => !isPublicReference(reference))) throw new Error("攻略引用必须是无需登录的公开直达页，并标注证据角色与核验时间");
+  if ((data.stopSummaries || []).some(stop => (stop.guides || []).some(reference => !isXhsPostReference(reference))) ||
+      references.some(reference => reference.evidenceRole === "firstHand"
+        ? !isXhsPostReference(reference) || reference.publicAccess === false && !allowSignedInXhs
+        : reference.evidenceRole !== "official" || !isPublicReference(reference))) {
+    throw new Error("攻略游记只能引用本次读取的小红书直达帖；登录后帖子须有用户授权，官方事实另行核验");
+  }
   const photos = (data.days || []).flatMap(day => day.slots || []).filter(slot => slot.photo);
   if (photos.some(slot => !/^https:\/\//i.test(slot.photo) || !slot.photoCredit || !/^https:\/\//i.test(slot.photoSourceUrl || ""))) throw new Error("每张景点图片必须提供 HTTPS 图片、署名和来源链接");
   if (new Set(photos.map(slot => slot.photo)).size !== photos.length) throw new Error("不同景点不能重复使用同一张图片");
@@ -280,6 +300,15 @@ async function filterPublicReferences(references) {
     })));
   }
   return references.filter((_, index) => available[index]);
+}
+
+async function filterRoadbookReferences(references, allowSignedInXhs, guideOnly = false) {
+  const allowedRole = reference => isXhsPostReference(reference) || !guideOnly && reference?.evidenceRole === "official";
+  const publicReferences = references.filter(reference => reference.publicAccess === true && allowedRole(reference));
+  const verifiedPublic = await filterPublicReferences(publicReferences);
+  const accepted = new Set(verifiedPublic);
+  return references.filter(reference => allowedRole(reference) && (accepted.has(reference) ||
+    allowSignedInXhs && reference.publicAccess === false && isXhsPostReference(reference)));
 }
 
 function requestPinnedPage(url, address) {
@@ -432,20 +461,27 @@ async function validateResult(job, result) {
     throw new Error("任务结果必须是 JSON 对象");
   }
   if (job.type === "candidates") {
-    if (!Array.isArray(result.candidates) || result.candidates.length < 3 || result.candidates.length > 8) {
-      throw new Error("候选结果必须包含 3—8 个地点");
+    if (!Array.isArray(result.candidates) || result.candidates.length < 1 || result.candidates.length > 60) {
+      throw new Error("行程选项必须包含 1—60 项具体景点或美食体验");
     }
     for (const candidate of result.candidates) {
       if (!["id", "name", "segment", "after", "pet", "ev", "reason", "highlight", "overlap"].every(key => typeof candidate[key] === "string") ||
+          !["景点", "美食"].includes(candidate.experienceType) ||
+          !(candidate.sourceRequest === null || job.state.route.must.includes(candidate.sourceRequest)) ||
           !["order", "stay"].every(key => Number.isFinite(candidate[key])) ||
           !["detour", "drive", "lon", "lat"].every(key => candidate[key] === null || Number.isFinite(candidate[key])) ||
-          !Array.isArray(candidate.tags) || candidate.tags.length < 2 || candidate.tags.some(tag => !canonicalTags.has(tag)) ||
+          !Array.isArray(candidate.tags) || candidate.tags.length > 5 || candidate.tags.some(tag => !canonicalTags.has(tag)) ||
           !["推荐", "可选", "谨慎"].includes(candidate.verdict) || !["高", "中", "低"].includes(candidate.confidence) ||
           !Array.isArray(candidate.references) || candidate.references.length > 3 || candidate.references.some(reference => !isPublicReference(reference))) {
         throw new Error("候选地点缺少页面所需字段");
       }
     }
-    for (const candidate of result.candidates) candidate.references = await filterPublicReferences(candidate.references);
+    if(job.state.candidateRequestMode!=='append') for (const wish of job.state.route.must) if (!result.candidates.some(c => c.sourceRequest === wish)) throw new Error(`尚未回应出行愿望：${wish}`);
+    for (const candidate of result.candidates) {
+      candidate.references = await filterPublicReferences(candidate.references);
+      enforceCandidateEvidence(candidate);
+      if(candidate.sourceRequest) { candidate.detour=null; candidate.drive=null; }
+    }
     return result;
   }
   if (job.type === "preview") {
@@ -493,13 +529,16 @@ async function validateResult(job, result) {
         data.capabilities?.flyai !== job.state.capabilities?.flyai) {
       throw new Error("路书的数据来源状态与当前配置不一致");
     }
+    if (data.meta?.departTime !== job.state.answers.departTime) throw new Error("路书首日出发时间与用户填写的不一致");
     if (readFileSync(destination, "utf8") !== renderRoadbook(data)) {
       throw new Error("路书不是由南线固定模板渲染，请使用 render-report.mjs 生成");
     }
     verifyRoadbookRoad(data, job.state.roadVerification);
-    for (const stop of data.stopSummaries || []) stop.guides = await filterPublicReferences(stop.guides || []);
-    for (const day of data.days || []) for (const slot of day.slots || []) slot.references = await filterPublicReferences(slot.references || []);
-    verifyRoadbookEvidence(data);
+    data.meta.dailyComfortDriveHours = Number(job.state.answers.maxDrive);
+    const allowSignedInXhs = job.state.answers.xiaohongshuBrowserOptIn === true;
+    for (const stop of data.stopSummaries || []) stop.guides = await filterRoadbookReferences(stop.guides || [], allowSignedInXhs, true);
+    for (const day of data.days || []) for (const slot of day.slots || []) slot.references = await filterRoadbookReferences(slot.references || [], allowSignedInXhs);
+    verifyRoadbookEvidence(data, allowSignedInXhs);
     writeFileSync(dataDestination, `${JSON.stringify(data, null, 2)}\n`, "utf8");
     writeFileSync(destination, renderRoadbook(data), "utf8");
     if (job.type === "refine") {
@@ -611,7 +650,7 @@ const handleRequest = async (req, res) => {
       const state = await readJsonBody(req);
       if (!state?.route || !state?.answers) throw new Error("页面条件不完整");
       const setup = credentialStatus();
-      state.capabilities = { amap: setup.amap.configured, amapJs: setup.amapJs.configured, flyai: setup.flyai.available };
+      state.capabilities = { amap: setup.amap.configured, amapJs: setup.amapJs.configured, flyai: setup.flyai.available && state.answers.flyaiDataConsent === true };
       const type = url.pathname.split("/").at(-1);
       if (type === "preview" || type === "plan" || type === "refine") {
         if (!Array.isArray(state.candidates) || state.candidates.some(candidate => !["selected", "excluded"].includes(candidate.status))) {

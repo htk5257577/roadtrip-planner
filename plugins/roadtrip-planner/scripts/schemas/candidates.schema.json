@@ -11,32 +11,34 @@
     },
     "candidates": {
       "type": "array",
-      "minItems": 3,
-      "maxItems": 8,
+      "minItems": 1,
+      "maxItems": 60,
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": [
           "id", "name", "segment", "after", "order", "detour", "drive",
           "stay", "tags", "pet", "ev", "reason", "lon", "lat", "highlight",
-          "verdict", "confidence", "overlap", "references"
+          "verdict", "confidence", "overlap", "references", "sourceRequest", "experienceType", "highlightStatus", "highlightSourceUrls"
         ],
         "properties": {
           "id": { "type": "string" },
           "name": { "type": "string" },
+          "sourceRequest": { "type": ["string", "null"], "description": "Exact input wish this resolves; null for an along-route discovery." },
+          "experienceType": { "enum": ["景点", "美食"] },
           "segment": { "type": "string" },
           "after": { "type": "string" },
           "order": { "type": "integer", "minimum": 1 },
           "detour": { "type": ["number", "null"], "minimum": 0, "description": "Incremental road km. Use null when no verified road result is available; never invent it." },
           "drive": { "type": ["number", "null"], "minimum": 0, "description": "Incremental driving plus EV charging hours. Use null when unverified; never invent it." },
-          "stay": { "type": "number", "minimum": 0.25 },
+          "stay": { "type": "number", "minimum": 0.05 },
           "tags": {
             "type": "array",
-            "minItems": 2,
+            "minItems": 0,
             "maxItems": 5,
             "uniqueItems": true,
             "description": "Multiple factual experience tags for this destination, from the canonical vocabulary only; do not include pet, charging, crowd, or effort constraints.",
-            "items": { "type": "string", "enum": ["地方美食", "历史街巷", "民族文化", "沙滩", "海岛", "海岸线", "山岳", "峡谷", "湖泊", "河流", "草原", "沙漠", "风景公路"] }
+            "items": { "type": "string", "enum": ["地方美食", "历史街巷", "民族文化", "沙滩", "海岛", "海岸线", "山岳", "峡谷", "湖泊", "河流", "草原", "沙漠", "风景公路", "主题公园", "动物园", "海洋馆", "温泉", "博物馆", "古迹建筑", "乡村田园"] }
           },
           "pet": { "type": "string" },
           "ev": { "type": "string" },
@@ -44,6 +46,8 @@
           "lon": { "type": ["number", "null"] },
           "lat": { "type": ["number", "null"] },
           "highlight": { "type": "string" },
+          "highlightStatus": { "enum": ["verified", "unverified"] },
+          "highlightSourceUrls": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^https://" }, "description": "Every supporting URL must appear in references, read during this run, and substantiate the scenery/food summary and tags. Empty if unverified." },
           "verdict": { "type": "string", "enum": ["推荐", "可选", "谨慎"] },
           "confidence": { "type": "string", "enum": ["高", "中", "低"] },
           "overlap": { "type": "string", "description": "Explain overlap or complementarity with locked stops." },

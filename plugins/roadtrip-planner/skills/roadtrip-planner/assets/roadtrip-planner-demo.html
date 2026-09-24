@@ -76,7 +76,15 @@
     .pref[data-state="avoid"]{color:#6f6462;text-decoration:line-through;background:#eee9e3}.pref[data-state="avoid"]:after{color:white;background:#756c68;text-decoration:none}
     .question-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .question{padding:10px;border-radius:13px;background:var(--paper);border:1px solid rgba(24,59,54,.08)}
+    .picker-field{position:relative;display:block;margin-top:5px}.picker-field input{pointer-events:none}.picker-trigger{position:absolute;inset:0;width:100%;border:0;border-radius:9px;background:transparent;cursor:pointer}.picker-trigger:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     .question label{display:block;margin-bottom:7px;font-size:10px;font-weight:900}.question select,.question input{width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff}
+    label.question{display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:0}
+    label.question>span{display:block;font-weight:700;line-height:1.5}
+    .question textarea{display:block;box-sizing:border-box;width:100%;min-width:0;min-height:110px;padding:12px 14px;border:1px solid var(--line);border-radius:11px;background:#fffdf8;color:var(--ink);font:inherit;font-size:13px;line-height:1.7;resize:vertical;transition:border-color .15s,box-shadow .15s}
+    .question textarea::placeholder{color:var(--muted);opacity:.85}
+    .question textarea:hover{border-color:#a8b9b1}
+    .question textarea:focus-visible{outline:2px solid rgba(35,109,120,.26);outline-offset:2px;border-color:var(--pine);box-shadow:0 0 0 3px rgba(24,59,54,.05)}
+    .source-permissions{grid-column:1/-1;display:grid;gap:9px;margin-top:5px}.source-permissions h3{margin:3px 0 0;font:700 18px var(--serif)}.source-permission{display:flex;align-items:flex-start;gap:11px;padding:15px;border:1px solid var(--line);border-radius:14px;background:#fffdf8;cursor:pointer}.source-permission:has(input:checked){border-color:#8eb7a7;background:#eff7f0}.source-permission input{flex:0 0 auto;width:18px;height:18px;margin:2px 0 0;accent-color:var(--pine)}.source-permission strong{display:block;font-size:12px}.source-permission small{display:block;margin-top:5px;color:var(--muted);font-size:10px;line-height:1.65}
     .toggle{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;padding:8px 0;color:var(--ink);background:transparent;font-size:11px;font-weight:800;text-align:left}
     .toggle small{margin-left:7px;padding:3px 6px;border-radius:99px;color:var(--muted);background:#fff;font-size:8px}.toggle.is-on small{color:white;background:var(--pine)}.toggle.is-off small{color:var(--muted);background:#dedbd2}
     .toggle i{position:relative;width:34px;height:20px;border-radius:99px;background:#c7c7c0;font-style:normal;transition:.2s}.toggle i:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:white;transition:.2s}
@@ -93,14 +101,15 @@
     .route-node{flex:0 0 auto;padding:7px 9px;border-radius:99px;font-size:9px;font-weight:900;border:1px solid var(--line);background:#fff}.route-node.hard{color:var(--red-dark);border-color:rgba(230,92,61,.28)}.route-node.soft{color:white;background:var(--pine);border-color:var(--pine)}
     .route-arrow{color:#a69b89;font-size:10px}
     .candidate{position:relative;padding:14px;border-radius:17px;border:1px solid var(--line);background:#fffdf8;overflow:hidden}
-    .candidate[data-status="selected"]{border-color:rgba(18,63,55,.42);box-shadow:inset 4px 0 0 var(--pine)}
+    .candidate[data-status="selected"]{border-color:var(--pine);background:#f5faf5;box-shadow:inset 5px 0 0 var(--pine),0 8px 22px rgba(18,63,55,.06)}
     .candidate[data-status="excluded"]{opacity:.58;filter:grayscale(.4)}
     .candidate-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.candidate-title h3{margin:0;font-family:var(--serif);font-size:18px}.candidate-title small{display:block;margin-top:4px;color:var(--muted);font-size:9px}
     .score{display:grid;place-items:center;min-width:45px;height:45px;border-radius:50%;color:white;background:var(--pine);font:900 14px Georgia,serif}.score small{font:700 7px var(--sans)}
     .candidate-reason{margin:10px 0;color:var(--ink);font-size:10px;line-height:1.6}
     .candidate-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.fact{padding:7px;border-radius:9px;background:var(--paper);font-size:8px;color:var(--muted)}.fact b{display:block;margin-bottom:2px;color:var(--ink);font-size:10px}
     .tags{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:9px}.tag{padding:4px 6px;border-radius:99px;color:var(--blue);background:#e9f2f1;font-size:8px;font-weight:800}.tag-label{margin-right:3px;color:var(--muted);font-size:9px;font-weight:800}.candidate-warning{margin:9px 0 0;color:var(--red-dark);font-size:10px;font-weight:800}
-    .candidate-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:10px}.status-btn{padding:8px 6px;color:var(--muted);background:var(--paper);font-size:9px}.status-btn.is-active[data-status-choice="selected"]{color:white;background:var(--pine)}.status-btn.is-active[data-status-choice="excluded"]{color:white;background:#7a706c}
+    .candidate-actions{display:flex;margin-top:14px}.candidate-actions .status-btn{min-width:150px;padding:10px 16px;font-size:11px}.candidate-actions .status-btn[data-status-choice="selected"]{color:white;background:var(--pine)}.candidate-actions .status-btn[data-status-choice="none"]{color:var(--pine);background:#e3efe8;border:1px solid rgba(18,63,55,.28)}
+    .candidate-choice{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:3px 8px;border-radius:99px;font-size:9px;font-weight:800;vertical-align:middle}.candidate-choice.is-selected{color:#fff;background:var(--pine)}.candidate-choice.is-unselected{color:var(--muted);background:#eeeae1}
     .ai-note{padding:12px;border-radius:14px;background:#fff0d2;border:1px solid rgba(243,189,77,.4);font-size:9px;line-height:1.65}.ai-note b{color:var(--red-dark)}
     .ai-run-state{display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;padding:7px 18px;color:#cfe1da;background:#17483f;border-bottom:1px solid rgba(255,255,255,.08);font-size:10px;font-weight:800;text-align:center}
     .ai-run-state[data-status="loading"]{color:#172f2b;background:var(--sun)}.ai-run-state[data-status="error"]{color:white;background:var(--red-dark)}.ai-run-state[data-status="ready"]{color:#d7eee6;background:#176153}.ai-run-state[data-status="ended"]{color:#d7eee6;background:#33524b}
@@ -137,6 +146,16 @@
     @media print{.topbar,.stagebar,.report-actions,.toast{display:none!important}.app{padding:0}.generated{box-shadow:none}.report-grid{grid-template-columns:1fr}.day-row{break-inside:avoid}body{background:white}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
     .map-canvas.has-map{display:block;min-height:350px}.amap-map-host{width:100%;height:350px;touch-action:pan-x pan-y}.amap-pin{display:grid;place-items:center;width:26px;height:26px;border:2px solid #fffdf6;border-radius:50%;background:#e65c3d;color:#fff;font:900 11px sans-serif;box-shadow:0 2px 8px #183b3650}.map-message{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;pointer-events:none;padding:9px 11px;border-radius:9px;background:#fffdf6e8;color:var(--ink);font-size:10px}
+    .guide-body.guide-body--form{grid-template-columns:minmax(0,1fr)}
+    .candidate-experience{margin:16px 0;padding:14px 16px;border-radius:12px;background:#eaf1eb;border-left:3px solid var(--pine)}
+    .candidate-experience small{font-size:10px;color:var(--muted);font-weight:700}
+    .candidate-experience p{margin:6px 0 0;font-size:14px;line-height:1.65;font-weight:600;color:var(--ink)}
+    .candidate.wish-selected{padding-top:14px}
+    .wish-selected .candidate-title{padding-right:38px}
+    .wish-remove{position:absolute;right:12px;top:11px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0 0 2px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:25px/1 var(--sans);cursor:pointer}
+    .wish-remove:hover{background:#fae8e1;color:var(--red);border-color:var(--red)}
+    .wish-removed{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;margin:12px 0;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}
+    .wish-removed small{margin-left:10px;font-size:11px}.wish-removed b{font-size:13px;font-weight:500}
   </style>
 </head>
 <body>
@@ -182,9 +201,10 @@
 
     // A tag describes a destination's experience, never a travel constraint.
     const tagGroups = {
-      '风味与文化':['地方美食','历史街巷','民族文化'],
+      '风味与文化':['地方美食','历史街巷','民族文化','博物馆','古迹建筑'],
       '海岸与岛屿':['沙滩','海岛','海岸线'],
-      '山水与旷野':['山岳','峡谷','湖泊','河流','草原','沙漠'],
+      '山水与旷野':['山岳','峡谷','湖泊','河流','草原','沙漠','乡村田园'],
+      '主题与休闲':['主题公园','动物园','海洋馆','温泉'],
       '路上体验':['风景公路']
     };
     const preferenceKeys = Object.values(tagGroups).flat();
@@ -202,7 +222,7 @@
     const preferenceCycles = ['off','prefer','must','avoid'];
     const preferenceLabels = { off:'未选', prefer:'偏好', must:'必有', avoid:'避开' };
     const emptyRoute = () => ({ start:'', end:'', must:[] });
-    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', travelers:'', maxDrive:'', maxDetour:'', pace:'', pet:null, petWeightKg:'', petAgeYears:'', petNotes:'', ev:null, evHighwayRange:'', exclusions:'', fixedBookings:'', borderDocs:'', lowEffort:false, lowCrowd:false });
+    const emptyAnswers = () => ({ departDate:'', returnDate:'', departTime:'', travelers:'', maxDrive:'', maxDetour:'', pace:'', pet:null, petWeightKg:'', petNotes:'', ev:null, evHighwayRange:'', exclusions:'', fixedBookings:'', borderDocs:'', flyaiDataConsent:false, xiaohongshuBrowserOptIn:false, lowEffort:false, lowCrowd:false, avoidAltitude:false, avoidWater:false, avoidHeights:false, avoidNightDriving:false });
     const emptyPrefs = () => Object.fromEntries(preferenceKeys.map(key=>[key,'off']));
 
     const state = {
@@ -211,6 +231,7 @@
       prefs: emptyPrefs(),
       answers: emptyAnswers(),
       candidateStatus: {},
+      reviewPhase: 'wishes',
       focusCandidate: 0,
       setup: { loading:location.protocol!=='file:', open:false, amap:false, amapJs:false, flyai:false, flyaiInstalled:false, amapSource:'none', amapJsKeySource:'none', amapJsSecuritySource:'none', flyaiSource:'none', error:'' },
       ai: { status:'checking', message:'正在等待当前 Codex 会话…', source:'static', summary:'', preview:null, previewKey:'', reportUrl:'', refineDraft:'', showRefine:false, candidateDraft:'', showCandidateRevision:false, backendReady:false, ended:false },
@@ -225,13 +246,13 @@
       if(typeof sessionStorage==='undefined')return;
       try { const saved=JSON.parse(sessionStorage.getItem(STORAGE_KEY)||'null'); if(!saved)return;
         if(saved.route)state.route=saved.route;if(saved.prefs)state.prefs={...emptyPrefs(),...saved.prefs};if(saved.answers)state.answers={...emptyAnswers(),...saved.answers};
-        if(saved.candidateStatus)state.candidateStatus=saved.candidateStatus;if(Array.isArray(saved.candidates))candidates=saved.candidates;
+        if(saved.candidateStatus)state.candidateStatus=saved.candidateStatus;if(Array.isArray(saved.candidates))candidates=saved.candidates;state.reviewPhase=saved.reviewPhase==='discoveries'?'discoveries':'wishes';
         if(Number.isInteger(saved.stage))state.stage=Math.min(5,Math.max(1,saved.stage));if(saved.preview)state.ai.preview=saved.preview;if(saved.previewKey)state.ai.previewKey=saved.previewKey;if(saved.reportUrl)state.ai.reportUrl=saved.reportUrl;
       } catch { sessionStorage.removeItem(STORAGE_KEY); }
     }
     function persistPlanningState(){
       if(typeof sessionStorage==='undefined')return;
-      try { sessionStorage.setItem(STORAGE_KEY,JSON.stringify({route:state.route,prefs:state.prefs,answers:state.answers,candidateStatus:state.candidateStatus,candidates,stage:state.stage,preview:state.ai.preview,previewKey:state.ai.previewKey,reportUrl:state.ai.reportUrl})); } catch {}
+      try { sessionStorage.setItem(STORAGE_KEY,JSON.stringify({reviewPhase:state.reviewPhase,route:state.route,prefs:state.prefs,answers:state.answers,candidateStatus:state.candidateStatus,candidates,stage:state.stage,preview:state.ai.preview,previewKey:state.ai.previewKey,reportUrl:state.ai.reportUrl})); } catch {}
     }
 
     const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -266,8 +287,8 @@
       return Number.isFinite(start.getTime()) && Number.isFinite(end.getTime()) && end >= start;
     };
     const frameworkReady = () => Boolean(state.route.start && state.route.end && state.route.must.length && state.answers.departTime && datesReady());
-    const planningReady = () => frameworkReady() && Number(state.answers.travelers) > 0 && Number(state.answers.maxDrive) > 0 && Number(state.answers.maxDetour) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.pet || Number(state.answers.petWeightKg)>0 && Number(state.answers.petAgeYears)>0) && (!state.answers.ev || Number(state.answers.evHighwayRange)>=100 && Number(state.answers.evHighwayRange)<=1000);
-    const candidateReviewComplete = () => candidates.length > 0 && candidates.every(candidate=>['selected','excluded'].includes(statusOf(candidate.id)));
+    const planningReady = () => frameworkReady() && Number(state.answers.travelers) > 0 && Number(state.answers.maxDrive) > 0 && Number(state.answers.maxDetour) > 0 && state.answers.pet!==null && state.answers.ev!==null && (!state.answers.pet || Number(state.answers.petWeightKg)>0) && (!state.answers.ev || Number(state.answers.evHighwayRange)>=100 && Number(state.answers.evHighwayRange)<=1000);
+    const candidateReviewComplete = () => candidates.length > 0 && wishBaselineReady();
     const chargeHoursFor = km => state.answers.ev && Number(state.answers.evHighwayRange)>0 ? km/Number(state.answers.evHighwayRange)*.45 : 0;
 
     function roadLeg(from,to,nodes=routeNodes()){
@@ -292,9 +313,11 @@
     const candidateScore = candidate => -candidateRank(candidate);
 
     function routeNodes(selectedOverride){
-      const anchors = [state.route.start, ...state.route.must, state.route.end].filter(Boolean).map((name, index) => ({ name, kind:'hard', index, ...(coordFor(name) || {}) }));
+      const preliminary=candidates.length?[]:state.route.must.filter(name=>!/(可以|适合|品质|地方|北方|南方|附近|想去)/.test(name)&&(locationByLabel.has(name)||Boolean(coordFor(name))||locations.some(p=>p[1]===name)||/峡谷|景区|博物馆|乐园|公园|寺$/.test(name)));
+      const anchors = [state.route.start, ...preliminary, state.route.end].filter(Boolean).map((name, index) => ({ name, kind:'hard', index, ...(coordFor(name) || {}) }));
       const included=(selectedOverride || selectedCandidates()).slice().sort((a,b) => a.order-b.order);
       included.forEach(candidate => {
+        if(anchors.slice(1,-1).some(node=>node.name===candidate.name))return;
         const anchorNames = anchors.map(n => n.name);
         let index = candidate.after === state.route.start ? 0 : anchorNames.indexOf(candidate.after);
         if (index < 0) index = Math.max(0, anchors.length - 2);
@@ -304,7 +327,10 @@
       return anchors;
     }
 
+    const wishBaselineReady = () => state.reviewPhase==='discoveries' && state.route.must.every(wish=>{const options=candidates.filter(c=>c.sourceRequest===wish);return options.length>0&&options.every(c=>['selected','excluded'].includes(statusOf(c.id)));});
     function candidateImpact(candidate){
+      if(candidate.sourceRequest) return {km:null,drive:null,source:'baseline'};
+      if(!wishBaselineReady()) return {km:null,drive:null,source:'baseline-pending'};
       const without=selectedCandidates().filter(item=>item.id!==candidate.id);
       const withCandidate=[...without,candidate];
       const base=routeRoadStats(routeNodes(without));
@@ -329,7 +355,7 @@
       const play = stayDays * 7;
       if (!planningReady() || km===null) return { km:km===null?null:Number(km.toFixed(1)), drive:drive===null?null:Number(drive.toFixed(1)), play:Math.round(play), pressure:null, availableDays:null, load:null, source:road.source, road };
       const availableDays = Math.floor((new Date(`${state.answers.returnDate}T00:00:00`)-new Date(`${state.answers.departDate}T00:00:00`))/86400000)+1;
-      const load = (drive / Number(state.answers.maxDrive) + stayDays) / availableDays;
+      const load = (road.driveHours / Number(state.answers.maxDrive) + road.chargeHours / 8 + stayDays) / availableDays;
       const pressure = load <= .72 ? '舒缓' : load <= .98 ? '均衡' : '偏赶';
       return { km:Number(km.toFixed(1)), drive:Number(drive.toFixed(1)), play:Math.round(play), pressure, availableDays, load, source:road.source, road };
     }
@@ -354,7 +380,7 @@
         const stay = to.name === state.route.end && i === nodes.length-1 ? 0 : (profile.stay ?? 1);
         const play = drive===null ? null : stay === 0 ? .5 : Math.max(2,Math.min(5.5,stay*5.2-Math.max(0,drive-4)*.35));
         const plan = profile.highlight || profile.reason || '抵达后安排该地最有区分度的体验。';
-        days.push({ date:formatDate(date), title:`${from.name} → ${to.name}`, subtitle:km===null?'道路距离与驾驶时间待核验':`高德道路参考 ${km.toFixed(1)} km · ${drive.toFixed(1)}h${state.answers.ev?' 含补能估算':''}`, plan:drive > Number(state.answers.maxDrive) ? `长转场，拆成弹性休息区间；抵达后：${plan}` : plan, drive, play, stay:stay ? `${to.name} · ${stay} 天` : '返程抵达' });
+        days.push({ date:formatDate(date), title:`${from.name} → ${to.name}`, subtitle:km===null?'道路距离与驾驶时间待核验':`高德道路参考 ${km.toFixed(1)} km · ${drive.toFixed(1)}h${state.answers.ev?' 含补能估算':''}`, plan:leg.hours > Number(state.answers.maxDrive) ? `长转场，拆成弹性休息区间；抵达后：${plan}` : plan, drive, play, stay:stay ? `${to.name} · ${stay} 天` : '返程抵达' });
         const fullDays = Math.max(0,Math.floor(stay-.6));
         for(let j=0;j<fullDays;j++){
           date = addDays(date,1);
@@ -382,7 +408,7 @@
           <div class="setup-key-group"><div class="setup-key-heading"><span class="setup-key-step">1</span><div><h3>路线与里程</h3></div>${status(amap,amap?'已配置':'未配置')}</div><p>使用「Web 服务」Key，核验地点、驾车道路、里程与时长。</p><label class="setup-field" for="amapSetupKey">Web 服务 Key<input id="amapSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="高德 Web 服务 Key" placeholder="${amap?'已配置，留空保持不变':'粘贴 Web 服务 Key'}"></label>${state.setup.amapSource==='environment'?'<p class="helper">当前由启动环境提供，网页保存的新值不会覆盖它。</p>':''}</div>
           <div class="setup-key-group is-paired"><div class="setup-key-heading"><span class="setup-key-step">2</span><div><h3>可交互地图</h3></div>${status(state.setup.amapJs,state.setup.amapJs?'已配置':'未配置')}</div><p>下面两项要取自高德控制台<strong>同一条 Web 端（JS API）Key</strong>，不能和 Web 服务 Key 混用。</p><label class="setup-field" for="amapJsSetupKey">Web 端 JS Key<input id="amapJsSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="高德 Web 端 JS Key" placeholder="${state.setup.amapJsKeySource!=='none'?'已配置，留空保持不变':'粘贴 Web 端 JS Key'}"></label><label class="setup-field" for="amapSecuritySetupCode">配套安全密钥 · securityJsCode<input id="amapSecuritySetupCode" type="password" autocomplete="off" spellcheck="false" aria-label="高德 JS 安全密钥" placeholder="${state.setup.amapJsSecuritySource!=='none'?'已配置，留空保持不变':'粘贴对应的安全密钥'}"></label></div>
         </div><p class="setup-guide"><a href="https://lbs.amap.com/api/javascript-api-v2/prerequisites" target="_blank" rel="noopener noreferrer">在高德控制台哪里找 JS Key 和安全密钥 ↗</a></p></section>
-        <section class="panel setup-card"><div class="setup-card-head"><div><span class="kicker">02 · 酒店与景点</span><h2>飞猪 FlyAI</h2></div>${status(flyai,flyai?'已配置':state.setup.flyaiSource!=='none'?'缺少工具':'未配置')}</div><p class="setup-flyai-copy">用于查询酒店与景点。未接入时仍可规划，但不会显示未经查询的实时房价和票价。</p><label class="setup-field setup-flyai-field" for="flyaiSetupKey">FlyAI API Key<input id="flyaiSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="FlyAI API Key" placeholder="${state.setup.flyaiSource!=='none'?'已配置，留空保持不变':'粘贴 FlyAI API Key'}"></label>${!state.setup.flyaiInstalled?`<div class="setup-dependency"><h3>想用飞猪实时查询，还差一步</h3><p>在本机终端安装 FlyAI 命令行工具；只做基础行程规划可以跳过。</p><div class="setup-install-row"><code>${FLYAI_INSTALL_COMMAND}</code><button type="button" data-action="flyai-copy-install" aria-label="复制 FlyAI 安装命令">复制命令</button></div><div class="setup-dependency-foot"><button class="setup-recheck" type="button" data-action="flyai-recheck">安装完成，重新检测</button><a href="https://github.com/alibaba-flyai/flyai-skill#step-2--install-the-cli" target="_blank" rel="noopener noreferrer">查看 FlyAI 安装说明 ↗</a></div></div>`:''}</section>
+        <section class="panel setup-card"><div class="setup-card-head"><div><span class="kicker">02 · 酒店与景点</span><h2>飞猪 FlyAI</h2></div>${status(flyai,flyai?'已配置':state.setup.flyaiSource!=='none'?'缺少工具':'未配置')}</div><p class="setup-flyai-copy">用于查询酒店与景点。配置 Key 不等于允许共享行程信息；第二步由你决定是否使用目的地、日期和必要的宠物信息查询。未接入或未授权时，不显示未经查询的实时房价和票价。</p><label class="setup-field setup-flyai-field" for="flyaiSetupKey">FlyAI API Key<input id="flyaiSetupKey" type="password" autocomplete="off" spellcheck="false" aria-label="FlyAI API Key" placeholder="${state.setup.flyaiSource!=='none'?'已配置，留空保持不变':'粘贴 FlyAI API Key'}"></label>${!state.setup.flyaiInstalled?`<div class="setup-dependency"><h3>想用飞猪实时查询，还差一步</h3><p>在本机终端安装 FlyAI 命令行工具；只做基础行程规划可以跳过。</p><div class="setup-install-row"><code>${FLYAI_INSTALL_COMMAND}</code><button type="button" data-action="flyai-copy-install" aria-label="复制 FlyAI 安装命令">复制命令</button></div><div class="setup-dependency-foot"><button class="setup-recheck" type="button" data-action="flyai-recheck">安装完成，重新检测</button><a href="https://github.com/alibaba-flyai/flyai-skill#step-2--install-the-cli" target="_blank" rel="noopener noreferrer">查看 FlyAI 安装说明 ↗</a></div></div>`:''}</section>
         <div class="setup-warning">跳过也能继续：路线和游玩建议会标明“待核验”；不会用猜测填充高德精确道路数据或飞猪实时酒店、景点信息。之后可从右上角“服务设置”补填。</div>
         ${state.setup.error?`<p class="setup-error" role="alert">${esc(state.setup.error)}</p>`:''}
         <div class="setup-actions"><button class="ghost" type="button" data-action="setup-skip">暂时跳过</button><button class="primary" type="button" data-action="setup-save">保存并继续 →</button></div>
@@ -396,7 +422,7 @@
     }
 
     function stageBar(){
-      const stages = [['基础行程','地点与时间'],['旅行偏好','旅行约束'],['候选点','加入 / 排除'],['生成预览','核对路线与时间'],['完整计划','南线模板路书']];
+      const stages = [['基础行程','地点与时间'],['旅行偏好','旅行约束'],['确认行程','体验选择'],['生成预览','核对路线与时间'],['完整计划','南线模板路书']];
       return `<nav class="stagebar" aria-label="规划步骤">${stages.map((item,index) => `<button type="button" class="stage ${state.stage===index+1?'is-active':''}" data-stage="${index+1}"><i>${index+1}</i><span>${item[0]}</span></button>${index<stages.length-1?'<span class="stage-divider"></span>':''}`).join('')}</nav>`;
     }
 
@@ -412,18 +438,18 @@
           <div class="field"><span>从哪里出发</span>${placeInput('start','搜索出发地')}</div>
           <div class="field"><span>最终到哪里</span>${placeInput('end','搜索终点')}</div>
         </div>
-        <span class="kicker">一定要去</span>
-        <div class="must-list">${state.route.must.length?state.route.must.map((name,index) => `<div class="must-stop"><span class="lock">◆</span><div><b>${esc(name)}</b><small>必去 · AI 不得删除</small></div><div class="must-actions"><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="-1" aria-label="上移">↑</button><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="1" aria-label="下移">↓</button><button type="button" class="mini" data-action="remove-stop" data-index="${index}" aria-label="删除">×</button></div></div>`).join(''):'<p class="helper">还没有必去点，至少添加一个。</p>'}</div>
-        <div class="add-row">${placeInput('must','搜索城市、县，或输入景点')}<button type="button" class="primary" data-action="add-stop">加入必去</button></div>
-        <p class="helper">支持全国省、市、区县模糊搜索；也可输入景点或海岛名称。必去点按加入顺序排列，可随时调整。行政区划数据为 2026 年 4 月快照。</p>
+        <span class="kicker">想去的地方 / 想体验的事</span>
+        <div class="must-list">${state.route.must.length?state.route.must.map((name,index) => `<div class="must-stop"><span class="lock">◆</span><div><b>${esc(name)}</b><small>愿望 · 第三步确认</small></div><div class="must-actions"><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="-1" aria-label="上移">↑</button><button type="button" class="mini" data-action="move-stop" data-index="${index}" data-dir="1" aria-label="下移">↓</button><button type="button" class="mini" data-action="remove-stop" data-index="${index}" aria-label="删除">×</button></div></div>`).join(''):'<p class="helper">还没有出行愿望，至少添加一个。</p>'}</div>
+        <div class="add-row">${placeInput('must','城市、景点，或「可以骑马的地方」')}<button type="button" class="primary" data-action="add-stop">加入愿望</button></div>
+        <p class="helper">可以填写「品质的游乐场」「北方的海岛」。未明确定位的愿望不标地图，第三步再选择具体景点或美食；每项都可以放弃。</p>
       </div>`;
     }
 
     function timeEditor(){
       return `<div class="framework-block"><h3>什么时候出发与结束？</h3><div class="question-grid">
-        <label class="question"><span>出发日期</span><input type="date" value="${state.answers.departDate}" data-answer="departDate"></label>
-        <label class="question"><span>结束日期</span><input type="date" value="${state.answers.returnDate}" data-answer="returnDate"></label>
-        <label class="question"><span>出发时间</span><input type="time" value="${state.answers.departTime}" data-answer="departTime"></label>
+        <div class="question"><span>出发日期</span><span class="picker-field"><input type="date" value="${state.answers.departDate}" data-answer="departDate" tabindex="-1" inputmode="none" aria-label="出发日期"><button type="button" class="picker-trigger" data-picker="departDate" aria-label="选择出发日期，${state.answers.departDate||'未选择'}" aria-haspopup="dialog"></button></span></div>
+        <div class="question"><span>结束日期</span><span class="picker-field"><input type="date" value="${state.answers.returnDate}" data-answer="returnDate" tabindex="-1" inputmode="none" aria-label="结束日期"><button type="button" class="picker-trigger" data-picker="returnDate" aria-label="选择结束日期，${state.answers.returnDate||'未选择'}" aria-haspopup="dialog"></button></span></div>
+        <div class="question"><span>出发时间</span><span class="picker-field"><input type="time" value="${state.answers.departTime}" data-answer="departTime" tabindex="-1" inputmode="none" aria-label="出发时间"><button type="button" class="picker-trigger" data-picker="departTime" aria-label="选择出发时间，${state.answers.departTime||'未选择'}" aria-haspopup="dialog"></button></span></div>
       </div><p class="helper">先确定可用时间，下一步才能判断加入沿途点是否值得。</p></div>`;
     }
 
@@ -432,20 +458,33 @@
       return `<div><span class="kicker">目的地标签</span><div class="pref-groups">${groups}</div><p class="helper">一个城市可有多个标签。点击循环：未选 → 偏好 → 必有 → 避开；这里仅描述想体验什么，宠物、驾驶和补能条件单独判断。</p></div>`;
     }
 
+    const paceDescriptions={relaxed:'一天围绕一个主要体验，留足自由时间，尽量连续住宿。',balanced:'一个主要体验，搭配附近的小体验或美食，保留机动时间。',dense:'多安排顺路体验，但不压缩必要游玩时间，也不放宽驾驶目标。'};
+    const travelLimits=[
+      ['lowEffort','少爬山少步行','优先低体力路线，避免长距离徒步和大量台阶。'],
+      ['lowCrowd','尽量避开拥挤','优先错峰与人少的体验，不承诺无人或不排队。'],
+      ['avoidAltitude','避免高海拔','避免高海拔游玩及住宿，核对途经海拔；冲突时向用户确认。'],
+      ['avoidWater','避免涉水项目','不安排游泳、漂流等涉水活动；不排除岸边观景。'],
+      ['avoidHeights','避免高空项目','不安排玻璃栈道、蹦极等高空体验，索道等交通需求另行确认。'],
+      ['avoidNightDriving','尽量不走夜路','优先白天转场；与出发时间、固定活动冲突时说明并提供调整方案。']
+    ];
     function questions(){
       const toggle=(key,label)=>`<button type="button" class="toggle ${state.answers[key]===true?'is-on':state.answers[key]===false?'is-off':''}" data-toggle="${key}"><span>${label}<small>${state.answers[key]===null?'未选':state.answers[key]?'是':'否'}</small></span><i></i></button>`;
       return `<div class="question-grid">
         <label class="question"><span>同行人数</span><input type="number" min="1" max="9" value="${esc(state.answers.travelers)}" data-answer="travelers" placeholder="例如 2"></label>
-        <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select></label>
-        <label class="question"><span>可接受的额外绕路</span><select data-answer="maxDetour"><option value="" ${state.answers.maxDetour===''?'selected':''}>请选择</option><option value="1" ${state.answers.maxDetour==='1'?'selected':''}>最多 1 小时</option><option value="2" ${state.answers.maxDetour==='2'?'selected':''}>最多 2 小时</option><option value="4" ${state.answers.maxDetour==='4'?'selected':''}>最多 4 小时</option><option value="999" ${state.answers.maxDetour==='999'?'selected':''}>不设上限</option></select><small>对比不去该候选点的路线，计算增加的驾驶与补能时间。</small></label>
-        <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select></label>
+        <label class="question"><span>单日舒适驾驶</span><select data-answer="maxDrive"><option value="" ${state.answers.maxDrive===''?'selected':''}>请选择</option><option value="4" ${state.answers.maxDrive==='4'?'selected':''}>约 4 小时</option><option value="6" ${state.answers.maxDrive==='6'?'selected':''}>约 6 小时</option><option value="8" ${state.answers.maxDrive==='8'?'selected':''}>约 8 小时</option></select><small>仅开车，不含充电和休息；偶尔超出会提示，不自动删行程。</small></label>
+        <label class="question"><span>可接受的额外绕路</span><select data-answer="maxDetour"><option value="" ${state.answers.maxDetour===''?'selected':''}>请选择</option><option value="1" ${state.answers.maxDetour==='1'?'selected':''}>最多 1 小时</option><option value="2" ${state.answers.maxDetour==='2'?'selected':''}>最多 2 小时</option><option value="4" ${state.answers.maxDetour==='4'?'selected':''}>最多 4 小时</option><option value="999" ${state.answers.maxDetour==='999'?'selected':''}>不设上限</option></select><small>每个候选相对当前路线增加的驾驶与补能时间，不含游玩；超出会提醒，仍可选择。</small></label>
+        <label class="question"><span>旅行节奏</span><select data-answer="pace"><option value="" ${state.answers.pace===''?'selected':''}>请选择</option><option value="relaxed" ${state.answers.pace==='relaxed'?'selected':''}>松弛：宁可少去</option><option value="balanced" ${state.answers.pace==='balanced'?'selected':''}>均衡</option><option value="dense" ${state.answers.pace==='dense'?'selected':''}>高密度</option></select><small>${esc(paceDescriptions[state.answers.pace]||'影响推荐数量、每日活动密度和自由时间，不改变舒适驾驶目标。')}</small></label>
         <div class="question">${toggle('pet','带宠物')}${toggle('ev','纯电车')}<p class="helper">点击选择：未选 → 是 → 否。</p></div>
-        <div class="question"><span>可选的游玩限制</span><div class="pref-grid"><button type="button" class="pref" data-filter="lowEffort" data-state="${state.answers.lowEffort?'prefer':'off'}" data-state-label="${state.answers.lowEffort?'已选':'未选'}">少爬山少步行</button><button type="button" class="pref" data-filter="lowCrowd" data-state="${state.answers.lowCrowd?'prefer':'off'}" data-state-label="${state.answers.lowCrowd?'已选':'未选'}">尽量避开拥挤</button></div><small>这是行程限制，不是城市标签。</small></div>
+        <div class="question"><span>可选的游玩限制</span><div class="pref-grid">${travelLimits.map(([key,label])=>`<button type="button" class="pref" data-filter="${key}" aria-pressed="${Boolean(state.answers[key])}" data-state="${state.answers[key]?'prefer':'off'}" data-state-label="${state.answers[key]?'已选':'未选'}">${label}</button>`).join('')}</div><small>可多选，用于推荐与排程；和已选体验冲突时会提示，不自动删点。</small></div>
         ${state.answers.ev?`<label class="question"><span>实际高速续航</span><input type="number" min="100" max="1000" step="10" inputmode="numeric" placeholder="例如 350" value="${esc(state.answers.evHighwayRange)}" data-answer="evHighwayRange"><small>填你日常高速能稳定跑到的公里数，不是车辆标称续航；只用于补能粗估。</small></label>`:''}
-        ${state.answers.pet?`<label class="question"><span>宠物体重（kg）</span><input type="number" min="0.1" max="100" step="0.1" value="${esc(state.answers.petWeightKg)}" data-answer="petWeightKg"></label><label class="question"><span>宠物年龄（岁）</span><input type="number" min="0.1" max="30" step="0.1" value="${esc(state.answers.petAgeYears)}" data-answer="petAgeYears"></label><label class="question"><span>宠物补充说明</span><textarea maxlength="500" data-answer="petNotes" placeholder="品种、出行习惯、明确不能接受的安排">${esc(state.answers.petNotes)}</textarea></label>`:''}
+        ${state.answers.pet?`<label class="question"><span>宠物体重（kg）</span><input type="number" min="0.1" max="100" step="0.1" value="${esc(state.answers.petWeightKg)}" data-answer="petWeightKg"></label><label class="question"><span>宠物补充说明</span><textarea maxlength="500" data-answer="petNotes" placeholder="品种、出行习惯、明确不能接受的安排">${esc(state.answers.petNotes)}</textarea></label>`:''}
         <label class="question"><span>明确不去 / 不要的体验</span><textarea maxlength="800" data-answer="exclusions" placeholder="例如：不去主题乐园，不安排连续爬山">${esc(state.answers.exclusions)}</textarea></label>
         <label class="question"><span>已订住宿、门票或固定活动</span><textarea maxlength="800" data-answer="fixedBookings" placeholder="没有可留空；有则写日期、地点和时间">${esc(state.answers.fixedBookings)}</textarea></label>
         <label class="question"><span>跨境证件或通行限制</span><textarea maxlength="800" data-answer="borderDocs" placeholder="例如：不出境；已具备港澳签注">${esc(state.answers.borderDocs)}</textarea></label>
+        <section class="source-permissions" aria-label="旅行信息使用许可"><h3>信息查询，由你决定</h3>
+          <label class="source-permission"><input type="checkbox" data-consent="flyaiDataConsent" ${state.answers.flyaiDataConsent?'checked':''}><span><strong>允许用行程与必要的宠物信息查询飞猪</strong><small>仅在查询酒店、景点及宠物准入时，使用目的地、日期、同行人数，以及你填写的宠物同行、体重或相关限制；不发送无关备注。未勾选就不调用 FlyAI，酒店与票务结果留待核验。</small></span></label>
+          <label class="source-permission"><input type="checkbox" data-consent="xiaohongshuBrowserOptIn" ${state.answers.xiaohongshuBrowserOptIn?'checked':''}><span><strong>允许用小红书查攻略和游记</strong><small>勾选一次即可。查询时 Codex 会在内置浏览器打开小红书，等你自行登录；它会记住打开的标签页，不用你再找或授权一次。只读取本次行程相关帖子；路书只引用找到的小红书直达帖，找不到就不放攻略引用。</small></span></label>
+        </section>
       </div>`;
     }
 
@@ -539,7 +578,7 @@
 
     function refreshMapPreview(){
       requestMapPreview(mapPlaces());
-      if(state.stage===3) candidates.forEach(candidate=>{
+      if(state.stage===3&&wishBaselineReady()) candidates.filter(c=>!c.sourceRequest).forEach(candidate=>{
         const without=selectedCandidates().filter(item=>item.id!==candidate.id);
         requestMapPreview(mapPlaces(routeNodes(without)));
         requestMapPreview(mapPlaces(routeNodes([...without,candidate])));
@@ -548,36 +587,41 @@
 
     function candidateCard(c, focus=false){
       const status=statusOf(c.id);
+      const isWish=Boolean(c.sourceRequest), showIncrement=!isWish&&wishBaselineReady();
+      if(isWish&&status==='excluded')return `<div class="wish-removed"><span><b>${esc(c.name)}</b><small>已移除</small></span><button type="button" class="ghost" data-candidate="${c.id}" data-status-choice="selected" aria-label="恢复 ${esc(c.name)}">撤销</button></div>`;
       const impact=candidateDetour(c);
       const sources=Array.isArray(c.references)&&c.references.length?`<div class="candidate-sources"><span class="tag-label">判断依据</span>${c.references.map(reference=>/^https:\/\//i.test(reference.url||'')?`<a class="tag" href="${esc(reference.url)}" target="_blank" rel="noopener noreferrer">${esc(reference.platform||reference.title)} ↗</a>`:'').join('')}</div>`:'';
       const sign=value=>value>0?'+':'';
       const sourceLabel=impact.source==='amap'?'高德道路增量':impact.source==='unverified'?'路段待核验':'地点待核验';
-      return `<article class="candidate ${focus?'focus-card':''}" data-status="${status}">
-        <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}</h3><small>${esc(c.segment)} · ${status==='selected'?'已加入路线':status==='excluded'?'已排除':'等待你的决定'}</small></div><div class="score">${esc(c.verdict||'可选')}<small>${esc(c.confidence||'中')}置信</small></div></div>
-        <p class="candidate-reason"><b>为什么出现：</b>${esc(c.reason)}</p>
+      return `<article class="candidate ${focus?'focus-card':''} ${isWish?'wish-selected':''}" data-status="${status}">
+        ${isWish?`<button type="button" class="wish-remove" data-candidate="${c.id}" data-status-choice="excluded" title="从本次行程移除" aria-label="移除 ${esc(c.name)}">×</button>`:''}
+        <div class="candidate-top"><div class="candidate-title"><h3>${esc(c.name)}${isWish?'':`<span class="candidate-choice ${status==='selected'?'is-selected':'is-unselected'}">${status==='selected'?'✓ 已加入':'未加入'}</span>`}</h3><small>${esc(c.segment)}</small></div>${isWish?'':`<div class="score">${esc(c.verdict||'可选')}<small>${esc(c.confidence||'中')}置信</small></div>`}</div>
+        <div class="candidate-experience"><small>${c.experienceType==='美食'?'主要吃什么':'主要看什么 · 玩什么'}</small><p>${esc(c.highlight||'体验概括待补充，请重新生成候选。')}</p></div>
+        <p class="candidate-reason"><span class="tag">${esc(c.experienceType||'景点')}</span> <b>${c.verdict==='谨慎'?'不推荐原因：':'推荐理由：'}</b>${esc(c.reason)}</p>
         <p class="candidate-reason"><b>与现有路线：</b>${esc(c.overlap||'由 Codex 结合当前路线判断')}</p>
-        <div class="candidate-facts"><div class="fact"><b>${impact.km===null?'待核验':`${sign(impact.km)}${impact.km} km`}</b>${sourceLabel}</div><div class="fact"><b>${impact.drive===null?'待核验':`${sign(impact.drive)}${impact.drive} h`}</b>额外驾驶${state.answers.ev?'＋补能':''}</div><div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
-        ${impact.drive!==null && Number(state.answers.maxDetour)<999 && impact.drive>Number(state.answers.maxDetour)?`<p class="candidate-warning">比你设定的绕路上限多 ${+(impact.drive-Number(state.answers.maxDetour)).toFixed(1)} 小时</p>`:''}
+        <div class="candidate-facts">${showIncrement?`<div class="fact"><b>${impact.km===null?'待核验':`${sign(impact.km)}${impact.km} km`}</b>${sourceLabel}</div><div class="fact"><b>${impact.drive===null?'待核验':`${sign(impact.drive)}${impact.drive} h`}</b>额外驾驶${state.answers.ev?'＋补能':''}</div>`:''}<div class="fact"><b>${c.stay} 天</b>建议停留</div></div>
+        <p class="helper">${isWish?'来自你的愿望 · 用于确定基础路线，不计额外绕路。':showIncrement?'相对当前已选路线，比较不去此处与加入此处的交通成本。':'先确认上方所有愿望选项，再计算沿途增量。'}</p>
+        ${showIncrement && impact.drive!==null && Number(state.answers.maxDetour)<999 && impact.drive>Number(state.answers.maxDetour)?`<p class="candidate-warning">比你设定的绕路上限多 ${+(impact.drive-Number(state.answers.maxDetour)).toFixed(1)} 小时</p>`:''}
         <div class="tags"><span class="tag-label">适合体验</span>${c.tags.map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</div><div class="tags"><span class="tag">🐾 ${esc(c.pet)}</span><span class="tag">⚡ ${esc(c.ev)}</span></div>${sources}
-        <div class="candidate-actions"><button type="button" class="status-btn ${status==='selected'?'is-active':''}" data-candidate="${c.id}" data-status-choice="selected">加入路线</button><button type="button" class="status-btn ${status==='excluded'?'is-active':''}" data-candidate="${c.id}" data-status-choice="excluded">排除</button></div>
+        ${!isWish?`<div class="candidate-actions"><button type="button" class="status-btn" data-candidate="${c.id}" data-status-choice="${status==='selected'?'none':'selected'}">${status==='selected'?'移出路线':'＋ 加入路线'}</button></div>`:''}
       </article>`;
     }
 
     function routeOrderBand(){
-      return `<section class="panel route-band"><div class="route-band-title"><span class="kicker">当前顺序</span><b>${state.stage<3?'必去点骨架':'当前路线'}</b><small>${state.stage<3?'候选加入后会在这里插入':'与地图和计划保持一致'}</small></div>${routeString()}</section>`;
+      return `<section class="panel route-band"><div class="route-band-title"><span class="kicker">当前顺序</span><b>${state.stage<3?'已定位地点':'当前路线'}</b><small>${state.stage<3?'候选加入后会在这里插入':'与地图和计划保持一致'}</small></div>${routeString()}</section>`;
     }
 
     function globalDashboard(){
       const ready=planningReady(), reviewed=previewCurrent(), preview=reviewed?state.ai.preview:null, stats=routeStats(), located=ready&&(reviewed?Number.isFinite(preview.totals.distanceKm):stats.km!==null);
       const selected=selectedCandidates().length, excluded=excludedCandidates().length;
       const reviewedCount=candidates.filter(c=>statusOf(c.id)!=='none').length;
-      const stageName=['','基础行程','旅行偏好','候选评审','路线预览','完整计划'][state.stage];
+      const stageName=['','基础行程','旅行偏好','确认行程','路线预览','完整计划'][state.stage];
       const cell=(value,label,pending=false)=>`<div class="global-cell"><b class="${pending?'pending':''}">${value}</b><span>${label}</span></div>`;
       const selectionVisible=state.stage>=3;
       const cells=[
-        cell(state.route.must.length,'已锁定必去点'),
-        cell(selectionVisible?selected:'—',selectionVisible?'已加入沿途点':'候选尚未生成',!selectionVisible),
-        cell(selectionVisible?excluded:'—',selectionVisible?'已排除沿途点':'候选尚未评审',!selectionVisible),
+        cell(state.route.must.length,'出行愿望'),
+        cell(selectionVisible?selected:'—',selectionVisible?'已确认体验':'体验尚未生成',!selectionVisible),
+        cell(selectionVisible?excluded:'—',selectionVisible?'已放弃体验':'体验尚未评审',!selectionVisible),
         cell(datesReady()?`${Math.floor((new Date(state.answers.returnDate)-new Date(state.answers.departDate))/86400000)+1}天`:'—',datesReady()?'可用旅行时间':'时间尚未填完整',!datesReady()),
         cell(located?(preview?preview.totals.distanceKm:stats.km).toLocaleString('zh-CN',{maximumFractionDigits:1}):'待核验',located?(preview?`${esc(preview.totals.distanceSource)} · km`:'高德实时路网参考 · km'):'路线里程',!located),
         cell(located&&(preview?Number.isFinite(preview.totals.driveHours)&&Number.isFinite(preview.totals.chargeHours):stats.drive!==null)?`${preview?(preview.totals.driveHours+preview.totals.chargeHours).toFixed(1):stats.drive}h`:'待核验',located?`驾驶＋${state.answers.ev?'补能':'休息'}估算`:'驾驶时长',!located),
@@ -586,8 +630,9 @@
       ].join('');
       const foot=[
         datesReady()?`${state.answers.departDate}—${state.answers.returnDate}`:'日期待填写',
-        state.answers.maxDrive?`舒适驾驶 ≤ ${state.answers.maxDrive}h/天`:'驾驶上限待选择',
+        state.answers.maxDrive?`舒适驾驶目标 ${state.answers.maxDrive}h/天 · 仅开车`:'驾驶上限待选择',
         state.answers.maxDetour?`额外绕路 ${state.answers.maxDetour==='999'?'不限':`≤ ${state.answers.maxDetour}h`}`:'绕路上限待选择',
+        state.answers.pace?`旅行节奏：${({relaxed:'松弛',balanced:'均衡',dense:'高密度'})[state.answers.pace]}`:'旅行节奏待选择',
         state.stage>=3?`候选已处理 ${reviewedCount}/${candidates.length}`:'候选尚未开始',
         state.answers.ev?`纯电高速续航 ${state.answers.evHighwayRange||'待填'} km`:null,
         state.answers.pet?'带宠物':null,
@@ -596,6 +641,16 @@
         located?(preview?`Codex 预览 · ${preview.totals.distanceSource}`:'高德实时查询 · 不含未来节假日拥堵'):null
       ].filter(Boolean).map(item=>`<span>${esc(item)}</span>`).join('');
       return `<section class="panel global-state"><div class="global-state-head"><div><span class="kicker" style="color:#f3bd4d">全局状态</span><h3>${stageName}</h3><p>${preview?'优先展示 Codex 预览中核对过的数值':'只展示当前已经能够确定或计算的结果'}</p></div><span class="phase-chip">STEP ${state.stage} / 5</span></div><div class="global-state-grid">${cells}</div><div class="global-state-foot">${foot}</div></section>`;
+    }
+
+    function drivingNotices(days,index){
+      const day=days[index], limit=Number(state.answers.maxDrive), notices=[];
+      if(!Number.isFinite(day.driveHours)||!(limit>0)) return ['驾驶安排待核验，暂不能判断是否符合舒适时长。'];
+      if(day.driveHours>limit) notices.push(`驾驶超出舒适时长 ${(day.driveHours-limit).toFixed(1)}h（目标 ${limit}h，不含补能）。建议调整顺序或拆分转场；保留长途日需明确确认。`);
+      const transit=d=>Number.isFinite(d.driveHours)&&Number.isFinite(d.chargeHours)&&Number.isFinite(d.playHours)&&d.driveHours+d.chargeHours>=4&&d.driveHours+d.chargeHours>d.playHours;
+      if(index>0&&transit(days[index-1])&&transit(day)) notices.push('连续两天以赶路为主，建议增加停留或减少体验，由你决定。');
+      if(Number.isFinite(day.chargeHours)&&Number.isFinite(day.playHours)&&day.driveHours+day.chargeHours>=4&&day.playHours<2) notices.push('交通挤占游玩：当天不足 2h，仅作排程提醒；核心体验还需核对最低游玩时长。');
+      return notices;
     }
 
     function previewContent(){
@@ -607,17 +662,17 @@
         <div class="preview-route">${preview.routeOrder.map(esc).join(' → ')}</div>
         <div class="preview-metrics"><div><b>${n(total.distanceKm)}</b><span>全程公里 · ${esc(total.distanceSource)}</span></div><div><b>${Number.isFinite(total.driveHours)?`${n(total.driveHours)}h`:'待核验'}</b><span>驾驶时间</span></div><div><b>${Number.isFinite(total.chargeHours)?`${n(total.chargeHours)}h`:'待核验'}</b><span>预计补能</span></div><div><b>${Number.isFinite(total.playHours)?`${n(total.playHours)}h`:'待核验'}</b><span>可用游玩 · ${esc(total.pressure)}</span></div></div>
         <div class="panel-head"><div><h3>每天大致怎么过</h3><p>按当前路线核对，完整计划会进一步展开到小时和具体地点。</p></div></div>
-        <div class="preview-days">${preview.days.map(day=>`<article class="preview-day"><small>${esc(day.date)} · ${esc(day.route)}</small><h3>${esc(day.title)}</h3><p>${esc(day.activities)}</p><p>驾驶 ${Number.isFinite(day.driveHours)?`${n(day.driveHours)}h`:'待核验'} · 补能 ${Number.isFinite(day.chargeHours)?`${n(day.chargeHours)}h`:'待核验'} · 游玩 ${Number.isFinite(day.playHours)?`${n(day.playHours)}h`:'待核验'} · 里程 ${Number.isFinite(day.distanceKm)?`${n(day.distanceKm)} km`:'待核验'}</p><p>住宿：${esc(day.lodging)}</p></article>`).join('')}</div>
+        <div class="preview-days">${preview.days.map((day,index)=>`<article class="preview-day"><small>${esc(day.date)} · ${esc(day.route)}</small><h3>${esc(day.title)}</h3><p>${esc(day.activities)}</p><p>驾驶 ${Number.isFinite(day.driveHours)?`${n(day.driveHours)}h`:'待核验'} · 补能 ${Number.isFinite(day.chargeHours)?`${n(day.chargeHours)}h`:'待核验'} · 游玩 ${Number.isFinite(day.playHours)?`${n(day.playHours)}h`:'待核验'} · 里程 ${Number.isFinite(day.distanceKm)?`${n(day.distanceKm)} km`:'待核验'}</p>${drivingNotices(preview.days,index).map(note=>`<p role="note" style="color:var(--red);border-left:3px solid currentColor;padding-left:10px">${esc(note)}</p>`).join('')}<p>住宿：${esc(day.lodging)}</p></article>`).join('')}</div>
         <div class="preview-notes"><h3>确认前看这里</h3><ul>${preview.notes.map(note=>`<li>${esc(note)}</li>`).join('')||'<li>暂无额外提醒。</li>'}</ul>${preview.sourceNotes.length?`<p>核验与估算：${preview.sourceNotes.map(esc).join('；')}</p>`:''}</div>
         <div class="guide-next"><button class="ghost" type="button" data-stage="3">← 返回候选调整</button><button class="primary" type="button" data-action="ai-plan">确认预览，生成完整计划 →</button></div></section>`;
     }
 
     function refineEditor(){
-      return state.ai.showRefine?`<section class="refine-panel" id="refinePanel"><h3>想怎么调整计划？</h3><p>写具体改动即可。已锁定的必去点、出行日期和硬约束不会因一句话被悄悄删掉；Codex 会在当前路书上修改。</p><textarea id="refineText" maxlength="2000" placeholder="例如：把其中一天的驾驶拆开，海边留足两个完整时段。">${esc(state.ai.refineDraft)}</textarea><div class="report-actions"><button type="button" class="primary" data-action="ai-refine" ${state.ai.status==='loading'?'disabled':''}>提交调整</button><button type="button" class="ghost" data-action="refine-close">取消</button></div></section>`:'';
+      return state.ai.showRefine?`<section class="refine-panel" id="refinePanel"><h3>想怎么调整计划？</h3><p>写具体改动即可。已确认的体验、出行日期和硬约束不会因一句话被悄悄删掉；Codex 会在当前路书上修改。</p><textarea id="refineText" maxlength="2000" placeholder="例如：把其中一天的驾驶拆开，海边留足两个完整时段。">${esc(state.ai.refineDraft)}</textarea><div class="report-actions"><button type="button" class="primary" data-action="ai-refine" ${state.ai.status==='loading'?'disabled':''}>提交调整</button><button type="button" class="ghost" data-action="refine-close">取消</button></div></section>`:'';
     }
 
     function candidateRevisionEditor(){
-      return state.ai.showCandidateRevision?`<section class="refine-panel candidate-revision" id="candidateRevision"><h3>想让候选怎么变？</h3><p>写明想增加或避开的地方、体验或绕路要求。提交后会生成一组新候选，当前的加入／排除选择需要重新确认。</p><textarea id="candidateInstruction" maxlength="2000" aria-label="重新生成候选的具体要求" placeholder="例如：少推荐古城，多找适合带狗散步的海滨城市；单站最多绕路 1 小时。">${esc(state.ai.candidateDraft)}</textarea><div class="report-actions"><button type="button" class="primary" data-action="candidate-revise-submit" ${state.ai.status==='loading'?'disabled':''}>按要求重新生成</button><button type="button" class="ghost" data-action="candidate-revise-close">取消</button></div></section>`:'';
+      return state.ai.showCandidateRevision?`<section class="refine-panel candidate-revision" id="candidateRevision"><h3>还想推荐什么？</h3><p>写明想补充的体验。已有选项与选择保持不变，只追加不重复的新推荐。</p><textarea id="candidateInstruction" maxlength="2000" aria-label="重新生成候选的具体要求" placeholder="例如：少推荐古城，多找适合带狗散步的海滨城市；单站最多绕路 1 小时。">${esc(state.ai.candidateDraft)}</textarea><div class="report-actions"><button type="button" class="primary" data-action="candidate-revise-submit" ${state.ai.status==='loading'?'disabled':''}>保留已选，继续推荐</button><button type="button" class="ghost" data-action="candidate-revise-close">取消</button></div></section>`:'';
     }
 
     function report(){
@@ -625,17 +680,32 @@
       if(state.ai.reportUrl) return `<section class="completed-report" id="reportPreview"><div class="completed-toolbar"><p>完整计划 · 南线同款版式</p>${actions}</div>${refineEditor()}<div class="ai-result-summary"><b>规划结论：</b>${esc(state.ai.summary||'完整路线与逐日安排已生成。')}</div><iframe class="ai-report-frame" src="${esc(state.ai.reportUrl)}" title="完整自驾旅行计划"></iframe></section>`;
     }
 
+    function canRecommendMore(group){
+      if(group==='沿途发现')return true;
+      if(locationByLabel.has(group)||locations.some(place=>place[1]===group||place[4]===group))return true;
+      const normalize=name=>String(name).replace(/\s+/g,'').replace(/（.*?）|\(.*?\)/g,'');
+      return !candidates.some(c=>c.sourceRequest===group&&normalize(c.name)===normalize(group));
+    }
+    function itineraryReview(){
+      if(!candidates.length)return `<h2>把愿望变成具体体验</h2><p>先生成景点、美食与沿途体验，再决定哪些值得停留。</p><button class="primary" data-action="ai-candidates">生成行程选项 →</button>`;
+      const keys=[...state.route.must,'沿途发现'];
+      const groups=keys.map(key=>({key,items:candidates.filter(c=>(c.sourceRequest||'沿途发现')===key)})).filter(g=>g.items.length);
+      const wishes=state.reviewPhase!=='discoveries';
+      const visible=groups.filter(g=>wishes?g.key!=='沿途发现':g.key==='沿途发现');
+      return `<div class="panel-head"><div><span class="kicker">确认行程</span><h2>${wishes?'先确认想去的体验':'再挑值得加入的沿途体验'}</h2><p>${wishes?'来自愿望的选项默认保留，不想去的点右上角“×”；查看建议后确认基础路线。':'愿望已确认。沿途只需加入想去的，没选就不加入计划。'}</p></div></div>${candidateRevisionEditor()}${visible.map(g=>`<section style="margin:24px 0;padding-top:18px;border-top:1px solid var(--line)"><div class="panel-head"><div><h3>${esc(g.key)}</h3><p>已选 ${g.items.filter(c=>statusOf(c.id)==='selected').length} 项</p></div>${canRecommendMore(g.key)?`<button class="ghost" data-more-group="${esc(g.key)}">保留已选，继续推荐</button>`:''}</div>${g.items.map(c=>candidateCard(c)).join('')}</section>`).join('')}${!wishes&&!visible.length?'<p>暂无沿途候选，可以直接生成预览。</p><button class="ghost" data-more-group="沿途发现">继续推荐沿途体验</button>':''}<div class="guide-next">${wishes?'<button class="ghost" data-stage="2">← 修改条件</button><button class="primary" data-action="confirm-wishes">愿望选好了，看看沿途 →</button>':'<button class="ghost" data-action="edit-wishes">← 调整愿望</button><button class="primary" data-action="ai-preview">选好了，生成预览 →</button>'}</div>`;
+    }
+
     function guideContent(){
-      if(state.stage===1) return `<div class="panel-head"><div><span class="kicker">基础行程</span><h2>先把地点和时间定下来。</h2><p>出发地、终点、必去点和日期齐了，才有判断沿途值得停哪里的依据。</p></div></div>${routeEditor()}${timeEditor()}<div class="guide-next"><p>下一步再选节奏、驾驶上限与旅行偏好。</p><button class="primary" type="button" data-stage="2">继续：旅行偏好 →</button></div>`;
+      if(state.stage===3)return itineraryReview();
+      if(state.stage===1) return `<div class="panel-head"><div><span class="kicker">基础行程</span><h2>先把地点和时间定下来。</h2><p>填好出发地、终点、时间和出行愿望，再把它们变成具体体验。</p></div></div>${routeEditor()}${timeEditor()}<div class="guide-next"><p>下一步再选节奏、驾驶上限与旅行偏好。</p><button class="primary" type="button" data-stage="2">继续：旅行偏好 →</button></div>`;
       if(state.stage===2) return `<div class="panel-head"><div><span class="kicker">旅行偏好</span><h2>哪些条件会改变路线？</h2><p>告诉 Codex 你的驾驶节奏、同行约束和想要的体验。</p></div></div>${questions()}<div style="margin-top:20px">${preferenceEditor()}</div><div class="guide-next"><button class="ghost" type="button" data-stage="1">← 修改基础行程</button><button class="primary" type="button" data-action="ai-candidates" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'正在生成沿途候选…':'生成沿途候选 →'}</button></div>`;
-      if(state.stage===3){ const sorted=[...candidates].sort((a,b)=>candidateScore(b)-candidateScore(a)); const index=Math.max(0,Math.min(state.focusCandidate,sorted.length-1)); const c=sorted[index]; if(!c) return `<div class="panel-head"><div><h2>候选点还没生成。</h2><p>完成前两步后，让 Codex 根据你的真实路线生成沿途选择。</p></div></div><button class="primary" type="button" data-action="ai-candidates">生成沿途候选 →</button>`; return `<div class="panel-head"><div><span class="kicker">ONE DECISION AT A TIME</span><h2>这个地方，值不值得拐进去？</h2><p>这些候选来自当前 Codex 会话的规划结果。</p></div><button class="ghost" type="button" data-action="candidate-revise-open">重新生成候选</button></div>${candidateRevisionEditor()}<div class="guide-candidate-focus"><button class="focus-arrow" data-action="focus-prev" aria-label="上一个候选"><span aria-hidden="true">←</span><span class="arrow-label">上一个</span></button>${candidateCard(c,true)}<button class="focus-arrow" data-action="focus-next" aria-label="下一个候选"><span class="arrow-label">下一个</span><span aria-hidden="true">→</span></button></div><div class="focus-count">${index+1} / ${sorted.length} · 按推荐度排序</div><div class="guide-next"><button class="ghost" type="button" data-stage="2">← 修改条件</button><button class="primary" type="button" data-action="ai-preview" ${state.ai.status==='loading'?'disabled':''}>${state.ai.status==='loading'?'Codex 正在生成…':'候选选好了，生成预览 →'}</button></div>`; }
       if(state.stage===4) return previewContent();
       return report();
     }
 
     function guideVariant(){
       if(state.stage===5&&state.ai.reportUrl) return report();
-      return `<div class="guide"><div class="guide-shell"><section class="guide-hero"><div><span class="kicker" style="color:#f3bd4d">先把路线搭起来</span><h1>先定下非去不可，<br>再挑沿途值得停。</h1><p>把一定要去的地方先放进路线，再看看沿途哪些地方值得多留一晚。每加一站，都把能玩什么、要多开多久、建议留几天说清楚。</p></div></section>${routeOrderBand()}<div class="guide-body"><main class="panel guide-main">${guideContent()}</main><aside class="guide-side"><div class="guide-map-label"><div><span class="kicker">路线预览</span><b>随选择实时更新</b></div><small>${state.stage<3?'当前只显示必去骨架':'候选加入后立即改线'}</small></div>${mapView()}${globalDashboard()}</aside></div></div></div>`;
+      return `<div class="guide"><div class="guide-shell"><section class="guide-hero"><div><span class="kicker" style="color:#f3bd4d">先把路线搭起来</span><h1>先说想去哪里，<br>再选值得停的体验。</h1><p>城市、景点，或者一个还没想清楚的愿望，都可以先填进来。再一起确认玩什么、吃什么、值不值得绕路。</p></div></section>${routeOrderBand()}<div class="guide-body ${state.stage<3?'guide-body--form':''}"><main class="panel guide-main">${guideContent()}</main>${state.stage>=3?`<aside class="guide-side"><div class="guide-map-label"><div><span class="kicker">路线预览</span><b>随选择实时更新</b></div><small>${state.stage<3?'模糊愿望暂不标图':'候选加入后立即改线'}</small></div>${mapView()}${globalDashboard()}</aside>`:''} </div></div></div>`;
     }
 
     function render(){
@@ -729,10 +799,12 @@
         route: JSON.parse(JSON.stringify(state.route)),
         preferences: JSON.parse(JSON.stringify(state.prefs)),
         answers: JSON.parse(JSON.stringify(state.answers)),
-        candidates: candidates.map(candidate=>({ ...candidate, status:statusOf(candidate.id) })),
+        travelConstraints: travelLimits.filter(([key])=>state.answers[key]).map(([key,label,meaning])=>({key,label,meaning})),
+        candidates: candidates.map(candidate=>({ ...candidate, status:statusOf(candidate.id)==='selected'?'selected':'excluded' })),
+        reviewPhase:state.reviewPhase,
         routeOrder: routeNodes().map(node=>node.name),
         mapPlaces: mapPlaces(),
-        capabilities: { amap:state.setup.amap, amapJs:state.setup.amapJs, flyai:state.setup.flyai },
+        capabilities: { amap:state.setup.amap, amapJs:state.setup.amapJs, flyai:state.setup.flyai&&state.answers.flyaiDataConsent },
         clientEstimate: planningReady()?routeStats():null,
         review: { preview:previewCurrent()?state.ai.preview:null }
       };
@@ -780,10 +852,11 @@
       }
     }
 
-    function applyCodexCandidates(data,source='codex'){
+    function applyCodexCandidates(data,source='codex',append=false){
       const incoming=Array.isArray(data.candidates)?data.candidates:[];
       if(!incoming.length) throw new Error('Codex 没有返回候选地点。');
-      candidates=incoming.map((candidate,index)=>({
+      const previous=append?candidates.slice():[], previousStatus={...state.candidateStatus};
+      const additions=incoming.filter(c=>!previous.some(old=>old.name===c.name&&old.sourceRequest===c.sourceRequest)).map((candidate,index)=>({
         ...candidate,
         id:String(candidate.id||`candidate-${index+1}`).toLowerCase().replace(/[^a-z0-9-]+/g,'-'),
         order:Number(candidate.order)||index+1,
@@ -792,9 +865,13 @@
         stay:Number(candidate.stay)||1,
         tags:Array.isArray(candidate.tags)?[...new Set(candidate.tags.filter(tag=>preferenceKeys.includes(tag)))]:[]
       }));
-      state.candidateStatus={};
+      const used=new Set(previous.map(c=>c.id));
+      additions.forEach(c=>{let id=c.id;while(used.has(id))id+='-new';c.id=id;used.add(id);});
+      candidates=[...previous,...additions];
+      state.candidateStatus=append?previousStatus:{};
+      if(!append || additions.some(c=>c.sourceRequest))state.reviewPhase='wishes';
       candidates.forEach(candidate=>{
-        state.candidateStatus[candidate.id]='none';
+        if(!(candidate.id in state.candidateStatus))state.candidateStatus[candidate.id]=candidate.sourceRequest?'selected':'none';
         cityCatalog[candidate.name]={
           lon:Number.isFinite(candidate.lon)?Number(candidate.lon):null,lat:Number.isFinite(candidate.lat)?Number(candidate.lat):null,stay:candidate.stay,
           highlight:candidate.highlight||candidate.reason,tags:candidate.tags
@@ -818,10 +895,10 @@
       const instruction=document.getElementById('candidateInstruction')?.value.trim()||state.ai.candidateDraft.trim();
       state.ai.candidateDraft=instruction;
       if(!instruction){toast('先写下这次希望调整的具体要求。');return;}
-      await requestCodexCandidates(instruction);
+      await requestCodexCandidates(instruction,true);
     }
 
-    async function requestCodexCandidates(instruction=''){
+    async function requestCodexCandidates(instruction='',append=false){
       if(!frameworkReady()){
         state.stage=1;render();toast('先完成第一步的地点与时间。');return;
       }
@@ -831,11 +908,11 @@
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       setAiState('loading','请求已提交；当前 Codex 会话将领取任务，过程会显示在 Codex 对话中。');
       try{
-        const response=await fetch('/api/codex/candidates',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(instruction?{...plannerState(),instruction}:plannerState())});
+        const response=await fetch('/api/codex/candidates',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...plannerState(),instruction,candidateRequestMode:append?'append':'replace',candidateGroup:append?(state.ai.moreGroup||null):null})});
         const data=await response.json();
         if(!response.ok||!data.ok) throw new Error(data.error||'候选生成失败');
         const result=await waitForJob(data.job.id);
-        applyCodexCandidates(result);
+        applyCodexCandidates(result,'codex',append);
         state.ai.showCandidateRevision=false;state.ai.candidateDraft='';
         state.ai.status='idle';
         state.ai.message=`Codex 已返回 ${candidates.length} 个候选。选好之后，第 4 步会单独生成路线预览。`;
@@ -853,7 +930,8 @@
         state.stage=2;render();toast('先填写完整的必要信息。');return;
       }
       if(!candidates.length){state.stage=3;render();toast('先生成并审阅沿途候选。');return;}
-      if(!candidateReviewComplete()){state.stage=3;render();toast('每个候选都要明确选择加入或排除。');return;}
+      if(!selectedCandidates().length){state.stage=3;render();toast('至少选择一项景点或美食体验。');return;}
+      if(!candidateReviewComplete()){state.stage=3;render();toast('请先确认愿望，进入沿途选择；沿途没加入的不会进入计划。');return;}
       if(!state.ai.backendReady){toast('当前 Codex 会话尚未等待页面操作，请回到 Codex 对话。');return;}
       const submittedKey=reviewKey();
       setAiState('loading','Codex 正在重新核对所选路线、时间、补能和游玩安排；过程可在对话中查看。');
@@ -977,7 +1055,7 @@
       const input=document.getElementById('newMustStop'); const name=input?.value.trim();
       if(!name) return toast('先输入一个必去点。');
       if([state.route.start,...state.route.must,state.route.end].includes(name)) return toast('这个地点已经在路线中。');
-      state.route.must.push(name); state.stage=1; render(); toast(`${name} 已锁定为必去点。`);
+      state.route.must.push(name); candidates=[];state.candidateStatus={};state.ai.preview=null;state.ai.previewKey='';state.ai.reportUrl=''; state.stage=1; render(); toast(`${name} 已加入愿望，稍后确认具体体验。`);
     }
 
     function matchingPlaces(query){
@@ -1034,19 +1112,25 @@
     });
 
     document.addEventListener('click',event=>{
+      const moreGroup=event.target.closest('[data-more-group]');
+      if(moreGroup){if(!canRecommendMore(moreGroup.dataset.moreGroup))return;state.ai.moreGroup=moreGroup.dataset.moreGroup;openCandidateRevision();return;}
+      const picker=event.target.closest('[data-picker]');
+      if(picker){const input=picker.parentElement.querySelector('input');if(typeof input.showPicker==='function'){input.showPicker();}else{toast('当前浏览器不支持弹出选择器，请使用新版 Chrome 或 Edge。');}return;}
       const stageButton=event.target.closest('[data-stage]'); if(stageButton){goToStage(Number(stageButton.dataset.stage));return;}
       const prefButton=event.target.closest('[data-pref]'); if(prefButton){const key=prefButton.dataset.pref;const index=preferenceCycles.indexOf(state.prefs[key]||'off');state.prefs[key]=preferenceCycles[(index+1)%preferenceCycles.length];render();return;}
       const filterButton=event.target.closest('[data-filter]'); if(filterButton){const key=filterButton.dataset.filter;state.answers[key]=!state.answers[key];render();return;}
       const toggle=event.target.closest('[data-toggle]'); if(toggle){const key=toggle.dataset.toggle;state.answers[key]=state.answers[key]===null?true:state.answers[key]===true?false:null;if(key==='ev'&&state.answers.ev!==true)state.answers.evHighwayRange='';render();return;}
       const candidateButton=event.target.closest('[data-candidate]'); if(candidateButton){updateCandidate(candidateButton.dataset.candidate,candidateButton.dataset.statusChoice);return;}
       const action=event.target.closest('[data-action]')?.dataset.action;
+      if(action==='confirm-wishes'){state.reviewPhase='discoveries';render();return;}
+      if(action==='edit-wishes'){state.reviewPhase='wishes';render();return;}
       if(action==='setup-open'){state.setup.open=true;state.setup.error='';render();return;}
       if(action==='setup-skip'){state.setup.open=false;render();return;}
       if(action==='setup-save'){saveSetup();return;}
       if(action==='flyai-copy-install'){copyFlyaiInstallCommand();return;}
       if(action==='flyai-recheck'){recheckFlyaiTool();return;}
       if(action==='add-stop'){addStop();return;}
-      if(action==='remove-stop'){const index=Number(event.target.closest('[data-index]').dataset.index);const removed=state.route.must.splice(index,1)[0];render();toast(`${removed} 已从必去点移除。`);return;}
+      if(action==='remove-stop'){const index=Number(event.target.closest('[data-index]').dataset.index);const removed=state.route.must.splice(index,1)[0];candidates=[];state.candidateStatus={};state.ai.preview=null;state.ai.previewKey='';state.ai.reportUrl='';render();toast(`${removed} 已从出行愿望移除，请重新生成行程选项。`);return;}
       if(action==='move-stop'){const el=event.target.closest('[data-index]');const index=Number(el.dataset.index),next=index+Number(el.dataset.dir);if(next>=0&&next<state.route.must.length){[state.route.must[index],state.route.must[next]]=[state.route.must[next],state.route.must[index]];render();}return;}
       if(action==='generate'||action==='ai-plan'){requestCodexPlan();return;}
       if(action==='ai-preview'){requestCodexPreview();return;}
@@ -1064,6 +1148,7 @@
 
     document.addEventListener('change',event=>{
       if(event.target.matches('[data-place-field]')){commitPlaceText(event.target);return;}
+      if(event.target.matches('[data-consent]')){state.answers[event.target.dataset.consent]=event.target.checked;render();return;}
       if(event.target.matches('[data-answer]')){state.answers[event.target.dataset.answer]=event.target.value;render();}
     });
 
@@ -1080,6 +1165,7 @@
     });
 
     document.addEventListener('keydown',event=>{
+      if(event.target?.matches('.picker-field input')&&event.key!=='Tab'){event.preventDefault();return;}
       if(!event.target?.matches('[data-place-field]')) return;
       const input=event.target,list=input.parentElement.querySelector('.place-results');
       if(event.key==='ArrowDown'||event.key==='ArrowUp'){
@@ -1103,6 +1189,9 @@
     });
 
     restorePlanningState();
+    candidates.filter(c=>c.sourceRequest&&statusOf(c.id)==='none').forEach(c=>state.candidateStatus[c.id]='selected');
+    delete state.answers.petAgeYears;
+    if(candidates.some(c=>!('sourceRequest' in c)||!c.experienceType)){candidates=[];state.candidateStatus={};state.ai.preview=null;state.ai.previewKey='';state.ai.reportUrl='';state.stage=Math.min(state.stage,2);}
     render();
     checkCodexStatus();
     loadSetupStatus();

@@ -384,6 +384,7 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     await bridge(base, "progress", candidateJob.id, "正在比较绕路成本");
     assert.equal((await json(base, `/api/jobs/${candidateJob.id}`)).data.job.message, "正在比较绕路成本");
     const candidate = {
+      sourceRequest: "恩施", experienceType: "景点",
       id: "sample", name: "样例", segment: "杭州 → 恩施", after: "杭州", order: 1,
       detour: 12, drive: 0.3, stay: 1, tags: ["地方美食", "历史街巷"], pet: "需核验", ev: "有补能",
       reason: "供测试", lon: 110, lat: 30, highlight: "样例体验", verdict: "可选", confidence: "中", overlap: "补充体验",
@@ -435,6 +436,7 @@ test("page jobs are handled by the waiting conversation bridge", async () => {
     const planJob = await waitingPlan;
     assert.equal(planJob.id, planSubmitted.data.job.id);
     const reportData = JSON.parse(await readFile(exampleDataPath, "utf8"));
+    reportData.meta.departTime=planJob.state.answers.departTime;
     reportData.capabilities=planJob.state.capabilities;
     reportData.stopSummaries.forEach(stop=>{stop.guides=[];});
     reportData.days.forEach(day=>day.slots.forEach(slot=>{slot.references=[];delete slot.openingHours;slot.productQueryStatus=slot.productRelevant?"not-configured":"not-applicable";}));

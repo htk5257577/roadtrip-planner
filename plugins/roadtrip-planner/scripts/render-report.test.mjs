@@ -60,8 +60,8 @@ test("missing providers suppress precise map, hotel and ticket claims", () => {
   const trip = structuredClone(example);
   trip.capabilities = { amap: false, amapJs: false, flyai: false };
   trip.hotelAreas[0].options[0].priceRange = "¥999 / 晚";
-  trip.days[0].slots[1].ticketPrice = "门票 ¥888";
-  trip.days[0].slots[1].actionLink = { label: "立即预订", url: "https://example.com/book" };
+  trip.days[0].slots[3].ticketPrice = "门票 ¥888";
+  trip.days[0].slots[3].actionLink = { label: "立即预订", url: "https://example.com/book" };
   trip.dataSources.push({ name: "飞猪 FlyAI", scope: "实时酒店价格" });
   const html = renderRoadbook(trip);
   assert.match(html, /未接入高德，地图落点暂不展示/);
@@ -80,22 +80,33 @@ test("city guides and spot posts stay beside their place and only link to safe s
   assert.match(html, /去之前看看/);
   assert.match(html, /去过的人怎么说/);
   assert.match(html, /乙城慢游参考/);
-  assert.match(html, /乙城街区信息/);
-  assert.match(html, /公开网页体验仅供参考，准入与价格以官方为准/);
+  assert.match(html, /乙城街区实走参考/);
+  assert.doesNotMatch(html, /乙城街区信息/);
+  assert.match(html, /小红书实走参考；准入与价格以官方为准/);
   assert.ok(html.indexOf("乙城慢游参考") < html.indexOf('id="day-1"'));
-  assert.ok(html.indexOf("乙城街区信息") > html.indexOf('id="day-1"'));
+  assert.ok(html.indexOf("乙城街区实走参考") > html.indexOf('id="day-1"'));
   const unsafe = structuredClone(trip);
   unsafe.stopSummaries[0].guides.push({ type: "游记", platform: "旅行社区", title: "不安全链接", note: "无", url: "javascript:alert(1)", evidenceRole: "firstHand", publicAccess: true, checkedAt: "2026-09-23T08:00:00.000Z" });
   assert.throws(() => renderRoadbook(unsafe), /格式不正确/);
 });
 
-test("empty guide sections explain the public no-login boundary", () => {
+test("no Xiaohongshu post means no travel-post citation block", () => {
   const trip = structuredClone(example);
   trip.sample = false;
   trip.stopSummaries[0].guides = [];
-  trip.days[0].slots[1].references = [];
+  trip.days[0].slots[3].references = [];
   const html = renderRoadbook(trip);
-  assert.match(html, /暂未找到无需登录且可核验的直达攻略或帖子/);
+  assert.doesNotMatch(html, /去之前看看|去过的人怎么说|<div class="reference-block/);
+});
+
+test("logged-in Xiaohongshu posts are visibly marked, while other travel posts stay hidden", () => {
+  const trip = structuredClone(example);
+  trip.sample = false;
+  trip.stopSummaries[0].guides = [{ type: "游记", platform: "小红书", title: "亲测散步路线", note: "供参考", url: "https://www.xiaohongshu.com/explore/abcdef123456", evidenceRole: "firstHand", publicAccess: false, access: "signedInBrowser", checkedAt: "2026-09-23T08:00:00.000Z" }, { type: "游记", platform: "别的平台", title: "不该显示", note: "无", url: "https://example.com/post", evidenceRole: "firstHand", publicAccess: true, checkedAt: "2026-09-23T08:00:00.000Z" }];
+  const html = renderRoadbook(trip);
+  assert.match(html, /亲测散步路线/);
+  assert.match(html, /登录后查看/);
+  assert.doesNotMatch(html, /不该显示/);
 });
 
 test("report rejects missing city tags and slot reference arrays", () => {
@@ -108,4 +119,20 @@ test("report rejects missing city tags and slot reference arrays", () => {
   const missingProductRelevance = structuredClone(example);
   delete missingProductRelevance.days[0].slots[1].productRelevant;
   assert.throws(() => renderRoadbook(missingProductRelevance), /缺少 productRelevant/);
+});
+
+test("daily timeline covers meals, travel and rest without silent afternoon gaps", () => {
+  const complete = renderRoadbook(example);
+  assert.match(complete, /08:00–09:00/);
+  assert.match(complete, /19:00–22:00/);
+  assert.match(complete, /酒店 · 乙城城区酒店/);
+  const gap = structuredClone(example);
+  gap.days[0].slots[3].time = "13:00–16:00";
+  assert.throws(() => renderRoadbook(gap), /空档或重叠/);
+  const earlyEnd = structuredClone(example);
+  earlyEnd.days[0].slots = earlyEnd.days[0].slots.slice(0, 4);
+  assert.throws(() => renderRoadbook(earlyEnd), /傍晚前中断/);
+  const missingPlace = structuredClone(example);
+  missingPlace.days[0].slots[2].location = "";
+  assert.throws(() => renderRoadbook(missingPlace), /不能为空|缺少所在地点/);
 });

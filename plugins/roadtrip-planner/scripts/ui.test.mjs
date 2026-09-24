@@ -14,6 +14,73 @@ function seedTestState(context) {
   vm.runInContext(`state.route=${JSON.stringify(testRoute)};state.answers=${JSON.stringify(testAnswers)};applyCodexCandidates(${JSON.stringify({ summary: "候选", candidates: testCandidates })},'codex');state.ai.backendReady=true;render()`, context);
 }
 
+test("daily comfort checks exclude charging and flag overruns without removing choices", () => {
+  const source=page.slice(page.indexOf('    function drivingNotices('),page.indexOf('    function previewContent('));
+  const context=vm.createContext({state:{answers:{maxDrive:'4'}}});
+  vm.runInContext(source,context);
+  const check=days=>JSON.parse(vm.runInContext(`JSON.stringify(drivingNotices(${JSON.stringify(days)},${days.length-1}))`,context));
+  assert.deepEqual(check([{driveHours:4,chargeHours:2,playHours:4}]),[]);
+  assert.match(check([{driveHours:7,chargeHours:1,playHours:3}]).join(''),/超出舒适时长 3.0h/);
+  assert.match(check([{driveHours:4,chargeHours:1,playHours:2},{driveHours:4,chargeHours:1,playHours:1}]).join(''),/连续两天/);
+  assert.match(check([{driveHours:4,chargeHours:1,playHours:1}]).join(''),/交通挤占游玩/);
+  assert.match(check([{driveHours:null,chargeHours:null,playHours:1}]).join(''),/待核验/);
+});
+
+test("pet age is unnecessary and selected travel restrictions reach planning requests", () => {
+  const app={innerHTML:'',querySelector:()=>null};
+  const context=vm.createContext({document:{getElementById:id=>id==='app'?app:{classList:{add(){},remove(){}}},addEventListener(){}},window:{ROADTRIP_LOCATIONS:[]},location:{protocol:'file:',href:'file:///tmp/planner.html'},URL,structuredClone,setTimeout:()=>1,clearTimeout(){}});
+  const script=page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)[1];
+  vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/,''),context);
+  seedTestState(context);
+  vm.runInContext("delete state.answers.petAgeYears;state.answers.avoidWater=true;state.answers.avoidNightDriving=true",context);
+  assert.equal(vm.runInContext('planningReady()',context),true);
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(plannerState().travelConstraints.map(x=>x.key))',context)),['avoidWater','avoidNightDriving']);
+  assert.doesNotMatch(vm.runInContext('questions()',context),/宠物年龄/);
+  vm.runInContext('state.answers.avoidWater=false',context);
+  assert.equal(vm.runInContext('plannerState().travelConstraints.length',context),1);
+});
+
+test("vague wishes stay off the map and only selected experiences become itinerary nodes", () => {
+  const app={innerHTML:'',querySelector:()=>null};
+  const context=vm.createContext({document:{getElementById:id=>id==='app'?app:{classList:{add(){},remove(){}}},addEventListener(){}},window:{ROADTRIP_LOCATIONS:[]},location:{protocol:'file:',href:'file:///tmp/planner.html'},URL,structuredClone,setTimeout:()=>1,clearTimeout(){}});
+  const script=page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)[1];
+  vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/,''),context);
+  vm.runInContext(`state.route={start:'杭州',end:'杭州',must:['泉州','可以骑马的地方']}`,context);
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(routeNodes().map(n=>n.name))',context)),['杭州','泉州','杭州']);
+  const choices=[{...testCandidates[0],id:'temple',name:'泉州开元寺',sourceRequest:'泉州',experienceType:'景点'}, {...testCandidates[0],id:'food',name:'泉州西街小吃',sourceRequest:'泉州',experienceType:'美食'}];
+  vm.runInContext(`applyCodexCandidates(${JSON.stringify({candidates:choices})});state.candidateStatus={temple:'selected',food:'selected'}`,context);
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(routeNodes().map(n=>n.name))',context)),['杭州','泉州开元寺','泉州西街小吃','杭州']);
+  vm.runInContext("state.candidateStatus.temple='excluded'",context);
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(routeNodes().map(n=>n.name))',context)),['杭州','泉州西街小吃','杭州']);
+  assert.doesNotMatch(vm.runInContext('itineraryReview()',context),/这组不去了/);
+  assert.match(vm.runInContext('itineraryReview()',context),/愿望选好了/);
+  assert.doesNotMatch(vm.runInContext('candidateCard(candidates[0])',context),/高德道路增量|额外驾驶|绕路上限/);
+  assert.match(vm.runInContext('candidateCard(candidates[0])',context),/已移除.*撤销/);
+  assert.match(vm.runInContext('candidateCard(candidates[1])',context),/class="wish-remove"/);
+  assert.doesNotMatch(vm.runInContext('candidateCard(candidates[1])',context),/✓ 已加入行程|class="score"|candidate-actions|>不去</);
+  vm.runInContext("candidates.push({...candidates[0],id:'discovery',sourceRequest:null});state.route.must=['泉州'];state.candidateStatus.food='none'",context);
+  assert.equal(vm.runInContext('wishBaselineReady()',context),false);
+  assert.match(vm.runInContext("candidateCard(candidates[2])",context),/先确认上方所有愿望/);
+  assert.doesNotMatch(vm.runInContext("candidateCard(candidates[2])",context),/额外驾驶/);
+  vm.runInContext("state.candidateStatus.food='selected';state.reviewPhase='discoveries'",context);
+  assert.equal(vm.runInContext('wishBaselineReady()',context),true);
+  assert.match(vm.runInContext("candidateCard(candidates[2])",context),/额外驾驶/);
+  assert.doesNotMatch(vm.runInContext('itineraryReview()',context),/data-candidate="temple"/);
+  const more={...choices[0],id:'food',name:'追加体验',sourceRequest:null};
+  vm.runInContext(`applyCodexCandidates(${JSON.stringify({candidates:[more]})},'codex',true)`,context);
+  assert.equal(vm.runInContext("statusOf('food')",context),'selected');
+  assert.equal(vm.runInContext("statusOf('food-new')",context),'none');
+  assert.equal(vm.runInContext("state.reviewPhase",context),'discoveries');
+  assert.equal(vm.runInContext("candidateReviewComplete()",context),true);
+  assert.equal(vm.runInContext("plannerState().candidates.find(c=>c.id==='food-new').status",context),'excluded');
+  vm.runInContext("candidates.push({...candidates[0],id:'exact',name:'屏山峡谷',sourceRequest:'屏山峡谷'});state.route.must.push('屏山峡谷');state.reviewPhase='wishes'",context);
+  assert.equal(vm.runInContext("canRecommendMore('屏山峡谷')",context),false);
+  assert.equal(vm.runInContext("canRecommendMore('泉州')",context),true);
+  assert.equal(vm.runInContext("canRecommendMore('可以骑马的地方')",context),true);
+  assert.equal(vm.runInContext("canRecommendMore('沿途发现')",context),true);
+  assert.doesNotMatch(vm.runInContext('itineraryReview()',context),/data-more-group="屏山峡谷"/);
+});
+
 test("first step starts empty and has no simulated generation entry", () => {
   const script = page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)?.[1];
   const app = { innerHTML: "", querySelector: () => null };
@@ -33,15 +100,38 @@ test("first step starts empty and has no simulated generation entry", () => {
   assert.doesNotMatch(page, /\/api\/mock-report|data-action="mock-(?:candidates|preview|final)"/);
 });
 
-test("candidate navigation stays visible on narrow screens", () => {
-  assert.match(page, /data-action="focus-prev"/);
-  assert.match(page, /data-action="focus-next"/);
-  assert.doesNotMatch(page, /\.focus-arrow\{display:none\}/);
+test("itinerary review groups selectable experiences by wish", () => {
+  assert.match(page, /function itineraryReview\(/);
+  assert.match(page, /data-more-group=/);
+  assert.match(page, /g\.items\.map\(c=>candidateCard\(c\)\)/);
+  assert.doesNotMatch(page, /ONE DECISION AT A TIME/);
 });
 
 test("candidate generation buttons use the plain product label", () => {
   assert.match(page, /'生成沿途候选 →'/);
   assert.doesNotMatch(page, /让 Codex 推荐|让 Codex 生成沿途候选/);
+});
+
+test("travel-source permissions are explicit and opt-in", () => {
+  const script = page.match(/<script>\s*([\s\S]*?)\s*<\/script>/)?.[1];
+  const context = vm.createContext({
+    document: { getElementById() { return null; }, addEventListener() {} },
+    window: { ROADTRIP_LOCATIONS: [] },
+    location: { protocol: "file:", href: "file:///tmp/roadtrip-planner-demo.html" },
+    URL, structuredClone, setTimeout: () => 1, clearTimeout() {},
+  });
+  vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/, ""), context);
+  vm.runInContext("state.setup.flyai=true", context);
+  assert.equal(vm.runInContext("state.answers.flyaiDataConsent", context), false);
+  assert.equal(vm.runInContext("state.answers.xiaohongshuBrowserOptIn", context), false);
+  const html = vm.runInContext("questions()", context);
+  assert.match(html, /允许用行程与必要的宠物信息查询飞猪/);
+  assert.match(html, /允许用小红书查攻略和游记/);
+  assert.match(html, /内置浏览器打开小红书/);
+  assert.match(html, /未勾选就不调用 FlyAI/);
+  assert.equal(vm.runInContext("plannerState().capabilities.flyai", context), false);
+  vm.runInContext("state.answers.flyaiDataConsent=true", context);
+  assert.equal(vm.runInContext("plannerState().capabilities.flyai", context), true);
 });
 
 test("top bar keeps session and settings controls without duplicate generation actions", () => {
@@ -94,6 +184,12 @@ test("first launch offers skippable key setup and hides unverified road data", a
   assert.match(app.innerHTML, /飞猪 FlyAI/);
   assert.match(app.innerHTML, /data-action="setup-skip"/);
   vm.runInContext("state.setup.open=false;render()", context);
+  assert.doesNotMatch(app.innerHTML, /class="guide-side"/);
+  vm.runInContext("state.stage=2;render()", context);
+  assert.doesNotMatch(app.innerHTML, /class="guide-side"/);
+  assert.match(app.innerHTML, /guide-body--form/);
+  vm.runInContext("state.stage=3;render()", context);
+  assert.match(app.innerHTML, /class="guide-side"/);
   assert.match(app.innerHTML, /地图暂不展示/);
   assert.doesNotMatch(app.innerHTML, /高德道路快照 · km/);
   await vm.runInContext("saveSetup()", context);
@@ -189,7 +285,7 @@ test("destination tag heading is not itself an experience tag", () => {
 test("required framework includes travelers, detailed pet facts, exclusions and fixed constraints", () => {
   assert.match(page, /data-answer="travelers"/);
   assert.match(page, /data-answer="petWeightKg"/);
-  assert.match(page, /data-answer="petAgeYears"/);
+  assert.doesNotMatch(page, /data-answer="petAgeYears"/);
   assert.match(page, /data-answer="exclusions"/);
   assert.match(page, /data-answer="fixedBookings"/);
   assert.match(page, /data-answer="borderDocs"/);
@@ -268,7 +364,7 @@ test("Codex preview, full report, and text refinement are three separate page jo
   vm.runInContext(script.replace(/\n    render\(\);\s*checkCodexStatus\(\);[\s\S]*?registerPlannerTools\(\)\.catch\(\(\)=>\{\}\);/, ""), context);
   vm.runInContext("state.setup.loading=false", context);
   seedTestState(context);
-  vm.runInContext("state.candidateStatus['candidate-quanzhou']='selected'", context);
+  vm.runInContext("state.candidateStatus['candidate-quanzhou']='selected';state.route.must=['泉州'];candidates[0].sourceRequest='泉州';state.reviewPhase='discoveries'", context);
   await vm.runInContext("requestCodexPreview()", context);
   assert.equal(calls[0].url, "/api/codex/preview");
   assert.equal(vm.runInContext("state.stage", context), 4);

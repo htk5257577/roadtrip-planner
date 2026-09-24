@@ -2,7 +2,7 @@
   "title": "示例自驾路书",
   "startDate": "2026-10-01",
   "capabilities": { "amap": true, "amapJs": true, "flyai": true },
-  "meta": { "dateRange": "2026-10-01—2026-10-01", "distance": "约120公里", "party": "自驾同行", "pace": "留出完整游玩时段" },
+  "meta": { "dateRange": "2026-10-01—2026-10-01", "departTime": "09:00", "distance": "约120公里", "party": "自驾同行", "pace": "留出完整游玩时段" },
   "hero": { "eyebrow": "ROAD BOOK · 示例", "badge": "自驾 · 1日", "title": "从甲城到乙城。", "lede": "固定路书版式回归数据。", "route": "甲城 → 乙城", "imageUrl": "https://picsum.photos/seed/roadbook-fixture-hero/1200/800", "stats": [{ "value": "1", "label": "天" }, { "value": "120", "label": "公里" }, { "value": "4h", "label": "有效游玩" }] },
   "reminders": [{ "item": "核对天气与停车", "leadDays": 1 }],
   "preTrip": { "note": "示例数据，不作为旅行建议。", "weather": { "summary": "临行核对", "typhoon": "恶劣天气调整" }, "packing": "饮水与常用物品", "payment": "准备移动支付", "apps": ["地图"], "ticketTip": "按实际政策预订" },
@@ -12,15 +12,20 @@
   "transport": [{ "status": "示例", "title": "自驾", "detail": "临行核验路况。" }],
   "hotelAreas": [{ "area": "乙城城区", "reason": "接近游玩点。", "queryStatus": "verified", "queriedAt": "2026-09-23T08:00:00.000Z", "options": [{ "tier": "区域建议", "priceRange": "待查", "name": "城区住宿", "note": "入住前确认条件。", "sourceProvider": "flyai", "queriedAt": "2026-09-23T08:00:00.000Z", "actionLink": { "label": "飞猪查看", "url": "https://www.fliggy.com/" } }] }],
   "mapStops": [{ "name": "甲城", "lat": 30.2, "lng": 120.2 }, { "name": "乙城", "lat": 30.8, "lng": 120.9 }],
-  "stopSummaries": [{ "city": "乙城", "stay": "半日 · 示例停留", "playHours": 4, "focus": ["街巷慢游", "地方餐食"], "note": "保留完整半日。", "pet": "接宠条件出发前核验", "tags": ["地方美食", "历史街巷"], "guides": [{ "type": "城市攻略", "platform": "示例来源", "title": "乙城慢游参考", "note": "参考步行路线与停留时长。", "url": "https://example.com/guide", "evidenceRole": "firstHand", "publicAccess": true, "checkedAt": "2026-09-23T08:00:00.000Z" }] }],
+  "stopSummaries": [{ "city": "乙城", "stay": "半日 · 示例停留", "playHours": 4, "focus": ["街巷慢游", "地方餐食"], "note": "保留完整半日。", "pet": "接宠条件出发前核验", "tags": ["地方美食", "历史街巷"], "guides": [{ "type": "城市攻略", "platform": "小红书", "title": "乙城慢游参考（模拟）", "note": "参考步行路线与停留时长，仅供版式示例。", "url": "https://www.xiaohongshu.com/explore/000000000000000000000001", "evidenceRole": "firstHand", "publicAccess": true, "checkedAt": "2026-09-23T08:00:00.000Z" }] }],
   "days": [{
     "date": "10/01", "weekday": "周四", "theme": "抵达乙城",
     "drive": { "route": "甲城 → 乙城", "distance": "约120公里", "duration": "约2小时；补能与休息1小时" },
     "dog": { "status": "同行条件待定", "note": "临行确认" },
     "tips": ["夜宿：乙城城区。合理休息。"],
     "slots": [
-      { "period": "上午", "time": "09:00–11:00", "name": "道路转场", "review": "驾车前往乙城。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] },
-      { "period": "下午", "time": "12:00–16:00", "name": "乙城街区", "review": "步行体验。", "productRelevant": true, "productQueryStatus": "not-configured", "photo": "https://picsum.photos/seed/roadbook-fixture-street/900/600", "photoCredit": "示例图片", "photoSourceUrl": "https://picsum.photos/", "openingHours": "示例开放时段", "seasonal": "示例景色", "references": [{ "type": "官方信息", "platform": "示例来源", "title": "乙城街区信息", "note": "核验开放时间。", "url": "https://example.com/post", "evidenceRole": "official", "publicAccess": true, "checkedAt": "2026-09-23T08:00:00.000Z" }] }
+      { "period": "上午", "time": "08:00–09:00", "kind": "meal", "location": "甲城出发地", "name": "早餐与出发准备", "review": "用餐、整理随身物品，确认当日路况。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] },
+      { "period": "上午", "time": "09:00–11:00", "kind": "travel", "location": "甲城 → 乙城", "name": "道路转场", "review": "驾车前往乙城。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] },
+      { "period": "中午", "time": "11:00–12:00", "kind": "meal", "location": "乙城城区", "name": "午餐", "review": "按抵达时间在城区用餐。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] },
+      { "period": "下午", "time": "12:00–16:00", "kind": "visit", "location": "乙城街区", "name": "乙城街区", "review": "步行体验。", "productRelevant": true, "productQueryStatus": "not-configured", "photo": "https://picsum.photos/seed/roadbook-fixture-street/900/600", "photoCredit": "示例图片", "photoSourceUrl": "https://picsum.photos/", "openingHours": "示例开放时段", "seasonal": "示例景色", "references": [{ "type": "官方信息", "platform": "示例来源", "title": "乙城街区信息", "note": "核验开放时间。", "url": "https://example.com/post", "evidenceRole": "official", "publicAccess": true, "checkedAt": "2026-09-23T08:00:00.000Z" }, { "type": "实走记录", "platform": "小红书", "title": "乙城街区实走参考（模拟）", "note": "示范景点帖子的展示位置。", "url": "https://www.xiaohongshu.com/explore/000000000000000000000002", "evidenceRole": "firstHand", "publicAccess": true, "checkedAt": "2026-09-23T08:00:00.000Z" }] },
+      { "period": "傍晚", "time": "16:00–18:00", "kind": "hotel", "location": "乙城城区酒店", "name": "办理入住与休息", "review": "回酒店放行李，留出休息和整理时间。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] },
+      { "period": "晚上", "time": "18:00–19:00", "kind": "meal", "location": "乙城城区", "name": "晚餐", "review": "就近吃当地菜，餐厅可根据实际排队情况调整。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] },
+      { "period": "晚上", "time": "19:00–22:00", "kind": "rest", "location": "乙城城区酒店", "name": "自由活动与睡前休息", "review": "不再安排必须完成的景点，按体力自由散步或在酒店休息。", "productRelevant": false, "productQueryStatus": "not-applicable", "references": [] }
     ],
     "dining": [{ "meal": "午餐", "place": "乙城城区", "hours": "12:00", "dishes": [{ "name": "当地菜", "price": "按实付" }] }],
     "alternatives": [{ "label": "下雨时", "summary": "缩短户外时间，保留就近餐食。" }]

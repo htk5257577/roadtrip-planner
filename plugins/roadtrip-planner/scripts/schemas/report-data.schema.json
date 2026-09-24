@@ -13,7 +13,7 @@
       "properties": { "amap": { "type": "boolean" }, "amapJs": { "type": "boolean" }, "flyai": { "type": "boolean" } }
     },
     "verifiedRoad": { "type": "object", "description": "Copy state.roadVerification exactly when complete." },
-    "meta": { "type": "object" }, "hero": { "type": "object" }, "preTrip": { "type": "object" },
+    "meta": { "type": "object", "required": ["departTime"], "properties": { "departTime": { "type": "string", "pattern": "^(?:[01]?[0-9]|2[0-3]):[0-5][0-9]$" } } }, "hero": { "type": "object" }, "preTrip": { "type": "object" },
     "reminders": { "type": "array", "minItems": 1 }, "routeDecision": { "type": "object" },
     "dayBalance": { "type": "array", "minItems": 1 },
     "routeLegs": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["date", "route"], "properties": { "from": { "type": "string" }, "to": { "type": "string" }, "distanceKm": { "type": "number" }, "driveHours": { "type": "number" }, "source": { "enum": ["amap", "unverified"] } } } },
@@ -42,8 +42,10 @@
           "slots": {
             "type": "array", "minItems": 1,
             "items": {
-              "type": "object", "required": ["period", "time", "name", "review", "references", "productRelevant", "productQueryStatus"],
+              "type": "object", "required": ["period", "time", "kind", "location", "name", "review", "references", "productRelevant", "productQueryStatus"],
               "properties": {
+                "kind": { "enum": ["travel", "charge", "visit", "meal", "rest", "hotel", "free", "arrival"] },
+                "location": { "type": "string", "minLength": 1 },
                 "photo": { "type": "string", "pattern": "^https://" }, "photoCredit": { "type": "string" }, "photoSourceUrl": { "type": "string", "pattern": "^https://" },
                 "productRelevant": { "type": "boolean" },
                 "productQueryStatus": { "enum": ["verified", "unavailable", "not-configured", "not-applicable"] },
@@ -64,7 +66,7 @@
       "required": ["type", "platform", "title", "note", "url", "evidenceRole", "publicAccess", "checkedAt"],
       "properties": {
         "url": { "type": "string", "pattern": "^https://" }, "evidenceRole": { "enum": ["firstHand", "official"] },
-        "publicAccess": { "const": true }, "checkedAt": { "type": "string", "format": "date-time" }
+        "publicAccess": { "type": "boolean" }, "access": { "enum": ["signedInBrowser"] }, "checkedAt": { "type": "string", "format": "date-time" }
       }
     }
   }
